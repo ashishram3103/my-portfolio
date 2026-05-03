@@ -849,6 +849,55 @@ body.is-loading{overflow-x:hidden;overflow-y:auto;}
 
 
 
+/* ── MOBILE SMOOTHNESS PATCH: preserve GSAP, fix invisible hero intro and touch jank ── */
+@media(max-width:900px){
+  /* The hero overview/bio was being hidden by load animation states on some mobile browsers. */
+  .hero-bottom-row,
+  .hero-bottom-row > *,
+  .hero-bio,
+  .hero-scroll-hint{
+    opacity:1!important;
+    visibility:visible!important;
+    transform:none!important;
+  }
+  .hero-bottom-row{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:22px!important;
+    margin-top:34px!important;
+    align-items:start!important;
+  }
+  .hero-bio{
+    display:block!important;
+    max-width:100%!important;
+    font-size:15.5px!important;
+    line-height:1.62!important;
+    color:#333!important;
+    position:relative!important;
+    z-index:3!important;
+  }
+  .hero-scroll-hint{
+    justify-self:start!important;
+    color:var(--muted)!important;
+  }
+  /* Prevent mobile browser address-bar resize from creating visible up/down shake. */
+  #hero-section,
+  .hero-inner{
+    min-height:100svh!important;
+  }
+  /* Reduce mobile compositing load without changing the desktop animation result. */
+  #hero-canvas{
+    opacity:.18!important;
+  }
+  .hero-shape,
+  .vid-reel-card,
+  .word-current-item{
+    backface-visibility:hidden;
+    transform:translateZ(0);
+  }
+}
+
+
 /* ── MINIMAL SCROLL INPUT FIX ──
    Do not change GSAP/ScrollTrigger flow. Only stop hidden fixed layers from catching wheel/touch input. */
 #site-loader{pointer-events:none;}
@@ -1375,7 +1424,16 @@ const IS_MOBILE = window.innerWidth < 900;
     pts.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.c+'30';ctx.fill();p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;});
     raf=requestAnimationFrame(tick);
   }
-  let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{resize();mkPts();},200);});
+  let rt,lastVW=window.innerWidth,lastVH=window.innerHeight;
+  window.addEventListener('resize',()=>{
+    /* Mobile browser chrome resize can fire repeatedly while scrolling and causes up/down jitter. */
+    if(IS_MOBILE){
+      const vw=window.innerWidth,vh=window.innerHeight;
+      if(Math.abs(vw-lastVW)<2 && Math.abs(vh-lastVH)<120) return;
+      lastVW=vw;lastVH=vh;
+    }
+    clearTimeout(rt);rt=setTimeout(()=>{resize();mkPts();},260);
+  },{passive:true});
   resize();mkPts();tick();
   const hero=document.getElementById('hero-section');
   if('IntersectionObserver' in window && hero){
@@ -1481,7 +1539,11 @@ const IS_MOBILE = window.innerWidth < 900;
 function playHeroIntro(){
   gsap.to('.h-li',{y:'0%',duration:1.05,stagger:.09,ease:'power3.out'});
   gsap.from('.hero-top-row > *',{opacity:0,y:20,duration:.75,stagger:.08,ease:'power2.out',delay:.75});
-  gsap.from('.hero-bottom-row > *',{opacity:0,y:30,duration:.9,stagger:.1,ease:'power2.out',delay:.95});
+  if(IS_MOBILE){
+    gsap.set('.hero-bottom-row > *',{clearProps:'opacity,transform'});
+  }else{
+    gsap.from('.hero-bottom-row > *',{opacity:0,y:30,duration:.9,stagger:.1,ease:'power2.out',delay:.95});
+  }
   gsap.from('#main-nav',{opacity:0,y:-12,duration:.65,delay:.2,ease:'power2.out'});
   /* hero shapes removed */
 }
@@ -1558,7 +1620,22 @@ setTimeout(()=>{
     document.querySelectorAll('.word-pip').forEach((p,i)=>p.classList.toggle('is-active',i===idx));
   }
   inner.addEventListener('click',advance);
-  inner.addEventListener('touchend',e=>{e.preventDefault();advance();},{passive:false});
+  /* Mobile fix: do not preventDefault on touchend.
+     Only advance the word if it was a real tap, not a vertical scroll gesture. */
+  let touchStartX=0,touchStartY=0,touchStartT=0;
+  inner.addEventListener('touchstart',e=>{
+    const t=e.changedTouches&&e.changedTouches[0];
+    if(!t) return;
+    touchStartX=t.clientX;touchStartY=t.clientY;touchStartT=Date.now();
+  },{passive:true});
+  inner.addEventListener('touchend',e=>{
+    const t=e.changedTouches&&e.changedTouches[0];
+    if(!t) return;
+    const dx=Math.abs(t.clientX-touchStartX);
+    const dy=Math.abs(t.clientY-touchStartY);
+    const dt=Date.now()-touchStartT;
+    if(dx<14 && dy<14 && dt<450) advance();
+  },{passive:true});
   inner.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')advance();});
 })();
 
@@ -2166,7 +2243,13 @@ function resetPanel(){
 })();
 
 /* ── FINAL REFRESH ── */
-window.addEventListener('load',()=>setTimeout(()=>ScrollTrigger.refresh(true),400));
+window.addEventListener('load',()=>{
+  if(!IS_MOBILE){
+    setTimeout(()=>ScrollTrigger.refresh(true),400);
+  }else{
+    setTimeout(()=>ScrollTrigger.refresh(),700);
+  }
+});
 </script>
 </body>
 </html>
