@@ -1012,6 +1012,86 @@ body.is-loading{overflow-x:hidden;overflow-y:auto;}
   }
 }
 
+
+
+/* ─────────────────────────────────────────────
+   FINAL MOBILE HERO TITLE LOCK
+   Explicit mobile line breaks prevent "moves." from pushing the page down.
+   The full title can stay visible because only the animated word is nowrap.
+───────────────────────────────────────────── */
+.desktop-title-lines,
+.mobile-title-lines{display:block;}
+.mobile-title-lines{display:none;}
+
+@media(max-width:900px){
+  .desktop-title-lines{display:none!important;}
+  .mobile-title-lines{display:block!important;}
+
+  .hero-headline{
+    font-size:clamp(38px,11.5vw,64px)!important;
+    line-height:.96!important;
+    max-width:100%!important;
+    overflow:visible!important;
+  }
+
+  .hero-headline .h-line,
+  .hero-headline .h-li{
+    display:block!important;
+    overflow:visible!important;
+    min-height:1em!important;
+    line-height:.96!important;
+    white-space:normal!important;
+  }
+
+  .hl-cab,
+  .hero-scramble-text{
+    display:inline-block!important;
+    white-space:nowrap!important;
+    width:auto!important;
+    min-width:6.45ch!important;
+    max-width:none!important;
+    box-sizing:content-box!important;
+    text-align:center!important;
+    font-size:.76em!important;
+    line-height:.9!important;
+    padding:.04em .36em .12em!important;
+    margin-top:.04em!important;
+    vertical-align:baseline!important;
+    overflow:visible!important;
+    box-decoration-break:clone;
+    -webkit-box-decoration-break:clone;
+  }
+}
+
+@media(max-width:480px){
+  .hero-headline{
+    font-size:clamp(35px,10.9vw,54px)!important;
+    line-height:.98!important;
+  }
+  .hero-headline .h-line,
+  .hero-headline .h-li{
+    line-height:.98!important;
+  }
+  .hl-cab,
+  .hero-scramble-text{
+    font-size:.72em!important;
+    min-width:6.55ch!important;
+    padding:.04em .38em .12em!important;
+  }
+}
+
+@media(max-width:380px){
+  .hero-headline{
+    font-size:clamp(32px,10.4vw,48px)!important;
+  }
+  .hl-cab,
+  .hero-scramble-text{
+    font-size:.68em!important;
+    min-width:6.7ch!important;
+    padding-inline:.42em!important;
+  }
+}
+
 </style>
 </head>
 <body class="is-loading">
@@ -1130,10 +1210,19 @@ body.is-loading{overflow-x:hidden;overflow-y:auto;}
     </div>
     <div class="hero-hl-wrap">
       <h1 class="hero-headline" aria-label="Designer and developer building the web that moves.">
-        <span class="h-line"><span class="h-li">Designer</span></span>
-        <span class="h-line"><span class="h-li"><span class="hl-red">&amp;</span> Developer</span></span>
-        <span class="h-line"><span class="h-li">Building the web</span></span>
-        <span class="h-line"><span class="h-li">that <span class="hl-cab" id="hero-scramble">moves.</span></span></span>
+        <span class="desktop-title-lines">
+          <span class="h-line"><span class="h-li">Designer</span></span>
+          <span class="h-line"><span class="h-li"><span class="hl-red">&amp;</span> Developer</span></span>
+          <span class="h-line"><span class="h-li">Building the web</span></span>
+          <span class="h-line"><span class="h-li">that <span class="hl-cab hero-scramble-text">moves.</span></span></span>
+        </span>
+        <span class="mobile-title-lines" aria-hidden="true">
+          <span class="h-line"><span class="h-li">Designer</span></span>
+          <span class="h-line"><span class="h-li"><span class="hl-red">&amp;</span> Developer</span></span>
+          <span class="h-line"><span class="h-li">Building the</span></span>
+          <span class="h-line"><span class="h-li">web that</span></span>
+          <span class="h-line"><span class="h-li"><span class="hl-cab hero-scramble-text">moves.</span></span></span>
+        </span>
       </h1>
     </div>
     <div class="hero-bottom-row">
@@ -1622,22 +1711,27 @@ const IS_MOBILE = window.innerWidth < 900;
 
 /* ── SCRAMBLE ── */
 (function(){
-  const el=document.getElementById('hero-scramble');if(!el) return;
+  const els=Array.from(document.querySelectorAll('.hero-scramble-text'));if(!els.length) return;
   const TARGET='moves.',CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%&*';
   const isMobile=window.matchMedia('(max-width:900px)').matches;
   let interval;
   let loopTimer;
   let heroInView=true;
 
+  function setScrambleText(text){
+    els.forEach(el=>{el.textContent=text;});
+  }
+
   function scramble(){
     if(isMobile && !heroInView){
-      el.textContent=TARGET;
+      setScrambleText(TARGET);
       return;
     }
     let i=0;clearInterval(interval);
     interval=setInterval(()=>{
-      el.textContent=TARGET.split('').map((_,j)=>j<i?TARGET[j]:CHARS[Math.floor(Math.random()*CHARS.length)]).join('').toLowerCase();
-      if(i>=TARGET.length){clearInterval(interval);el.textContent=TARGET;}
+      const text=TARGET.split('').map((_,j)=>j<i?TARGET[j]:CHARS[Math.floor(Math.random()*CHARS.length)]).join('').toLowerCase();
+      setScrambleText(text);
+      if(i>=TARGET.length){clearInterval(interval);setScrambleText(TARGET);}
       i+=0.4;
     },50);
   }
@@ -1653,7 +1747,7 @@ const IS_MOBILE = window.innerWidth < 900;
       heroInView=entries.some(entry=>entry.isIntersecting);
       if(!heroInView){
         clearInterval(interval);
-        el.textContent=TARGET;
+        setScrambleText(TARGET);
       }
     },{threshold:0.05});
     if(hero) io.observe(hero);
