@@ -910,6 +910,108 @@ body.is-loading{overflow-x:hidden;overflow-y:auto;}
 .proj-panel-backdrop.is-vis,
 #egg-overlay.is-active{pointer-events:auto;}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+
+
+/* ─────────────────────────────────────────────
+   MOBILE HERO LAYOUT-SHIFT FIX + SAFE SMOOTHNESS
+   Added after original CSS so it overrides only where needed.
+   It does not remove/disable GSAP or ScrollTrigger.
+───────────────────────────────────────────── */
+@media(max-width:900px){
+  /* The scramble word must never wrap or change line height while its letters change. */
+  .hero-headline{
+    font-size:clamp(42px,13.2vw,72px);
+    line-height:.92;
+    max-width:100%;
+  }
+  .hero-headline .h-line{
+    display:block;
+    overflow:hidden;
+    min-height:.96em;
+  }
+  .hero-headline .h-li{
+    display:block;
+    line-height:.92;
+    white-space:nowrap;
+  }
+  .hl-cab,
+  #hero-scramble{
+    display:inline-block;
+    white-space:nowrap;
+    width:5.35ch;
+    min-width:5.35ch;
+    max-width:5.35ch;
+    text-align:center;
+    font-size:.82em;
+    line-height:.9;
+    padding:0 8px 3px;
+    vertical-align:baseline;
+    transform-origin:center center;
+  }
+  .hero-hl-wrap{max-width:100%;}
+  .hero-hl-wrap::before{inset:-10px -10px -10px -6px;}
+
+  /* Keep the hero overview readable under the mobile title. */
+  .hero-bottom-row{
+    margin-top:30px!important;
+    gap:20px!important;
+  }
+  .hero-bio{
+    font-size:15.5px!important;
+    line-height:1.62!important;
+  }
+
+  /* Conservative mobile compositing: only elements that already animate. */
+  .hero-headline .h-li,
+  .hl-cab,
+  #hero-scramble,
+  .hero-shape,
+  .vid-reel-card,
+  .wcard-bg,
+  .arch-track,
+  .sband-track,
+  .mq-track,
+  .word-current-item{
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+    transform:translateZ(0);
+    will-change:transform;
+  }
+
+  img,
+  video,
+  canvas,
+  svg{
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+  }
+
+  /* Avoid huge paint cost from box shadows on mobile while preserving the blocky look. */
+  .vid-reel-card,
+  .arch-card,
+  .vid-copy,
+  .about-meta-card,
+  .wcard-cta{
+    box-shadow:4px 4px 0 var(--black)!important;
+  }
+
+  html,
+  body{
+    -webkit-overflow-scrolling:touch;
+  }
+}
+
+@media(max-width:480px){
+  .hero-headline{
+    font-size:clamp(38px,12.1vw,56px);
+  }
+  .hl-cab,
+  #hero-scramble{
+    font-size:.76em;
+    padding:0 6px 2px;
+  }
+}
+
 </style>
 </head>
 <body class="is-loading">
@@ -1522,16 +1624,42 @@ const IS_MOBILE = window.innerWidth < 900;
 (function(){
   const el=document.getElementById('hero-scramble');if(!el) return;
   const TARGET='moves.',CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%&*';
+  const isMobile=window.matchMedia('(max-width:900px)').matches;
   let interval;
+  let loopTimer;
+  let heroInView=true;
+
   function scramble(){
+    if(isMobile && !heroInView){
+      el.textContent=TARGET;
+      return;
+    }
     let i=0;clearInterval(interval);
     interval=setInterval(()=>{
       el.textContent=TARGET.split('').map((_,j)=>j<i?TARGET[j]:CHARS[Math.floor(Math.random()*CHARS.length)]).join('').toLowerCase();
-      if(i>=TARGET.length){clearInterval(interval);el.textContent='moves.';}
+      if(i>=TARGET.length){clearInterval(interval);el.textContent=TARGET;}
       i+=0.4;
     },50);
   }
-  setInterval(scramble,5000);
+
+  function startScrambleLoop(){
+    clearInterval(loopTimer);
+    loopTimer=setInterval(scramble,5000);
+  }
+
+  if(isMobile && 'IntersectionObserver' in window){
+    const hero=document.getElementById('hero-section');
+    const io=new IntersectionObserver(entries=>{
+      heroInView=entries.some(entry=>entry.isIntersecting);
+      if(!heroInView){
+        clearInterval(interval);
+        el.textContent=TARGET;
+      }
+    },{threshold:0.05});
+    if(hero) io.observe(hero);
+  }
+
+  startScrambleLoop();
   window.addEventListener('load',()=>setTimeout(scramble,1800));
 })();
 
