@@ -431,7 +431,8 @@ body.cur-hover #cur-ring{width:72px;height:72px;background:var(--yellow);border-
 /* ── WORD SCROLL ── */
 #word-section{background:var(--black);overflow:hidden;position:relative;min-height:0;}
 .word-inner{min-height:58vh;display:flex;align-items:center;justify-content:center;
-  flex-direction:column;padding:72px 40px;cursor:pointer;user-select:none;gap:10px;}
+  flex-direction:column;padding:72px 40px;cursor:pointer;user-select:none;gap:10px;
+  -webkit-tap-highlight-color:transparent;}
 .word-stem{font-family:'Clash Display','Arial Black',sans-serif;font-weight:600;
   font-size:clamp(36px,6vw,88px);line-height:1.05;letter-spacing:-.03em;
   text-transform:uppercase;color:rgba(255,255,255,.42);display:flex;
@@ -563,10 +564,10 @@ body.cur-hover #cur-ring{width:72px;height:72px;background:var(--yellow);border-
 }
 
 /* ── ARCHIVE ── */
-.arch-flow-wrap{overflow:hidden;border:2px solid var(--black);background:#f7f7f4;padding:30px 0 34px;position:relative;}
+.arch-flow-wrap{overflow-x:auto;overflow-y:hidden;border:2px solid var(--black);background:#f7f7f4;padding:30px 0 34px;position:relative;scrollbar-width:none;}
+.arch-flow-wrap::-webkit-scrollbar{display:none;}
 .arch-track{display:flex;gap:28px;width:max-content;will-change:transform;
-  animation:archiveMarquee 78s linear infinite;padding:0 24px;transform:translateZ(0);}
-.arch-flow-wrap:hover .arch-track{animation-play-state:paused;}
+  padding:0 24px;transform:translateZ(0);}
 .arch-card{width:280px;flex:0 0 280px;background:var(--white);border:2px solid var(--black);
   box-shadow:7px 7px 0 var(--black);margin:0;overflow:hidden;
   transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .35s;}
@@ -578,10 +579,8 @@ body.cur-hover #cur-ring{width:72px;height:72px;background:var(--yellow);border-
 @keyframes archiveMarquee{from{transform:translateX(0)}to{transform:translateX(calc(-50% - 14px))}}
 .arch-hint{margin-top:26px;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);}
 @media(max-width:900px){
-  /* auto-rotate + touch drag via JS */
-  .arch-flow-wrap{overflow-x:auto;overflow-y:hidden;padding:20px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-  .arch-flow-wrap::-webkit-scrollbar{display:none;}
-  .arch-track{animation:none!important;width:max-content;padding:0 16px;transform:none!important;}
+  .arch-flow-wrap{padding:20px 0;}
+  .arch-track{padding:0 16px;}
   .arch-card{width:200px;flex-basis:200px;flex:0 0 200px;}
   .arch-card img{height:270px;}
 }
@@ -1850,8 +1849,10 @@ setTimeout(()=>{
         gsap.fromTo(curEl,{y:'110%',opacity:0},{y:'0%',opacity:1,duration:.45,ease:'back.out(1.8)'});
       }
     });
-    /* ripple on section bg */
-    gsap.to('#word-section',{backgroundColor:'rgba(249,209,0,.06)',duration:.15,yoyo:true,repeat:1,ease:'none'});
+    /* ripple on section bg — desktop only, mobile throttling causes yoyo to stick */
+    if(!IS_MOBILE){
+      gsap.to('#word-section',{backgroundColor:'rgba(249,209,0,.06)',duration:.15,yoyo:true,repeat:1,ease:'none'});
+    }
     document.querySelectorAll('.word-pip').forEach((p,i)=>p.classList.toggle('is-active',i===idx));
   }
   inner.addEventListener('click',advance);
@@ -1871,7 +1872,11 @@ setTimeout(()=>{
     const dy=Math.abs(t.clientY-touchStartY);
     const dt=Date.now()-touchStartT;
     if(dx<14 && dy<14 && dt<450) advance();
-    setTimeout(()=>inner.classList.remove('touch-active'),320);
+    setTimeout(()=>{
+      inner.classList.remove('touch-active');
+      const ws=document.getElementById('word-section');
+      if(ws) ws.style.backgroundColor='';
+    },320);
   },{passive:true});
   inner.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')advance();});
 })();
@@ -2143,68 +2148,102 @@ function addRipple(btn,e){
   btn.appendChild(rip);setTimeout(()=>rip.remove(),700);
 }
 
-/* ── EDIT 5: Mobile archive — JS auto-scroll + touch drag ── */
+/* ── EDIT 5: Archive — JS auto-scroll + drag (desktop mouse + mobile touch) ── */
 (function(){
-  if(!IS_MOBILE) return;
   const wrap = document.querySelector('.arch-flow-wrap');
   const track = document.getElementById('arch-track');
   if(!wrap || !track) return;
 
-  /* Clone cards for seamless loop */
-  const cards = Array.from(track.querySelectorAll('.arch-card:not([aria-hidden])'));
-  cards.forEach(c=>{
-    const clone = c.cloneNode(true);
-    clone.setAttribute('aria-hidden','true');
-    track.appendChild(clone);
-  });
+  /* Stop CSS animation — JS takes over for both */
+  track.style.animation = 'none';
+  track.style.transform = 'none';
+
+  /* Clone cards for seamless loop if not already done */
+  const origCards = Array.from(track.querySelectorAll('.arch-card:not([aria-hidden])'));
+  if(!track.querySelector('[aria-hidden="true"]')){
+    origCards.forEach(c=>{
+      const clone = c.cloneNode(true);
+      clone.setAttribute('aria-hidden','true');
+      track.appendChild(clone);
+    });
+  }
 
   let scrollPos = 0;
-  const speed = 0.5; /* px per frame */
+  const speed = IS_MOBILE ? 0.5 : 0.8;
   let isDragging = false;
   let dragStartX = 0;
   let dragStartScroll = 0;
   let isPaused = false;
   let resumeTimer = null;
 
-  /* Get half-width for loop reset */
-  function halfWidth(){
-    return track.scrollWidth / 2;
-  }
+  function halfWidth(){ return track.scrollWidth / 2; }
 
   /* RAF auto-scroll */
   function tick(){
     if(!isPaused){
       scrollPos += speed;
-      if(scrollPos >= halfWidth()) scrollPos -= halfWidth();
-      wrap.scrollLeft = scrollPos;
+      const hw = halfWidth();
+      if(scrollPos >= hw){
+        scrollPos -= hw;
+        wrap.scrollLeft = scrollPos;
+      } else {
+        wrap.scrollLeft = scrollPos;
+      }
     }
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
 
-  /* Touch drag */
-  wrap.addEventListener('touchstart', e=>{
-    const t = e.changedTouches[0];
-    isDragging = true;
-    isPaused = true;
-    dragStartX = t.clientX;
-    dragStartScroll = wrap.scrollLeft;
-    clearTimeout(resumeTimer);
-  },{passive:true});
+  /* ── MOUSE DRAG (desktop) ── */
+  if(!IS_MOBILE){
+    wrap.style.cursor = 'grab';
+    wrap.addEventListener('mousedown', e=>{
+      isDragging = true;
+      isPaused = true;
+      dragStartX = e.clientX;
+      dragStartScroll = wrap.scrollLeft;
+      wrap.style.cursor = 'grabbing';
+      clearTimeout(resumeTimer);
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', e=>{
+      if(!isDragging) return;
+      const dx = dragStartX - e.clientX;
+      wrap.scrollLeft = dragStartScroll + dx;
+      scrollPos = wrap.scrollLeft;
+    });
+    window.addEventListener('mouseup', ()=>{
+      if(!isDragging) return;
+      isDragging = false;
+      wrap.style.cursor = 'grab';
+      resumeTimer = setTimeout(()=>{ isPaused = false; }, 1200);
+    });
+    /* Pause on hover, resume on leave — only when not dragging */
+    wrap.addEventListener('mouseenter', ()=>{ if(!isDragging){ isPaused = true; clearTimeout(resumeTimer); }});
+    wrap.addEventListener('mouseleave', ()=>{ if(!isDragging){ resumeTimer = setTimeout(()=>{ isPaused = false; }, 400); }});
+  }
 
-  wrap.addEventListener('touchmove', e=>{
-    if(!isDragging) return;
-    const t = e.changedTouches[0];
-    const dx = dragStartX - t.clientX;
-    wrap.scrollLeft = dragStartScroll + dx;
-    scrollPos = wrap.scrollLeft;
-  },{passive:true});
-
-  wrap.addEventListener('touchend', ()=>{
-    isDragging = false;
-    /* Resume auto-scroll after 1.2s of inactivity */
-    resumeTimer = setTimeout(()=>{ isPaused = false; }, 1200);
-  },{passive:true});
+  /* ── TOUCH DRAG (mobile) ── */
+  if(IS_MOBILE){
+    wrap.addEventListener('touchstart', e=>{
+      const t = e.changedTouches[0];
+      isDragging = true;
+      isPaused = true;
+      dragStartX = t.clientX;
+      dragStartScroll = wrap.scrollLeft;
+      clearTimeout(resumeTimer);
+    },{passive:true});
+    wrap.addEventListener('touchmove', e=>{
+      if(!isDragging) return;
+      const t = e.changedTouches[0];
+      wrap.scrollLeft = dragStartScroll + (dragStartX - t.clientX);
+      scrollPos = wrap.scrollLeft;
+    },{passive:true});
+    wrap.addEventListener('touchend', ()=>{
+      isDragging = false;
+      resumeTimer = setTimeout(()=>{ isPaused = false; }, 1200);
+    },{passive:true});
+  }
 })();
 
 /* ── BURGER MENU ── */
