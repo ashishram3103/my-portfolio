@@ -273,7 +273,7 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   width:clamp(210px,19vw,304px);height:clamp(166px,15.5vw,248px);
   z-index:5;pointer-events:auto;perspective:900px;transform-style:preserve-3d;opacity:0;
   transform-origin:right bottom;}
-.hero-lab-instruction{position:absolute;right:0;bottom:-28px;
+.hero-lab-instruction{position:absolute;right:108%;bottom:8px;
   width:max-content;max-width:220px;
   font-family:'Clash Display','Arial Black',sans-serif;font-weight:700;
   font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(13,13,13,.66);
@@ -542,8 +542,8 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 .vid-flow-head .sec-label{margin-bottom:0;align-self:start;padding-top:8px;}
 .vid-flow-head h2{font-family:'Clash Display','Arial Black',sans-serif;
   font-size:clamp(42px,7vw,104px);letter-spacing:-.05em;line-height:1.08;text-transform:uppercase;
-  overflow:visible;padding-block:.06em;white-space:nowrap;margin-bottom:16px;}
-.vid-flow-head p{font-size:16px;line-height:1.6;color:#555;max-width:560px;
+  overflow:visible;padding-block:.06em;white-space:normal;text-wrap:balance;margin-bottom:16px;}
+.vid-flow-head p{font-size:16px;line-height:1.6;color:#555;max-width:none;white-space:nowrap;
   grid-column:2;margin-top:0;}
 .vid-flow-head h2 em{color:var(--red);font-style:italic;display:inline-block;line-height:1.14;padding-block:.035em;}
 .vid-flow-stage{position:relative;z-index:1;max-width:1240px;margin:0 auto;
@@ -1240,16 +1240,16 @@ body.is-loading{overflow-x:hidden;overflow-y:auto;}
   <canvas id="hero-canvas"></canvas>
   <div class="hero-inner">
     <div class="hero-svg-panel" aria-hidden="true">
-      <svg id="hero-cursor-svg" viewBox="0 0 300 430" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg id="hero-cursor-svg" viewBox="0 0 300 760" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path id="svg-cursor-fill" d="M30 10 L30 90 L52 68 L65 100 L78 95 L65 63 L90 63 Z" fill="#F9D100" opacity="1"/>
         <path id="svg-cursor-stroke" d="M30 10 L30 90 L52 68 L65 100 L78 95 L65 63 L90 63 Z" stroke="#0D0D0D" stroke-width="2.5" stroke-linejoin="round" fill="none" opacity="1"/>
         <circle id="svg-click-dot" cx="30" cy="10" r="5" fill="#EE3A5A" opacity="1"/>
-        <path id="svg-dash-line" d="M60 102 C82 165 172 138 182 202 C193 272 116 292 158 338 C188 372 226 354 248 392" stroke="#0D0D0D" stroke-width="2" stroke-dasharray="6 5" fill="none" stroke-linecap="round"/>
-        <path id="svg-code-l" d="M190 360 L160 390 L190 420" stroke="#EE3A5A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <line id="svg-code-slash" x1="214" y1="356" x2="194" y2="424" stroke="#0D0D0D" stroke-width="3.5" stroke-linecap="round"/>
-        <path id="svg-code-r" d="M226 360 L256 390 L226 420" stroke="#EE3A5A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path id="svg-dash-line" d="M60 102 C84 168 174 138 182 214 C190 294 104 318 142 394 C186 482 244 512 198 568 C178 592 160 612 154 638" stroke="#0D0D0D" stroke-width="2" stroke-dasharray="6 5" fill="none" stroke-linecap="round"/>
+        <path id="svg-code-l" d="M190 630 L160 660 L190 690" stroke="#EE3A5A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <line id="svg-code-slash" x1="214" y1="626" x2="194" y2="694" stroke="#0D0D0D" stroke-width="3.5" stroke-linecap="round"/>
+        <path id="svg-code-r" d="M226 630 L256 660 L226 690" stroke="#EE3A5A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         <text id="svg-label-design" x="95" y="55" font-family="monospace" font-size="9" fill="#888" opacity="0" letter-spacing="1">DESIGN</text>
-        <text id="svg-label-dev" x="192" y="418" font-family="monospace" font-size="9" fill="#888" opacity="0" letter-spacing="1">DEV</text>
+        <text id="svg-label-dev" x="192" y="704" font-family="monospace" font-size="9" fill="#888" opacity="0" letter-spacing="1">DEV</text>
       </svg>
     </div>
 
@@ -1408,7 +1408,7 @@ body.is-loading{overflow-x:hidden;overflow-y:auto;}
   <div class="vid-flow-head">
     <span class="sec-label">Build Reel</span>
     <div>
-      <h2>This is what I <em>build.</em></h2>
+      <h2>This is what,<br><em>I build.</em></h2>
       <p>Production-ready motion, interface, and scroll systems — a smooth reveal as the page moves.</p>
     </div>
   </div>
