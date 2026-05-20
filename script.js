@@ -560,9 +560,10 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
         strokeDashoffset: 0,
         ease: 'none',
         scrollTrigger:{
-          trigger: '#vid-section',
-          start: 'top bottom',
-          end: 'bottom top',
+          trigger: '#vid-01',
+          start: 'center 62%',
+          endTrigger: '.vid-copy-end',
+          end: 'top 88%',
           scrub: 0.3,
           invalidateOnRefresh: true,
         }
