@@ -598,56 +598,6 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
   gsap.to('.vid-orb--dot',{y:180,x:-80,scrollTrigger:{trigger:'#vid-section',start:'top bottom',end:'bottom top',scrub:1}});
 })();
 
-/* ============================================================
-   REEL AMBIENT SVGs — single consolidated, paused outside section
-   ============================================================ */
-(function(){
-  const reel=document.getElementById('vid-section');
-  if(!reel) return;
-  const stage=document.querySelector('#vid-section .vid-flow-stage') || reel;
-  if(!stage || stage.querySelector('.reel-ambient-svg')) return;
-
-  const ambient=document.createElement('div');
-  ambient.className='reel-ambient-svg';
-  ambient.innerHTML=`
-    <svg class="reel-amb-1" viewBox="0 0 80 80" aria-hidden="true">
-      <circle cx="40" cy="40" r="30" stroke="#0D0D0D" stroke-width="1.5" fill="none" stroke-dasharray="3 4"/>
-      <circle cx="40" cy="40" r="6" fill="#F9D100"/>
-    </svg>
-    <svg class="reel-amb-2" viewBox="0 0 100 100" aria-hidden="true">
-      <path d="M 10 50 Q 30 10, 50 50 T 90 50" stroke="#2B5EB8" stroke-width="2" fill="none"/>
-    </svg>
-    <svg class="reel-amb-3" viewBox="0 0 60 60" aria-hidden="true">
-      <rect x="8" y="8" width="44" height="44" stroke="#0D0D0D" stroke-width="2" fill="none" transform="rotate(12 30 30)"/>
-      <rect x="14" y="14" width="32" height="32" stroke="#F9D100" stroke-width="1.5" fill="none" transform="rotate(-6 30 30)"/>
-    </svg>
-    <span class="reel-amb-label reel-amb-l1">01 / Sequence</span>
-    <span class="reel-amb-label reel-amb-l2">UX → System → Ship</span>
-    <span class="reel-amb-label reel-amb-l3">motion with purpose</span>
-  `;
-  stage.appendChild(ambient);
-
-  const ambientEls=ambient.querySelectorAll('svg, .reel-amb-label');
-  gsap.set(ambientEls,{opacity:0,y:18,scale:.96});
-
-  /* Single consolidated float timeline — paused by default */
-  const floatTl=gsap.timeline({paused:true});
-  floatTl
-    .to('.reel-amb-1',{rotation:360,duration:30,ease:'linear',repeat:-1},0)
-    .to('.reel-amb-2',{y:-20,duration:4,yoyo:true,repeat:-1,ease:'sine.inOut'},0)
-    .to('.reel-amb-3',{rotation:-15,duration:6,yoyo:true,repeat:-1,ease:'sine.inOut'},0)
-    .to('.reel-amb-l1',{x:-18,y:12,duration:5,yoyo:true,repeat:-1,ease:'sine.inOut'},0)
-    .to('.reel-amb-l2',{x:22,y:-10,duration:5.6,yoyo:true,repeat:-1,ease:'sine.inOut'},0)
-    .to('.reel-amb-l3',{x:-16,y:-14,duration:4.8,yoyo:true,repeat:-1,ease:'sine.inOut'},0);
-
-  ScrollTrigger.create({
-    trigger:stage,start:'top 90%',end:'bottom 10%',
-    onEnter:()=>{gsap.to(ambientEls,{opacity:1,y:0,scale:1,stagger:.07,duration:.7,ease:'expo.out'});floatTl.play();},
-    onEnterBack:()=>{gsap.to(ambientEls,{opacity:1,y:0,scale:1,stagger:.05,duration:.55,ease:'expo.out'});floatTl.play();},
-    onLeave:()=>floatTl.pause(),
-    onLeaveBack:()=>{floatTl.pause();gsap.to(ambientEls,{opacity:0,y:18,scale:.96,stagger:.03,duration:.42,ease:'power2.out'});}
-  });
-})();
 
 /* ============================================================
    BUILD UX CHIPS — section-scoped, paused outside
@@ -659,29 +609,39 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
   const layer=document.createElement('div');
   layer.className='ux-build-layer';
   layer.innerHTML=`
-    <span class="ux-chip c1">prototype</span>
-    <span class="ux-chip c2">system</span>
-    <span class="ux-chip c3">logic</span>
-    <span class="ux-chip c4">ship</span>
-    <span class="ux-node n1"></span><span class="ux-node n2"></span><span class="ux-node n3"></span>
+    <span class="ux-dc-path-gear"><span class="ux-dc-gear-body"></span><span class="ux-dc-gear-ring"></span><span class="ux-dc-gear-hub"></span></span>
   `;
   stage.appendChild(layer);
-  const cues=layer.querySelectorAll('.ux-chip,.ux-node');
-  gsap.set(cues,{opacity:0,scale:.82,y:26,rotation:(i)=>[-7,5,-5,6,0,0,0][i]||0});
+  const gear=layer.querySelector('.ux-dc-path-gear');
+  const gearBody=layer.querySelector('.ux-dc-gear-body');
 
-  const pulse=gsap.timeline({paused:true})
-    .to('.ux-chip.c1',{x:42,y:28,duration:4.5,yoyo:true,repeat:-1,ease:'sine.inOut'},0)
-    .to('.ux-chip.c2',{x:-52,y:32,duration:5.1,yoyo:true,repeat:-1,ease:'sine.inOut'},0)
-    .to('.ux-chip.c3',{x:58,y:-34,duration:4.8,yoyo:true,repeat:-1,ease:'sine.inOut'},0)
-    .to('.ux-chip.c4',{x:-64,y:-28,duration:5.3,yoyo:true,repeat:-1,ease:'sine.inOut'},0)
-    .to('.ux-node',{scale:1.42,opacity:.92,stagger:.18,duration:1.1,repeat:-1,yoyo:true,ease:'sine.inOut'},0);
+  const clamp01=gsap.utils.clamp(0,1);
+  const range=(p,a,b)=>clamp01((p-a)/(b-a));
+  const pulseAt=(p,c,w)=>Math.max(0,1-Math.abs(p-c)/w);
+  const gearPts=[
+    {p:.10,x:50,y:9},{p:.28,x:50,y:24},{p:.46,x:82,y:41},
+    {p:.62,x:22,y:62},{p:.78,x:66,y:84},{p:.94,x:54,y:97}
+  ];
+  function pointOnPath(p){
+    for(let i=1;i<gearPts.length;i++){
+      if(p<=gearPts[i].p){
+        const a=gearPts[i-1],b=gearPts[i],t=range(p,a.p,b.p);
+        return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};
+      }
+    }
+    return gearPts[gearPts.length-1];
+  }
+  function updateDesignerCoderObjects(progress){
+    const gp=range(progress,.10,.94),pt=pointOnPath(progress);
+    if(gear) gsap.set(gear,{left:pt.x+'%',top:pt.y+'%',rotation:gp*980,scale:1+pulseAt(progress,.46,.08)*.18+pulseAt(progress,.62,.08)*.14+pulseAt(progress,.78,.08)*.16});
+    if(gearBody) gsap.set(gearBody,{rotation:gp*120});
+  }
+  updateDesignerCoderObjects(0);
 
   ScrollTrigger.create({
     trigger:stage,start:'top 82%',end:'bottom 18%',
-    onEnter:()=>{gsap.to(cues,{opacity:1,scale:1,y:0,rotation:0,stagger:.08,duration:.72,ease:'back.out(1.45)'});pulse.play();},
-    onEnterBack:()=>{gsap.to(cues,{opacity:1,scale:1,y:0,rotation:0,stagger:.05,duration:.55,ease:'back.out(1.3)'});pulse.play();},
-    onLeave:()=>pulse.pause(),
-    onLeaveBack:()=>{pulse.pause();gsap.to(cues,{opacity:0,scale:.82,y:26,stagger:.03,duration:.42,ease:'power2.out'});}
+    onUpdate:self=>updateDesignerCoderObjects(self.progress),
+    onLeaveBack:()=>updateDesignerCoderObjects(0)
   });
 })();
 
