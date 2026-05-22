@@ -610,10 +610,90 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
   layer.className='ux-build-layer';
   layer.innerHTML=`
     <span class="ux-dc-path-gear"><span class="ux-dc-gear-body"></span><span class="ux-dc-gear-ring"></span><span class="ux-dc-gear-hub"></span></span>
+    <span class="ux-obj ux-obj--radius"><svg viewBox="0 0 152 152" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="6" y="6" width="140" height="140" fill="#0D0D0D" rx="2"/>
+      <rect x="2" y="2" width="140" height="140" fill="#F7F7F4" stroke="#0D0D0D" stroke-width="2" rx="2"/>
+      <rect class="ux-rd-inner" x="28" y="28" width="86" height="86" fill="#F9D100" stroke="#0D0D0D" stroke-width="2" rx="0"/>
+      <g class="ux-rd-ha"><line x1="16" y1="28" x2="23" y2="28" stroke="#0D0D0D" stroke-width="1.5"/><line x1="28" y1="16" x2="28" y2="23" stroke="#0D0D0D" stroke-width="1.5"/><circle cx="28" cy="28" r="5" fill="white" stroke="#0D0D0D" stroke-width="1.5"/></g>
+      <g class="ux-rd-hb"><line x1="116" y1="28" x2="128" y2="28" stroke="#0D0D0D" stroke-width="1.5"/><line x1="114" y1="16" x2="114" y2="23" stroke="#0D0D0D" stroke-width="1.5"/><circle cx="114" cy="28" r="5" fill="white" stroke="#0D0D0D" stroke-width="1.5"/></g>
+      <g class="ux-rd-hc"><line x1="16" y1="114" x2="23" y2="114" stroke="#0D0D0D" stroke-width="1.5"/><line x1="28" y1="116" x2="28" y2="128" stroke="#0D0D0D" stroke-width="1.5"/><circle cx="28" cy="114" r="5" fill="white" stroke="#0D0D0D" stroke-width="1.5"/></g>
+      <g class="ux-rd-hd"><line x1="116" y1="114" x2="128" y2="114" stroke="#0D0D0D" stroke-width="1.5"/><line x1="114" y1="116" x2="114" y2="128" stroke="#0D0D0D" stroke-width="1.5"/><circle cx="114" cy="114" r="5" fill="white" stroke="#0D0D0D" stroke-width="1.5"/></g>
+      <circle class="ux-rd-active" cx="28" cy="28" r="6" fill="#EE3A5A" stroke="#0D0D0D" stroke-width="1.5"/>
+    </svg></span>
+    <span class="ux-obj ux-obj--curve"><svg viewBox="0 0 190 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="6" y="6" width="178" height="138" fill="#0D0D0D" rx="3"/>
+      <rect x="2" y="2" width="178" height="138" fill="#F7F7F4" stroke="#0D0D0D" stroke-width="2" rx="3"/>
+      <path class="ux-cv-line" d="M 22 120 C 62 120 60 28 95 72 C 128 112 128 28 168 28" fill="none" stroke="#F9D100" stroke-width="3" stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="220"/>
+      <line class="ux-cv-arma" x1="22" y1="120" x2="62" y2="120" stroke="#0D0D0D" stroke-width="1.5" stroke-linecap="round"/>
+      <line class="ux-cv-armb" x1="168" y1="28" x2="128" y2="28" stroke="#0D0D0D" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="22" cy="120" r="5" fill="white" stroke="#0D0D0D" stroke-width="2"/>
+      <circle cx="168" cy="28" r="5" fill="white" stroke="#0D0D0D" stroke-width="2"/>
+      <circle cx="62" cy="120" r="4" fill="#F9D100" stroke="#0D0D0D" stroke-width="1.5"/>
+      <circle cx="128" cy="28" r="4" fill="#F9D100" stroke="#0D0D0D" stroke-width="1.5"/>
+      <circle class="ux-cv-dot" cx="22" cy="120" r="6" fill="#EE3A5A" stroke="#0D0D0D" stroke-width="1.5"/>
+    </svg></span>
+    <span class="ux-obj ux-obj--magnet"><svg viewBox="0 0 210 156" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="59" y="48" width="95" height="67" fill="#0D0D0D" rx="2"/>
+      <rect x="54" y="43" width="95" height="67" fill="#F7F7F4" stroke="#0D0D0D" stroke-width="2" rx="2"/>
+      <line class="ux-mb-gla" x1="20" y1="55" x2="54" y2="62" stroke="rgba(13,13,13,.55)" stroke-width="1.5" stroke-dasharray="3 3" stroke-linecap="round"/>
+      <line class="ux-mb-glb" x1="190" y1="70" x2="149" y2="76" stroke="rgba(13,13,13,.55)" stroke-width="1.5" stroke-dasharray="3 3" stroke-linecap="round"/>
+      <g class="ux-mb-moda"><rect x="2" y="32" width="64" height="19" fill="#F9D100" stroke="#0D0D0D" stroke-width="2" rx="1"/><rect x="9" y="37" width="22" height="6" fill="rgba(13,13,13,.18)" rx="1"/><rect x="36" y="37" width="18" height="6" fill="rgba(13,13,13,.1)" rx="1"/></g>
+      <g class="ux-mb-modb"><rect x="4" y="102" width="40" height="40" fill="#F7F7F4" stroke="#0D0D0D" stroke-width="2" rx="1"/><rect x="10" y="109" width="24" height="6" fill="rgba(13,13,13,.18)" rx="1"/><rect x="10" y="120" width="16" height="6" fill="rgba(13,13,13,.1)" rx="1"/></g>
+      <g class="ux-mb-modc"><rect x="154" y="26" width="54" height="36" fill="#D8E4F5" stroke="#0D0D0D" stroke-width="2" rx="1"/><rect x="160" y="32" width="16" height="6" fill="rgba(43,94,184,.28)" rx="1"/><rect x="160" y="42" width="30" height="5" fill="rgba(43,94,184,.18)" rx="1"/></g>
+      <circle cx="72" cy="60" r="4" fill="#F9D100" stroke="#0D0D0D" stroke-width="1.5"/>
+      <circle cx="101" cy="77" r="4" fill="#F9D100" stroke="#0D0D0D" stroke-width="1.5"/>
+      <circle cx="130" cy="94" r="4" fill="#F9D100" stroke="#0D0D0D" stroke-width="1.5"/>
+      <circle cx="101" cy="77" r="8" fill="none" stroke="#EE3A5A" stroke-width="2"/>
+      <circle cx="101" cy="77" r="3" fill="#EE3A5A"/>
+    </svg></span>
+    <span class="ux-obj ux-obj--switcher"><svg viewBox="0 0 230 152" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="6" y="6" width="218" height="140" fill="#0D0D0D" rx="3"/>
+      <rect x="2" y="2" width="218" height="140" fill="#F7F7F4" stroke="#0D0D0D" stroke-width="2" rx="3"/>
+      <g><rect x="14" y="13" width="190" height="34" fill="white" stroke="#0D0D0D" stroke-width="1.5" rx="17"/><circle cx="31" cy="30" r="9" fill="#F9D100" stroke="#0D0D0D" stroke-width="1.5"/><rect x="47" y="24" width="72" height="7" fill="rgba(13,13,13,.2)" rx="3"/><rect x="47" y="34" width="48" height="6" fill="rgba(13,13,13,.1)" rx="2"/></g>
+      <g><rect x="14" y="55" width="190" height="38" fill="white" stroke="#0D0D0D" stroke-width="1.5" rx="3"/><rect x="24" y="64" width="28" height="20" fill="#F9D100" stroke="#0D0D0D" stroke-width="1.5" rx="2"/><rect x="60" y="64" width="80" height="7" fill="rgba(13,13,13,.2)" rx="2"/><rect x="60" y="75" width="55" height="6" fill="rgba(13,13,13,.1)" rx="2"/></g>
+      <g><rect x="14" y="101" width="190" height="34" fill="white" stroke="#0D0D0D" stroke-width="1.5" rx="2"/><rect x="24" y="109" width="5" height="18" fill="#0D0D0D" rx="1"/><rect x="36" y="109" width="90" height="7" fill="rgba(13,13,13,.2)" rx="2"/><rect x="36" y="120" width="60" height="6" fill="rgba(13,13,13,.1)" rx="2"/><circle cx="195" cy="118" r="6" fill="rgba(69,182,73,.38)" stroke="#0D0D0D" stroke-width="1.5"/></g>
+      <rect class="ux-sw-sel" x="10" y="9" width="198" height="42" fill="none" stroke="#F9D100" stroke-width="3" rx="19"/>
+      <circle class="ux-sw-dot" cx="212" cy="30" r="5" fill="#EE3A5A" stroke="#0D0D0D" stroke-width="1.5"/>
+    </svg></span>
+    <span class="ux-obj ux-obj--ripple"><svg viewBox="0 0 180 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="6" y="6" width="126" height="112" fill="#0D0D0D" rx="3"/>
+      <rect x="2" y="2" width="126" height="112" fill="#F7F7F4" stroke="#0D0D0D" stroke-width="2" rx="3"/>
+      <circle class="ux-rp-ra" cx="65" cy="58" r="10" fill="none" stroke="#F9D100" stroke-width="2.5"/>
+      <circle class="ux-rp-rb" cx="65" cy="58" r="18" fill="none" stroke="#F9D100" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <circle class="ux-rp-press" cx="65" cy="58" r="7" fill="#EE3A5A" stroke="#0D0D0D" stroke-width="1.5"/>
+      <g class="ux-rp-bla"><rect x="138" y="8" width="36" height="26" fill="#F9D100" stroke="#0D0D0D" stroke-width="2" rx="2"/><rect x="144" y="14" width="16" height="5" fill="rgba(13,13,13,.2)" rx="1"/></g>
+      <g class="ux-rp-blb"><rect x="138" y="50" width="36" height="26" fill="#F7F7F4" stroke="#0D0D0D" stroke-width="2" rx="2"/><rect x="144" y="56" width="20" height="5" fill="rgba(13,13,13,.15)" rx="1"/></g>
+      <g class="ux-rp-blc"><rect x="138" y="92" width="36" height="26" fill="#D8E4F5" stroke="#0D0D0D" stroke-width="2" rx="2"/><rect x="144" y="98" width="14" height="5" fill="rgba(43,94,184,.25)" rx="1"/></g>
+    </svg></span>
   `;
   stage.appendChild(layer);
   const gear=layer.querySelector('.ux-dc-path-gear');
   const gearBody=layer.querySelector('.ux-dc-gear-body');
+  const rdWrap=layer.querySelector('.ux-obj--radius');
+  const rdInner=rdWrap.querySelector('.ux-rd-inner');
+  const rdActive=rdWrap.querySelector('.ux-rd-active');
+  const cvWrap=layer.querySelector('.ux-obj--curve');
+  const cvLine=cvWrap.querySelector('.ux-cv-line');
+  const cvDot=cvWrap.querySelector('.ux-cv-dot');
+  const cvArma=cvWrap.querySelector('.ux-cv-arma');
+  const cvArmb=cvWrap.querySelector('.ux-cv-armb');
+  const mbWrap=layer.querySelector('.ux-obj--magnet');
+  const mbModa=mbWrap.querySelector('.ux-mb-moda');
+  const mbModb=mbWrap.querySelector('.ux-mb-modb');
+  const mbModc=mbWrap.querySelector('.ux-mb-modc');
+  const mbGla=mbWrap.querySelector('.ux-mb-gla');
+  const mbGlb=mbWrap.querySelector('.ux-mb-glb');
+  const swWrap=layer.querySelector('.ux-obj--switcher');
+  const swSel=swWrap.querySelector('.ux-sw-sel');
+  const swDot=swWrap.querySelector('.ux-sw-dot');
+  const rpWrap=layer.querySelector('.ux-obj--ripple');
+  const rpRa=rpWrap.querySelector('.ux-rp-ra');
+  const rpRb=rpWrap.querySelector('.ux-rp-rb');
+  const rpPress=rpWrap.querySelector('.ux-rp-press');
+  const rpBla=rpWrap.querySelector('.ux-rp-bla');
+  const rpBlb=rpWrap.querySelector('.ux-rp-blb');
+  const rpBlc=rpWrap.querySelector('.ux-rp-blc');
+  gsap.set([rdWrap,cvWrap,mbWrap,swWrap,rpWrap],{opacity:0});
 
   const clamp01=gsap.utils.clamp(0,1);
   const range=(p,a,b)=>clamp01((p-a)/(b-a));
@@ -635,6 +715,50 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
     const gp=range(progress,.10,.94),pt=pointOnPath(progress);
     if(gear) gsap.set(gear,{left:pt.x+'%',top:pt.y+'%',rotation:gp*980,scale:1+pulseAt(progress,.46,.08)*.18+pulseAt(progress,.62,.08)*.14+pulseAt(progress,.78,.08)*.16});
     if(gearBody) gsap.set(gearBody,{rotation:gp*120});
+
+    /* radius tile — 0.18 → 0.58 */
+    const rd=range(progress,.18,.58);
+    gsap.set(rdWrap,{opacity:rd,rotation:-7+rd*7,x:(1-rd)*-22});
+    gsap.set(rdInner,{attr:{rx:rd*34,ry:rd*34}});
+    gsap.set(rdActive,{attr:{cx:28+rd*43,cy:28+rd*43}});
+
+    /* curve dial — 0.35 → 0.82 */
+    const cv=range(progress,.35,.82);
+    gsap.set(cvWrap,{opacity:cv,scale:.84+cv*.16});
+    gsap.set(cvLine,{strokeDashoffset:220*(1-cv)});
+    gsap.set(cvArma,{rotation:-cv*14,svgOrigin:'22 120'});
+    gsap.set(cvArmb,{rotation:cv*14,svgOrigin:'168 28'});
+    const dtx=22+(168-22)*cv,dty=cv<.5?120+(72-120)*(cv*2):72+(28-72)*((cv-.5)*2);
+    gsap.set(cvDot,{attr:{cx:dtx,cy:dty}});
+
+    /* magnet board — 0.12 → 0.48 */
+    const mg=range(progress,.12,.48);
+    gsap.set(mbWrap,{opacity:mg,x:(1-mg)*-32,y:(1-mg)*18});
+    gsap.set(mbModa,{x:(1-mg)*-44,y:(1-mg)*-20,rotation:(1-mg)*-8});
+    gsap.set(mbModb,{x:(1-mg)*-26,y:(1-mg)*34,rotation:(1-mg)*-5});
+    gsap.set(mbModc,{x:(1-mg)*42,y:(1-mg)*-28,rotation:(1-mg)*8});
+    gsap.set(mbGla,{attr:{x1:16+(1-mg)*-20,y1:55+(1-mg)*8}});
+    gsap.set(mbGlb,{attr:{x2:149+(1-mg)*22,y2:76+(1-mg)*-10}});
+
+    /* component switcher — 0.28 → 0.70 */
+    const sw=range(progress,.28,.70);
+    gsap.set(swWrap,{opacity:sw,x:(1-sw)*28,y:(1-sw)*-16});
+    let sY,sH,sRx;
+    if(sw<.45){sY=9;sH=42;sRx=19;}
+    else if(sw<.78){const t=(sw-.45)/.33;sY=9+t*42;sH=42-t*4;sRx=19-t*16;}
+    else{sY=51;sH=38;sRx=3;}
+    gsap.set(swSel,{attr:{y:sY,height:sH,rx:sRx}});
+    gsap.set(swDot,{attr:{cy:sY+sH*.5}});
+
+    /* ripple pad — 0.55 → 0.95 */
+    const rp=range(progress,.55,.95);
+    gsap.set(rpWrap,{opacity:rp,y:(1-rp)*24});
+    gsap.set(rpRa,{attr:{r:10+rp*20}});
+    gsap.set(rpRb,{attr:{r:18+rp*30}});
+    gsap.set(rpPress,{scale:1+pulseAt(progress,.72,.09)*.5,svgOrigin:'65 58'});
+    gsap.set(rpBla,{x:rp*12,y:-rp*10});
+    gsap.set(rpBlb,{x:rp*12,y:rp*6});
+    gsap.set(rpBlc,{x:rp*12,y:rp*16});
   }
   updateDesignerCoderObjects(0);
 

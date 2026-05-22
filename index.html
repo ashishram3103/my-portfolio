@@ -587,6 +587,13 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 .ux-dc-gear-body{position:absolute;inset:0;background:var(--black);clip-path:polygon(50% 0,58% 12%,72% 7%,76% 22%,93% 28%,88% 42%,100% 50%,88% 58%,93% 72%,76% 78%,72% 93%,58% 88%,50% 100%,42% 88%,28% 93%,24% 78%,7% 72%,12% 58%,0 50%,12% 42%,7% 28%,24% 22%,28% 7%,42% 12%);}
 .ux-dc-gear-ring{position:absolute;inset:14px;border:7px solid var(--yellow);border-radius:50%;background:var(--surface);}
 .ux-dc-gear-hub{position:absolute;left:25px;top:25px;width:14px;height:14px;border-radius:50%;background:var(--red);box-shadow:0 0 0 5px rgba(238,58,90,.18);}
+.ux-obj{position:absolute;pointer-events:none;will-change:transform,opacity;}
+.ux-obj svg{display:block;overflow:visible;}
+.ux-obj--radius{left:2%;top:2%;width:152px;}
+.ux-obj--curve{right:2%;top:16%;width:190px;}
+.ux-obj--magnet{left:3%;top:36%;width:210px;}
+.ux-obj--switcher{right:3%;top:56%;width:230px;}
+.ux-obj--ripple{left:3%;top:77%;width:180px;}
 @media(max-width:900px){
   #vid-section.vid-flow-section{padding:74px 20px 86px;min-height:auto;overflow:hidden;contain:layout paint;}
   #vid-section.vid-flow-section::before,.vid-orb{display:none;}
