@@ -1,5 +1,17 @@
 'use strict';
 
+if(!window.gsap || !window.ScrollTrigger){
+  if('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  document.body.classList.add('no-gsap');
+  document.body.classList.remove('is-loading');
+  const loader=document.getElementById('site-loader');
+  if(loader) loader.remove();
+  throw new Error('GSAP or ScrollTrigger failed to load.');
+}
+
 /* ============================================================
    v12 — CLEAN JS. All 10 A fixes applied. No patches on patches.
    ============================================================ */
@@ -10,6 +22,44 @@ gsap.defaults({ease:'expo.out',duration:0.9});
 gsap.ticker.lagSmoothing(500, 33);
 
 const IS_MOBILE = window.innerWidth < 900;
+const ENABLE_POINTER_TRAILS = false;
+let RESET_SCROLL_ON_LOAD = !window.location.hash;
+
+try{
+  const nav = performance.getEntriesByType('navigation')[0];
+  RESET_SCROLL_ON_LOAD = RESET_SCROLL_ON_LOAD || (nav && nav.type === 'reload');
+}catch(e){}
+
+if('scrollRestoration' in window.history){
+  window.history.scrollRestoration = 'manual';
+}
+
+if(window.ScrollTrigger && ScrollTrigger.clearScrollMemory){
+  ScrollTrigger.clearScrollMemory('manual');
+}
+
+function hardResetScroll(){
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
+if(RESET_SCROLL_ON_LOAD){
+  hardResetScroll();
+}
+
+function refreshScrollSystems(delay=0){
+  const run=()=>{
+    if(window.ScrollTrigger) ScrollTrigger.refresh(true);
+  };
+  if(delay) setTimeout(run, delay);
+  else requestAnimationFrame(run);
+}
+
+window.addEventListener('pageshow', e=>{
+  if(e.persisted && RESET_SCROLL_ON_LOAD) hardResetScroll();
+  refreshScrollSystems(0);
+});
 
 /* ============================================================
    ANCHOR SMOOTH SCROLL
@@ -75,7 +125,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
    INK TRAIL — single source, coloured per section
    ============================================================ */
 (function(){
-  if(IS_MOBILE) return;
+  if(IS_MOBILE || !ENABLE_POINTER_TRAILS) return;
   let trailActive=false, trailTimer=null;
   document.addEventListener('mousemove',e=>{
     if(trailActive) return;
@@ -104,7 +154,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
    TRAIL COLOUR PER SECTION
    ============================================================ */
 (function(){
-  if(IS_MOBILE) return;
+  if(IS_MOBILE || !ENABLE_POINTER_TRAILS) return;
   const sections=[
     {id:'hero-section',color:'#F9D100'},
     {id:'work-section',color:'#EE3A5A'},
@@ -315,10 +365,11 @@ function playHeroIntro(){
 function finishSiteLoader(){
   const loader=document.getElementById('site-loader');
   const done=()=>{
+    if(RESET_SCROLL_ON_LOAD) hardResetScroll();
     document.body.classList.remove('is-loading');
     playHeroIntro();
-    /* Single refresh — only inside loader done() */
-    setTimeout(()=>{if(window.ScrollTrigger)ScrollTrigger.refresh();},450);
+    /* Single safe refresh after the loader changes the visual viewport */
+    refreshScrollSystems(450);
   };
   if(!loader){done();return;}
   const tl=gsap.timeline({defaults:{ease:'power3.out'},onComplete:()=>{loader.remove();done();}});
@@ -336,7 +387,7 @@ setTimeout(()=>{
     const loader=document.getElementById('site-loader');
     if(loader) loader.remove();
     playHeroIntro();
-    setTimeout(()=>{if(window.ScrollTrigger)ScrollTrigger.refresh();},400);
+    refreshScrollSystems(400);
   }
 },3000);
 
@@ -451,7 +502,7 @@ setTimeout(()=>{
    (hero shapes removed from HTML, but trail spawn still works in hero)
    ============================================================ */
 (function(){
-  if(IS_MOBILE) return;
+  if(IS_MOBILE || !ENABLE_POINTER_TRAILS) return;
   const hero=document.getElementById('hero-section');if(!hero) return;
   const trails=[];
   const TRAIL_MAX=8;
@@ -694,6 +745,14 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
   const rpBlb=rpWrap.querySelector('.ux-rp-blb');
   const rpBlc=rpWrap.querySelector('.ux-rp-blc');
   gsap.set([rdWrap,cvWrap,mbWrap,swWrap,rpWrap],{opacity:0});
+  let uxW=1,uxH=1,lastUxProgress=-1;
+  function measureUx(){
+    uxW=layer.clientWidth||stage.clientWidth||1;
+    uxH=layer.clientHeight||stage.clientHeight||1;
+  }
+  measureUx();
+  ScrollTrigger.addEventListener('refreshInit',measureUx);
+  window.addEventListener('resize',measureUx,{passive:true});
 
   const clamp01=gsap.utils.clamp(0,1);
   const range=(p,a,b)=>clamp01((p-a)/(b-a));
@@ -711,9 +770,17 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
     }
     return gearPts[gearPts.length-1];
   }
-  function updateDesignerCoderObjects(progress){
+  function updateDesignerCoderObjects(progress,force=false){
+    if(!force && Math.abs(progress-lastUxProgress)<0.002) return;
+    lastUxProgress=progress;
     const gp=range(progress,.10,.94),pt=pointOnPath(progress);
-    if(gear) gsap.set(gear,{left:pt.x+'%',top:pt.y+'%',rotation:gp*980,scale:1+pulseAt(progress,.46,.08)*.18+pulseAt(progress,.62,.08)*.14+pulseAt(progress,.78,.08)*.16});
+    if(gear) gsap.set(gear,{
+      x:(pt.x/100)*uxW,
+      y:(pt.y/100)*uxH,
+      rotation:gp*980,
+      scale:1+pulseAt(progress,.46,.08)*.18+pulseAt(progress,.62,.08)*.14+pulseAt(progress,.78,.08)*.16,
+      force3D:true
+    });
     if(gearBody) gsap.set(gearBody,{rotation:gp*120});
 
     /* radius tile — 0.18 → 0.58 */
@@ -760,12 +827,12 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
     gsap.set(rpBlb,{x:rp*12,y:rp*6});
     gsap.set(rpBlc,{x:rp*12,y:rp*16});
   }
-  updateDesignerCoderObjects(0);
+  updateDesignerCoderObjects(0,true);
 
   ScrollTrigger.create({
     trigger:stage,start:'top 82%',end:'bottom 18%',
     onUpdate:self=>updateDesignerCoderObjects(self.progress),
-    onLeaveBack:()=>updateDesignerCoderObjects(0)
+    onLeaveBack:()=>updateDesignerCoderObjects(0,true)
   });
 })();
 
@@ -948,26 +1015,31 @@ function addRipple(btn,e){
   let isPaused=false;
   let sectionActive=false;
   let resumeTimer=null;
+  let raf=null;
 
   function halfWidth(){return track.scrollWidth/2;}
+  function stopTick(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+  function startTick(){if(sectionActive && !isPaused && !raf) raf=requestAnimationFrame(tick);}
+  function resumeAfter(ms){
+    clearTimeout(resumeTimer);
+    resumeTimer=setTimeout(()=>{isPaused=false;startTick();},ms);
+  }
 
   function tick(){
-    if(sectionActive && !isPaused){
-      scrollPos+=speed;
-      const hw=halfWidth();
-      if(scrollPos>=hw){scrollPos-=hw;wrap.scrollLeft=scrollPos;}
-      else{wrap.scrollLeft=scrollPos;}
-    }
-    requestAnimationFrame(tick);
+    if(!sectionActive || isPaused){raf=null;return;}
+    scrollPos+=speed;
+    const hw=halfWidth();
+    if(scrollPos>=hw){scrollPos-=hw;wrap.scrollLeft=scrollPos;}
+    else{wrap.scrollLeft=scrollPos;}
+    raf=requestAnimationFrame(tick);
   }
-  requestAnimationFrame(tick);
 
   ScrollTrigger.create({
     trigger:wrap,start:'top bottom',end:'bottom top',
-    onEnter:()=>{sectionActive=true;},
-    onEnterBack:()=>{sectionActive=true;},
-    onLeave:()=>{sectionActive=false;},
-    onLeaveBack:()=>{sectionActive=false;}
+    onEnter:()=>{sectionActive=true;startTick();},
+    onEnterBack:()=>{sectionActive=true;startTick();},
+    onLeave:()=>{sectionActive=false;stopTick();},
+    onLeaveBack:()=>{sectionActive=false;stopTick();}
   });
 
   if(!IS_MOBILE){
@@ -989,10 +1061,10 @@ function addRipple(btn,e){
       if(!isDragging) return;
       isDragging=false;
       wrap.style.cursor='grab';
-      resumeTimer=setTimeout(()=>{isPaused=false;},1200);
+      resumeAfter(1200);
     });
     wrap.addEventListener('mouseenter',()=>{if(!isDragging){isPaused=true;clearTimeout(resumeTimer);}});
-    wrap.addEventListener('mouseleave',()=>{if(!isDragging){resumeTimer=setTimeout(()=>{isPaused=false;},400);}});
+    wrap.addEventListener('mouseleave',()=>{if(!isDragging){resumeAfter(400);}});
   }
 
   if(IS_MOBILE){
@@ -1010,7 +1082,7 @@ function addRipple(btn,e){
     },{passive:true});
     wrap.addEventListener('touchend',()=>{
       isDragging=false;
-      resumeTimer=setTimeout(()=>{isPaused=false;},1200);
+      resumeAfter(1200);
     },{passive:true});
   }
 })();
@@ -1437,15 +1509,12 @@ function resetPanel(){
   const N = cards.length;
   if(!N) return;
 
-  /* Start all hidden except first */
-  cards.forEach((c,i)=>{
-    c.style.opacity = i===0 ? '1' : '0';
-    c.style.transform = i===0 ? 'translateY(0px) scale(1)' : 'translateY(40px) scale(0.96)';
-    if(i===0) c.classList.add('is-active');
-  });
+  /* GSAP will set initial state via applyDepth(0,0) */
+  cards.forEach((c,i)=>{ if(i===0) c.classList.add('is-active'); });
 
-  const prog = document.getElementById('cap-prog');
-  const bar  = document.getElementById('cap-bar');
+  const stage = section.querySelector('.cap-cards-stage');
+  const prog  = document.getElementById('cap-prog');
+  const bar   = document.getElementById('cap-bar');
 
   if(isMobile){
     /* Mobile: just show all cards stacked, no pinning */
@@ -1458,9 +1527,12 @@ function resetPanel(){
     return;
   }
 
-  /* Desktop: set section height to give scroll room for all cards */
-  const VH = window.innerHeight;
-  section.style.height = (N * VH * 1.2) + 'px';
+  /* Desktop: ~0.8VH per card — responsive like the reference */
+  function setSectionHeight(){
+    section.style.height = Math.round(N * window.innerHeight * 0.8) + 'px';
+  }
+  setSectionHeight();
+  ScrollTrigger.addEventListener('refreshInit', setSectionHeight);
 
   /* GSAP pin the inner wrap */
   ScrollTrigger.create({
@@ -1470,46 +1542,253 @@ function resetPanel(){
     pin: pinWrap,
     pinSpacing: false,
     anticipatePin: 1,
+    invalidateOnRefresh: true,
   });
 
-  /* Crossfade cards based on scroll progress through section */
-  let currentIdx = 0;
+  /* ── Reference-faithful camera world ──
+     Two-element architecture (mirrors hyper-scroll-brutal-preview.html):
+       stage (.cap-cards-stage) → perspective:Xpx only, NEVER transformed
+       world (.cap-world)       → transform-style:preserve-3d + rotateX/Y
+     Items live in world and use translate3d(x,y,z).
+     This is the only correct way: applying perspective and rotateX to the SAME
+     element causes perspective to evaluate in the rotated local frame → world flip. */
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
-  ScrollTrigger.create({
-    trigger: section,
-    start: 'top top',
-    end: 'bottom bottom',
-    onUpdate: self=>{
-      const rawIdx = self.progress * N;
-      const idx = Math.min(Math.floor(rawIdx), N-1);
+  const Z_GAP       = 1200;
+  const FOCUS_X     = Math.round(window.innerWidth * 0.10);
+  const TOTAL_DEPTH = (N - 1) * Z_GAP;
+  const items       = [];
 
-      if(idx !== currentIdx){
-        /* Fade out current */
-        gsap.to(cards[currentIdx], {
-          opacity: 0,
-          y: -40,
-          scale: 1.04,
-          duration: 0.45,
-          ease: 'power2.in',
-          onComplete:()=>{ cards[currentIdx].classList.remove('is-active'); }
-        });
-        /* Fade in new */
-        gsap.fromTo(cards[idx],
-          {opacity:0, y:40, scale:0.96},
-          {opacity:1, y:0, scale:1, duration:0.55, ease:'power3.out',
-           onStart:()=>{ cards[idx].classList.add('is-active'); }}
-        );
-        currentIdx = idx;
-      }
+  // Create world container — perspective stays on stage, transforms go here
+  const world = document.createElement('div');
+  world.className = 'cap-world';
+  stage.appendChild(world);
 
-      /* Progress readouts */
-      const pct = Math.round(self.progress * 100);
-      if(prog) prog.textContent = String(pct).padStart(3,'0');
-      if(bar)  bar.style.width = pct + '%';
+  // Wrap each card in a world-item (mirrors reference .item wrapping .card)
+  cards.forEach((card, i) => {
+    const item = document.createElement('div');
+    item.className = 'cap-world-item';
+    world.appendChild(item);
+    item.appendChild(card);
+    items.push({ el:item, type:'card', card, x:FOCUS_X, y:0, baseZ:-i * Z_GAP });
+  });
+
+  // Big outline words — sit at mid-point between each pair of cards.
+  // They fly toward the camera during transitions, giving the "text in face" feeling.
+  const BIG_TEXTS = [
+    { text:'BUILD',  rot:-2 },
+    { text:'MOTION', rot: 2 },
+    { text:'DEPTH',  rot:-1 }
+  ];
+  BIG_TEXTS.forEach((b, i) => {
+    if(i >= N - 1) return;
+    const el = document.createElement('div');
+    el.className = 'cap-world-text';
+    el.textContent = b.text;
+    world.appendChild(el);
+    items.push({
+      el, type:'text',
+      x:(i % 2 ? -60 : 60), y:0,
+      rot:b.rot,
+      baseZ:-(i + 0.5) * Z_GAP
+    });
+  });
+
+  // Stars — kept intentionally light; too many 3D layers cost frames during scroll.
+  const STAR_COUNT = window.innerWidth > 1280 ? 36 : 20;
+  for(let i = 0; i < STAR_COUNT; i++){
+    const s = document.createElement('span');
+    s.className = 'cap-star';
+    world.appendChild(s);
+    items.push({
+      el:s, type:'star',
+      x:(Math.random() - 0.5) * 2600,
+      y:(Math.random() - 0.5) * 1600,
+      baseZ:-Math.random() * (TOTAL_DEPTH + Z_GAP * 1.5)
+    });
+  }
+
+  // Section-local pointer state
+  const mouse = { x:0, y:0, tx:0, ty:0 };
+  let smoothVel      = 0;
+  let targetProgress = 0;
+  let smoothProgress = 0;
+  let lastVel        = 0;
+  let animRaf        = null;
+  let sectionVisible = false; // gates all demo RAF work when section is off-screen
+  let activeCard     = cards[0] || null;
+  let lastPct        = -1;
+  let lastFov        = 1000;
+  const startDemoLoops = [];
+  const stopDemoLoops = [];
+
+  function startCapabilityDemos(){startDemoLoops.forEach(fn=>fn());}
+  function stopCapabilityDemos(){stopDemoLoops.forEach(fn=>fn());}
+  function startWorldLoop(){if(sectionVisible && !animRaf) animRaf=requestAnimationFrame(animLoop);}
+
+  pinWrap.addEventListener('mousemove', e=>{
+    const r = pinWrap.getBoundingClientRect();
+    mouse.tx = (e.clientX - r.left) / r.width  * 2 - 1;
+    mouse.ty = (e.clientY - r.top)  / r.height * 2 - 1;
+    startWorldLoop();
+  }, { passive:true });
+  pinWrap.addEventListener('mouseleave', ()=>{ mouse.tx = 0; mouse.ty = 0; startWorldLoop(); });
+
+  // Unified RAF: lerps scroll progress (Lenis-style butter) + mouse tilt
+  function animLoop(){
+    // Mouse tilt
+    mouse.x += (mouse.tx - mouse.x) * 0.08;
+    mouse.y += (mouse.ty - mouse.y) * 0.08;
+    const rx = clamp(mouse.y * -5 - smoothVel * 5, -8, 8);
+    const ry = clamp(mouse.x *  5,                 -8, 8);
+    world.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+    // Lerp scroll progress — matches Lenis lerp:0.1 feel
+    smoothProgress += (targetProgress - smoothProgress) * 0.1;
+    render(smoothProgress, lastVel);
+    if(Math.abs(targetProgress-smoothProgress) < 0.0005 &&
+       Math.abs(mouse.tx-mouse.x) < 0.001 &&
+       Math.abs(mouse.ty-mouse.y) < 0.001 &&
+       Math.abs(smoothVel) < 0.001){
+      animRaf = null;
+      return;
     }
+    animRaf = requestAnimationFrame(animLoop);
+  }
+
+  // Linear camera — identical to reference's scroll→world mapping.
+  // Smoothness comes purely from the 0.08 lerp on smoothProgress (same as Lenis lerp).
+  function cameraPos(progress){
+    return clamp(progress, 0, 1) * TOTAL_DEPTH;
+  }
+
+  function render(progress, velocity){
+    // Normalize ScrollTrigger velocity (px/sec) to reference-style [-1, 1]
+    const vNorm = clamp((velocity || 0) / 2500, -1, 1);
+    smoothVel  += (vNorm - smoothVel) * 0.1;
+
+    const cameraZ = cameraPos(progress);
+
+    // Dynamic perspective on STAGE — mirrors reference viewport.style.perspective
+    // fov range [600, 1000]; never low enough for cards to approach the plane
+    const fov    = 1000 - Math.min(Math.abs(smoothVel) * 400, 400);
+    const MAX_Z  = fov - 300; // safety cap so translateZ can't cross the plane
+    if(Math.abs(fov - lastFov) > 1){
+      lastFov = fov;
+      stage.style.perspective = fov + 'px';
+    }
+
+    let bestAbs = Infinity, bestItem = null;
+
+    for(let k = 0; k < items.length; k++){
+      const it   = items[k];
+      const relZ = it.baseZ + cameraZ;
+      const safeZ = Math.min(relZ, MAX_Z);
+
+      // Alpha per type
+      let alpha;
+      if(it.type === 'card'){
+        // Tight exit: card never lingers past camera plane
+        if(relZ >  250 || relZ < -1800) alpha = 0;
+        else if(relZ < -200)            alpha = (relZ + 1800) / 1600;
+        else if(relZ >   50)            alpha = 1 - (relZ - 50) / 200;
+        else                            alpha = 1;
+      } else if(it.type === 'text'){
+        // Wide range — text appears as tiny point far back, grows, flies through
+        if(relZ >  350 || relZ < -3000) alpha = 0;
+        else if(relZ < -400)            alpha = (relZ + 3000) / 2600 * 0.88;
+        else if(relZ >  100)            alpha = (1 - (relZ - 100) / 250) * 0.88;
+        else                            alpha = 0.88;
+      } else { // star
+        if(relZ >  500 || relZ < -2800) alpha = 0;
+        else if(relZ < -300)            alpha = (relZ + 2800) / 2500 * 0.6;
+        else if(relZ >  150)            alpha = (1 - (relZ - 150) / 350) * 0.6;
+        else                            alpha = 0.6;
+      }
+      if(alpha < 0) alpha = 0;
+
+      if(alpha <= 0){
+        if(it.el.style.opacity !== '0') it.el.style.opacity = '0';
+        continue;
+      }
+      it.el.style.opacity = alpha;
+
+      if(it.type === 'star'){
+        const stretch = Math.max(1, Math.min(1 + Math.abs(smoothVel) * 5, 8));
+        it.el.style.transform = `translate3d(${it.x}px,${it.y}px,${safeZ}px) scale3d(1,1,${stretch})`;
+      } else if(it.type === 'text'){
+        const fillAmt = clamp(1 - Math.abs(relZ + 80) / 440, 0, 1);
+        it.el.style.color = `rgba(249,209,0,${(fillAmt * 0.95).toFixed(3)})`;
+        it.el.style.setProperty('-webkit-text-stroke-color', `rgba(249,209,0,${(0.28 + fillAmt * 0.42).toFixed(3)})`);
+        it.el.style.setProperty('--glow', (fillAmt * 0.28).toFixed(3));
+        // Include -50%/-50% centering since text has no wrapper element
+        it.el.style.transform = `translate(-50%,-50%) translate3d(${it.x}px,${it.y}px,${safeZ}px) rotateZ(${it.rot}deg)`;
+      } else {
+        it.el.style.transform = `translate3d(${it.x}px,${it.y}px,${safeZ}px)`;
+        const a = Math.abs(relZ);
+        if(a < bestAbs){ bestAbs = a; bestItem = it; }
+      }
+    }
+
+    // Active card: closest to camera — toggle is-active on the card, not the item
+    if(bestItem && activeCard !== bestItem.card){
+      if(activeCard) activeCard.classList.remove('is-active');
+      bestItem.card.classList.add('is-active');
+      activeCard = bestItem.card;
+    }
+
+    const pct = Math.round(progress * 100);
+    if(pct !== lastPct){
+      lastPct = pct;
+      if(prog) prog.textContent = String(pct).padStart(3, '0');
+      if(bar)  bar.style.width  = pct + '%';
+    }
+  }
+
+  function resetWorld(){
+    sectionVisible = false;
+    stopCapabilityDemos();
+    cancelAnimationFrame(animRaf); animRaf = null;
+    mouse.x = mouse.y = mouse.tx = mouse.ty = 0;
+    smoothVel = 0;
+    smoothProgress = targetProgress;
+    world.style.transform   = 'rotateX(0deg) rotateY(0deg)';
+    stage.style.perspective = '1000px';
+  }
+
+  const camST = ScrollTrigger.create({
+    trigger: section,
+    start:   'top top',
+    end:     'bottom bottom',
+    invalidateOnRefresh: true,
+    onUpdate:    self => { targetProgress = self.progress; lastVel = self.getVelocity(); startWorldLoop(); },
+    onEnter:     ()=>{ sectionVisible = true; startWorldLoop(); startCapabilityDemos(); },
+    onEnterBack: ()=>{ sectionVisible = true; startWorldLoop(); startCapabilityDemos(); },
+    onLeave:     resetWorld,
+    onLeaveBack: resetWorld,
+    onRefresh:   self => {
+      targetProgress = self.progress || 0;
+      smoothProgress = targetProgress;
+      lastVel = 0;
+      render(targetProgress, 0);
+      if(targetProgress > 0 && targetProgress < 1){
+        sectionVisible = true;
+        startWorldLoop();
+        startCapabilityDemos();
+      }else{
+        resetWorld();
+      }
+    },
   });
+
+  // Init at actual scroll position — prevents wrong-card flash on mid-section refresh
+  const initP = camST.progress || 0;
+  targetProgress = initP;
+  smoothProgress = initP;
+  if(initP > 0 && initP < 1){ sectionVisible = true; startWorldLoop(); }
+  render(initP, 0);
 
   initDemos();
+  if(sectionVisible) startCapabilityDemos();
 
   /* ── DEMOS ── */
   function initDemos(){
@@ -1520,56 +1799,133 @@ function resetPanel(){
       if(!el) return;
       const WORDS = ['MOTION','SCROLL','DEPTH','BUILD','SYSTEM'];
       const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&*!';
-      let wi = 0;
+      let wi = 0, loopId=null, scrambleId=null;
       function scramble(target){
         let f=0; const max=16;
-        const id=setInterval(()=>{
-          if(f>=max){el.textContent=target;clearInterval(id);return;}
+        clearInterval(scrambleId);
+        scrambleId=setInterval(()=>{
+          if(f>=max){el.textContent=target;clearInterval(scrambleId);scrambleId=null;return;}
           el.textContent=target.split('').map((ch,i)=>
             i<f*target.length/max?ch:CHARS[Math.floor(Math.random()*CHARS.length)]
           ).join('');
           f++;
         },36);
       }
-      scramble(WORDS[0]);
-      setInterval(()=>{ wi=(wi+1)%WORDS.length; scramble(WORDS[wi]); },2000);
+      function start(){
+        if(loopId) return;
+        scramble(WORDS[wi]);
+        loopId=setInterval(()=>{ wi=(wi+1)%WORDS.length; scramble(WORDS[wi]); },2400);
+      }
+      function stop(){
+        clearInterval(loopId);loopId=null;
+        clearInterval(scrambleId);scrambleId=null;
+        el.textContent=WORDS[wi];
+      }
+      el.textContent=WORDS[0];
+      startDemoLoops.push(start);
+      stopDemoLoops.push(stop);
     })();
 
     /* Demo 2 — Magnetic dots */
     (function(){
       const field = document.getElementById('cap-magnetic');
       if(!field) return;
-      const COLS=6, ROWS=4;
+      const COLS=6, ROWS=4, PULL=42;
       const dots=[];
+      let mx=-9999, my=-9999, fieldW=300, fieldH=150, maxDist=340, hasPointer=false, isRepel=false, raf=null, resizeObserver=null;
+      let start=()=>{}, stop=()=>{};
+
+      function measureField(){
+        fieldW=field.clientWidth||field.offsetWidth||300;
+        fieldH=field.clientHeight||field.offsetHeight||150;
+        maxDist=Math.max(1, Math.hypot(fieldW, fieldH));
+        for(let i=0;i<dots.length;i++){
+          const d=dots[i];
+          d.bx=(d.col+0.5)*(fieldW/COLS);
+          d.by=(d.row+0.5)*(fieldH/ROWS);
+          d.x=d.bx; d.y=d.by; d.tx=d.bx; d.ty=d.by;
+          d.el.style.left=d.bx+'px';
+          d.el.style.top=d.by+'px';
+          d.el.style.transform='translate(-50%,-50%)';
+        }
+      }
+
+      function setPointer(e){
+        const r = field.getBoundingClientRect();
+        if(!r.width || !r.height){
+          const wasPointer=hasPointer;
+          hasPointer=false;mx=-9999;my=-9999;
+          if(wasPointer) start();
+          return false;
+        }
+        const px=e.clientX-r.left;
+        const py=e.clientY-r.top;
+        if(px < 0 || px > r.width || py < 0 || py > r.height){
+          const wasPointer=hasPointer;
+          hasPointer=false;mx=-9999;my=-9999;
+          if(wasPointer) start();
+          return false;
+        }
+        hasPointer=true;
+        mx = px * (fieldW / r.width);
+        my = py * (fieldH / r.height);
+        start();
+        return true;
+      }
+
+      document.addEventListener('pointermove', setPointer, {passive:true});
+      document.addEventListener('pointerdown', e=>{ if(setPointer(e)) isRepel=!isRepel; }, {passive:true});
+
       setTimeout(()=>{
-        const r=field.getBoundingClientRect();
-        const w=r.width||300, h=r.height||150;
+        measureField();
         for(let row=0;row<ROWS;row++){
           for(let col=0;col<COLS;col++){
             const d=document.createElement('div');
             d.className='cap-mag-dot';
-            const bx=(col+0.5)*(w/COLS), by=(row+0.5)*(h/ROWS);
+            const bx=(col+0.5)*(fieldW/COLS), by=(row+0.5)*(fieldH/ROWS);
             d.style.left=bx+'px'; d.style.top=by+'px';
             field.appendChild(d);
-            dots.push({el:d,bx,by,x:bx,y:by,tx:bx,ty:by});
+            dots.push({el:d, row, col, bx, by, x:bx, y:by, tx:bx, ty:by});
           }
         }
-        let mx=-9999,my=-9999;
-        field.addEventListener('mousemove',e=>{
-          const r2=field.getBoundingClientRect();
-          mx=e.clientX-r2.left; my=e.clientY-r2.top;
-        });
-        field.addEventListener('mouseleave',()=>{mx=-9999;my=-9999;});
-        (function tick(){
-          dots.forEach(d=>{
-            const dx=mx-d.bx,dy=my-d.by,dist=Math.hypot(dx,dy);
-            if(dist<90&&dist>0){const f=(90-dist)/90;d.tx=d.bx+(dx/dist)*f*26;d.ty=d.by+(dy/dist)*f*26;}
-            else{d.tx=d.bx;d.ty=d.by;}
-            d.x+=(d.tx-d.x)*0.16; d.y+=(d.ty-d.y)*0.16;
-            d.el.style.transform=`translate(${d.x-d.bx}px,${d.y-d.by}px)`;
-          });
-          requestAnimationFrame(tick);
-        })();
+        measureField();
+        if('ResizeObserver' in window){
+          resizeObserver = new ResizeObserver(measureField);
+          resizeObserver.observe(field);
+        }
+        ScrollTrigger.addEventListener('refreshInit', measureField);
+
+        function tick(){
+          let keepRunning=hasPointer;
+          for(let i=0;i<dots.length;i++){
+            const d = dots[i];
+            if(hasPointer){
+              const dx  = mx - d.bx, dy = my - d.by;
+              const dist = Math.max(1, Math.hypot(dx, dy));
+              const falloff = 1 - Math.min(dist / (maxDist * 1.08), 1);
+              const strength = 0.16 + Math.pow(falloff, 1.35) * 0.84;
+              const dir = isRepel ? -1 : 1;
+              d.tx = d.bx + (dx/dist) * strength * PULL * dir;
+              d.ty = d.by + (dy/dist) * strength * PULL * dir;
+            } else {
+              d.tx = d.bx; d.ty = d.by;
+            }
+            d.x += (d.tx - d.x) * 0.18;
+            d.y += (d.ty - d.y) * 0.18;
+            d.el.style.transform = `translate(-50%,-50%) translate(${d.x-d.bx}px,${d.y-d.by}px)`;
+            if(Math.abs(d.x-d.tx) > 0.08 || Math.abs(d.y-d.ty) > 0.08) keepRunning=true;
+          }
+          if(keepRunning) raf=requestAnimationFrame(tick);
+          else raf=null;
+        }
+        start=()=>{if(!raf) raf=requestAnimationFrame(tick);};
+        stop=()=>{
+          hasPointer=false;mx=-9999;my=-9999;
+          if(raf){cancelAnimationFrame(raf);raf=null;}
+        };
+        startDemoLoops.push(start);
+        stopDemoLoops.push(stop);
+        if(sectionVisible) start();
       },80);
     })();
 
@@ -1578,7 +1934,7 @@ function resetPanel(){
       const wrap=document.getElementById('cap-tilt');
       const stack=document.getElementById('cap-tilt-stack');
       if(!wrap||!stack) return;
-      let rx=0,ry=0,trx=0,try_=0,at=0,isAuto=true;
+      let rx=0,ry=0,trx=0,try_=0,at=0,isAuto=true,raf=null;
       wrap.addEventListener('mousemove',e=>{
         isAuto=false;
         const r=wrap.getBoundingClientRect();
@@ -1586,13 +1942,18 @@ function resetPanel(){
         try_= ((e.clientX-r.left)/r.width-0.5)*34;
       });
       wrap.addEventListener('mouseleave',()=>{isAuto=true;});
-      (function tick(){
+      function tick(){
+        if(!sectionVisible){raf=null;return;}
         at+=0.013;
         if(isAuto){trx=Math.sin(at)*22;try_=Math.cos(at*0.7)*28;}
         rx+=(trx-rx)*0.1; ry+=(try_-ry)*0.1;
         stack.style.transform=`rotateX(${rx}deg) rotateY(${ry}deg)`;
-        requestAnimationFrame(tick);
-      })();
+        raf=requestAnimationFrame(tick);
+      }
+      const start=()=>{if(!raf) raf=requestAnimationFrame(tick);};
+      const stop=()=>{if(raf){cancelAnimationFrame(raf);raf=null;}};
+      startDemoLoops.push(start);
+      stopDemoLoops.push(stop);
     })();
 
     /* Demo 4 — Warp stars */
@@ -1603,6 +1964,7 @@ function resetPanel(){
         const r=wrap.getBoundingClientRect();
         const w=r.width||300,h=r.height||150;
         const stars=[];
+        let raf=null;
         for(let i=0;i<28;i++){
           const s=document.createElement('div');
           s.className='cap-warp-star';
@@ -1610,10 +1972,11 @@ function resetPanel(){
           s.style.left=sx+'px'; s.style.top=sy+'px';
           s.style.opacity=(0.3+Math.random()*0.7).toFixed(2);
           wrap.appendChild(s);
-          stars.push({el:s,x:sx,vx:0.5+Math.random()*1.8,w});
+          stars.push({el:s,baseX:sx,x:sx,vx:0.5+Math.random()*1.8,w});
         }
         let lastY=window.pageYOffset,vel=0,lastT=performance.now();
-        (function tick(now){
+        function tick(now){
+          if(!sectionVisible){raf=null;return;}
           const dt=Math.max(1,now-lastT);lastT=now;
           const sy=window.pageYOffset;
           vel+=(Math.abs(sy-lastY)/dt-vel)*0.18;lastY=sy;
@@ -1621,11 +1984,15 @@ function resetPanel(){
           stars.forEach(s=>{
             s.x-=s.vx*(1+vel*4);
             if(s.x<-10) s.x=s.w+10;
-            s.el.style.left=s.x+'px';
-            s.el.style.transform=`scaleX(${stretch})`;
+            s.el.style.transform=`translateX(${s.x-s.baseX}px) scaleX(${stretch})`;
           });
-          requestAnimationFrame(tick);
-        })(performance.now());
+          raf=requestAnimationFrame(tick);
+        }
+        const start=()=>{if(!raf) raf=requestAnimationFrame(tick);};
+        const stop=()=>{if(raf){cancelAnimationFrame(raf);raf=null;}};
+        startDemoLoops.push(start);
+        stopDemoLoops.push(stop);
+        if(sectionVisible) start();
       },80);
     })();
   }
