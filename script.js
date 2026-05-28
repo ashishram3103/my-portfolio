@@ -86,7 +86,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     mx=e.clientX;my=e.clientY;
     gsap.set(dot,{x:mx,y:my});
     gsap.set(label,{x:mx,y:my});
-  });
+  },{passive:true});
   gsap.ticker.add(()=>{rx+=(mx-rx)*.18;ry+=(my-ry)*.18;gsap.set(ring,{x:rx,y:ry});});
 
   let __curState = null;
@@ -834,38 +834,45 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
     const mg=range(progress,.12,.48);
     if(force || Math.abs(mg-lastMg)>SUB_EPS){
       lastMg=mg;
-      gsap.set(mbWrap,{opacity:mg,x:(1-mg)*-32,y:(1-mg)*18,force3D:true});
-      gsap.set(mbModa,{x:(1-mg)*-44,y:(1-mg)*-20,rotation:(1-mg)*-8,force3D:true});
-      gsap.set(mbModb,{x:(1-mg)*-26,y:(1-mg)*34,rotation:(1-mg)*-5,force3D:true});
-      gsap.set(mbModc,{x:(1-mg)*42,y:(1-mg)*-28,rotation:(1-mg)*8,force3D:true});
-      gsap.set(mbGla,{attr:{x1:16+(1-mg)*-20,y1:55+(1-mg)*8}});
-      gsap.set(mbGlb,{attr:{x2:149+(1-mg)*22,y2:76+(1-mg)*-10}});
+      mbWrap.style.opacity=+mg.toFixed(3);
+      mbWrap.style.transform=`translate3d(${+((1-mg)*-32).toFixed(1)}px,${+((1-mg)*18).toFixed(1)}px,0)`;
+      mbModa.style.transform=`translate3d(${+((1-mg)*-44).toFixed(1)}px,${+((1-mg)*-20).toFixed(1)}px,0) rotate(${+((1-mg)*-8).toFixed(2)}deg)`;
+      mbModb.style.transform=`translate3d(${+((1-mg)*-26).toFixed(1)}px,${+((1-mg)*34).toFixed(1)}px,0) rotate(${+((1-mg)*-5).toFixed(2)}deg)`;
+      mbModc.style.transform=`translate3d(${+((1-mg)*42).toFixed(1)}px,${+((1-mg)*-28).toFixed(1)}px,0) rotate(${+((1-mg)*8).toFixed(2)}deg)`;
+      mbGla.setAttribute('x1',+(16+(1-mg)*-20).toFixed(1));
+      mbGla.setAttribute('y1',+(55+(1-mg)*8).toFixed(1));
+      mbGlb.setAttribute('x2',+(149+(1-mg)*22).toFixed(1));
+      mbGlb.setAttribute('y2',+(76+(1-mg)*-10).toFixed(1));
     }
 
     /* component switcher — 0.28 → 0.70 */
     const sw=range(progress,.28,.70);
     if(force || Math.abs(sw-lastSw)>SUB_EPS){
       lastSw=sw;
-      gsap.set(swWrap,{opacity:sw,x:(1-sw)*28,y:(1-sw)*-16,force3D:true});
+      swWrap.style.opacity=+sw.toFixed(3);
+      swWrap.style.transform=`translate3d(${+((1-sw)*28).toFixed(1)}px,${+((1-sw)*-16).toFixed(1)}px,0)`;
       let sY,sH,sRx;
       if(sw<.45){sY=9;sH=42;sRx=19;}
       else if(sw<.78){const t=(sw-.45)/.33;sY=9+t*42;sH=42-t*4;sRx=19-t*16;}
       else{sY=51;sH=38;sRx=3;}
-      gsap.set(swSel,{attr:{y:sY,height:sH,rx:sRx}});
-      gsap.set(swDot,{attr:{cy:sY+sH*.5}});
+      swSel.style.transform=`translateY(${+(sY-9).toFixed(1)}px)`;
+      swSel.setAttribute('height',+sH.toFixed(1));
+      swSel.setAttribute('rx',+sRx.toFixed(1));
+      swDot.style.transform=`translateY(${+((sY+sH*.5)-30).toFixed(2)}px)`;
     }
 
     /* ripple pad — 0.55 → 0.95 */
     const rp=range(progress,.55,.95);
     if(force || Math.abs(rp-lastRp)>SUB_EPS){
       lastRp=rp;
-      gsap.set(rpWrap,{opacity:rp,y:(1-rp)*24,force3D:true});
-      gsap.set(rpRa,{attr:{r:10+rp*20}});
-      gsap.set(rpRb,{attr:{r:18+rp*30}});
-      gsap.set(rpPress,{scale:1+pulseAt(progress,.72,.09)*.5,svgOrigin:'65 58'});
-      gsap.set(rpBla,{x:rp*12,y:-rp*10,force3D:true});
-      gsap.set(rpBlb,{x:rp*12,y:rp*6,force3D:true});
-      gsap.set(rpBlc,{x:rp*12,y:rp*16,force3D:true});
+      rpWrap.style.opacity=+rp.toFixed(3);
+      rpWrap.style.transform=`translate3d(0,${+((1-rp)*24).toFixed(1)}px,0)`;
+      rpRa.style.transform=`scale(${+(1+rp*2).toFixed(3)})`;
+      rpRb.style.transform=`scale(${+(1+rp*1.667).toFixed(3)})`;
+      rpPress.style.transform=`scale(${+(1+pulseAt(progress,.72,.09)*.5).toFixed(3)})`;
+      rpBla.style.transform=`translate3d(${+(rp*12).toFixed(1)}px,${+(-rp*10).toFixed(1)}px,0)`;
+      rpBlb.style.transform=`translate3d(${+(rp*12).toFixed(1)}px,${+(rp*6).toFixed(1)}px,0)`;
+      rpBlc.style.transform=`translate3d(${+(rp*12).toFixed(1)}px,${+(rp*16).toFixed(1)}px,0)`;
     }
   }
   updateDesignerCoderObjects(0,true);
@@ -1420,11 +1427,12 @@ function resetPanel(){
   function armIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(idleDemo,2400);}
   armIdle();
 
+  let labRect=lab.getBoundingClientRect();
+  window.addEventListener('resize',()=>{labRect=lab.getBoundingClientRect();},{passive:true});
   lab.addEventListener('mousemove',e=>{
     clearTimeout(idleTimer);
-    const r=lab.getBoundingClientRect();
-    const px=(e.clientX-r.left)/r.width-.5;
-    const py=(e.clientY-r.top)/r.height-.5;
+    const px=(e.clientX-labRect.left)/labRect.width-.5;
+    const py=(e.clientY-labRect.top)/labRect.height-.5;
     gsap.to(obj,{rotationY:px*18,rotationX:-py*14,x:px*14,y:py*10,duration:.35,ease:'power3.out',overwrite:'auto'});
     gsap.to(bp,{x:px*20,y:py*16,opacity:.9,duration:.45,ease:'power3.out',overwrite:'auto'});
   });
@@ -1454,6 +1462,7 @@ function resetPanel(){
   if(!board || IS_MOBILE) return;
   const notes=Array.from(board.querySelectorAll('.testi-note'));
   if(notes.length < 3) return;
+  const noteRots=notes.map(n=>parseFloat(getComputedStyle(n).getPropertyValue('--rot'))||0);
 
   let positions=[];        /* original DOM-order coordinates */
   let slotIndex=[];        /* current slot occupied by each note (mod-wrapped) */
@@ -1488,8 +1497,7 @@ function resetPanel(){
       const to=positions[toSlot];
       const x=(to.left-from.left)*progress + (from.left-positions[i].left);
       const y=(to.top-from.top)*progress + (from.top-positions[i].top);
-      const rot=parseFloat(getComputedStyle(note).getPropertyValue('--rot'))||0;
-      note.style.transform=`translate(${x}px,${y}px) rotate(${rot}deg)`;
+      note.style.transform=`translate(${x}px,${y}px) rotate(${noteRots[i]}deg)`;
     });
   }
 
@@ -1520,9 +1528,8 @@ function resetPanel(){
     active=false;
     if(raf){cancelAnimationFrame(raf);raf=null;}
     /* Reset to resting position */
-    notes.forEach(n=>{
-      const rot=parseFloat(getComputedStyle(n).getPropertyValue('--rot'))||0;
-      n.style.transform=`rotate(${rot}deg)`;
+    notes.forEach((n,i)=>{
+      n.style.transform=`rotate(${noteRots[i]}deg)`;
     });
   }
 
@@ -1679,10 +1686,11 @@ function resetPanel(){
   function stopCapabilityDemos(){stopDemoLoops.forEach(fn=>fn());}
   function startWorldLoop(){if(sectionVisible && !animRaf) animRaf=requestAnimationFrame(animLoop);}
 
+  let pinRect = pinWrap.getBoundingClientRect();
+  ScrollTrigger.addEventListener('refresh',()=>{ pinRect = pinWrap.getBoundingClientRect(); });
   pinWrap.addEventListener('mousemove', e=>{
-    const r = pinWrap.getBoundingClientRect();
-    mouse.tx = (e.clientX - r.left) / r.width  * 2 - 1;
-    mouse.ty = (e.clientY - r.top)  / r.height * 2 - 1;
+    mouse.tx = (e.clientX - pinRect.left) / pinRect.width  * 2 - 1;
+    mouse.ty = (e.clientY - pinRect.top)  / pinRect.height * 2 - 1;
     startWorldLoop();
   }, { passive:true });
   pinWrap.addEventListener('mouseleave', ()=>{ mouse.tx = 0; mouse.ty = 0; startWorldLoop(); });
@@ -1831,7 +1839,7 @@ function resetPanel(){
     if(pct !== lastPct){
       lastPct = pct;
       if(prog) prog.textContent = String(pct).padStart(3, '0');
-      if(bar)  bar.style.width  = pct + '%';
+      if(bar)  bar.style.transform = `scaleX(${pct/100})`;
     }
   }
 
@@ -2031,11 +2039,12 @@ function resetPanel(){
       const stack=document.getElementById('cap-tilt-stack');
       if(!wrap||!stack) return;
       let rx=0,ry=0,trx=0,try_=0,at=0,isAuto=true,raf=null;
+      let wrapRect=wrap.getBoundingClientRect();
+      ScrollTrigger.addEventListener('refresh',()=>{ wrapRect=wrap.getBoundingClientRect(); });
       wrap.addEventListener('mousemove',e=>{
         isAuto=false;
-        const r=wrap.getBoundingClientRect();
-        trx=-((e.clientY-r.top)/r.height-0.5)*34;
-        try_= ((e.clientX-r.left)/r.width-0.5)*34;
+        trx=-((e.clientY-wrapRect.top)/wrapRect.height-0.5)*34;
+        try_= ((e.clientX-wrapRect.left)/wrapRect.width-0.5)*34;
       });
       wrap.addEventListener('mouseleave',()=>{isAuto=true;});
       function tick(){
