@@ -93,20 +93,50 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   });
   gsap.ticker.add(()=>{rx+=(mx-rx)*.18;ry+=(my-ry)*.18;gsap.set(ring,{x:rx,y:ry});});
 
+  let __curState = null;
   function setState(state, text){
+    if(state === __curState){
+      // Same state — only update label if it actually changed
+      if(text != null && label.textContent !== text) label.textContent = text;
+      return;
+    }
+    __curState = state;
     document.body.classList.remove('cur-hover','cur-text','cur-image','cur-drag','cur-work','cur-hidden');
     if(state) document.body.classList.add('cur-'+state);
     if(text != null) label.textContent = text;
   }
 
-  document.querySelectorAll('a,button,.svc-row,.exp-item,.skill-tag,.cnt-btn-email,.cnt-btn-phone,.currently-badge,.testi-note').forEach(el=>{
+  // Exclude work-tile anchors so the section-level cur-work state isn't overwritten
+  document.querySelectorAll('a:not(.wcard):not(.wcard-cta-link),button,.svc-row,.exp-item,.skill-tag,.cnt-btn-email,.cnt-btn-phone,.currently-badge,.testi-note').forEach(el=>{
     el.addEventListener('mouseenter',()=>setState('hover'));
     el.addEventListener('mouseleave',()=>setState(null));
   });
-  document.querySelectorAll('#work-section .wcard,#work-section .wcard-cta,#work-section .wcard-cta-link').forEach(el=>{
-    el.addEventListener('mouseenter',()=>setState('work','LOOK'));
-    el.addEventListener('mouseleave',()=>setState(null));
-  });
+  // Work tiles — bind enter/leave at SECTION level so the ring stays in cur-work
+  // when sliding between tiles (no shrink/regrow flicker). Per-tile mouseenter
+  // only swaps the --cur-work-color CSS variable on body. Color is read from each
+  // tile's own .wcard-bg / .wcard-overlay inline style so no markup change needed.
+  const workSection = document.getElementById('work-section');
+  if(workSection){
+    workSection.addEventListener('mouseenter',()=>setState('work','LOOK'));
+    workSection.addEventListener('mouseleave',()=>{
+      setState(null);
+      ring.style.removeProperty('--cur-work-color');
+    });
+    workSection.querySelectorAll('.wcard, .wcard-cta').forEach(card=>{
+      const src = card.querySelector('.wcard-bg, .wcard-overlay');
+      let color = '';
+      if(src){
+        const m = (src.getAttribute('style')||'').match(/background\s*:\s*([^;]+)/i);
+        if(m) color = m[1].trim();
+      }
+      if(!color) return;
+      // Set custom property on ring (not body) — limits style recalc to one element
+      // instead of cascading through every descendant of <body>.
+      card.addEventListener('mouseenter',()=>{
+        ring.style.setProperty('--cur-work-color', color);
+      });
+    });
+  }
   document.querySelectorAll('.arch-card img,.vid-reel-card').forEach(el=>{
     el.addEventListener('mouseenter',()=>setState('image'));
     el.addEventListener('mouseleave',()=>setState(null));
@@ -422,6 +452,12 @@ setTimeout(()=>{
   function stopVerbLoop(){if(verbTimer){clearInterval(verbTimer);verbTimer=null;}}
 
   const wordSection=document.getElementById('word-section');
+  let flashLine=null;
+  if(wordSection && !IS_MOBILE){
+    flashLine=document.createElement('span');
+    flashLine.className='word-flash-line';
+    wordSection.appendChild(flashLine);
+  }
   if('IntersectionObserver' in window && wordSection && verbEl){
     const io=new IntersectionObserver(entries=>{
       if(entries[0].isIntersecting) startVerbLoop();
@@ -450,8 +486,16 @@ setTimeout(()=>{
         gsap.fromTo(curEl,{y:'110%',opacity:0},{y:'0%',opacity:1,duration:.45,ease:'back.out(1.8)'});
       }
     });
-    if(!IS_MOBILE){
-      gsap.to('#word-section',{backgroundColor:'rgba(249,209,0,.06)',duration:.15,yoyo:true,repeat:1,ease:'none'});
+    if(flashLine){
+      gsap.killTweensOf(flashLine);
+      gsap.set(flashLine,{scaleX:0,opacity:1,overwrite:true});
+      gsap.to(flashLine,{scaleX:1,duration:.22,ease:'power2.in',
+        onComplete:()=>{
+          gsap.to(flashLine,{opacity:0,duration:.16,ease:'power2.out',
+            onComplete:()=>{ gsap.set(flashLine,{scaleX:0}); }
+          });
+        }
+      });
     }
     document.querySelectorAll('.word-pip').forEach((p,i)=>p.classList.toggle('is-active',i===idx));
   }
@@ -470,11 +514,7 @@ setTimeout(()=>{
     const dy=Math.abs(t.clientY-touchStartY);
     const dt=Date.now()-touchStartT;
     if(dx<14 && dy<14 && dt<450) advance();
-    setTimeout(()=>{
-      inner.classList.remove('touch-active');
-      const ws=document.getElementById('word-section');
-      if(ws) ws.style.backgroundColor='';
-    },320);
+    setTimeout(()=>{ inner.classList.remove('touch-active'); },320);
   },{passive:true});
   inner.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')advance();});
 })();
@@ -661,28 +701,6 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
   layer.className='ux-build-layer';
   layer.innerHTML=`
     <span class="ux-dc-path-gear"><span class="ux-dc-gear-body"></span><span class="ux-dc-gear-ring"></span><span class="ux-dc-gear-hub"></span></span>
-    <span class="ux-obj ux-obj--radius"><svg viewBox="0 0 152 152" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <rect x="6" y="6" width="140" height="140" fill="#0D0D0D" rx="2"/>
-      <rect x="2" y="2" width="140" height="140" fill="#F7F7F4" stroke="#0D0D0D" stroke-width="2" rx="2"/>
-      <rect class="ux-rd-inner" x="28" y="28" width="86" height="86" fill="#F9D100" stroke="#0D0D0D" stroke-width="2" rx="0"/>
-      <g class="ux-rd-ha"><line x1="16" y1="28" x2="23" y2="28" stroke="#0D0D0D" stroke-width="1.5"/><line x1="28" y1="16" x2="28" y2="23" stroke="#0D0D0D" stroke-width="1.5"/><circle cx="28" cy="28" r="5" fill="white" stroke="#0D0D0D" stroke-width="1.5"/></g>
-      <g class="ux-rd-hb"><line x1="116" y1="28" x2="128" y2="28" stroke="#0D0D0D" stroke-width="1.5"/><line x1="114" y1="16" x2="114" y2="23" stroke="#0D0D0D" stroke-width="1.5"/><circle cx="114" cy="28" r="5" fill="white" stroke="#0D0D0D" stroke-width="1.5"/></g>
-      <g class="ux-rd-hc"><line x1="16" y1="114" x2="23" y2="114" stroke="#0D0D0D" stroke-width="1.5"/><line x1="28" y1="116" x2="28" y2="128" stroke="#0D0D0D" stroke-width="1.5"/><circle cx="28" cy="114" r="5" fill="white" stroke="#0D0D0D" stroke-width="1.5"/></g>
-      <g class="ux-rd-hd"><line x1="116" y1="114" x2="128" y2="114" stroke="#0D0D0D" stroke-width="1.5"/><line x1="114" y1="116" x2="114" y2="128" stroke="#0D0D0D" stroke-width="1.5"/><circle cx="114" cy="114" r="5" fill="white" stroke="#0D0D0D" stroke-width="1.5"/></g>
-      <circle class="ux-rd-active" cx="28" cy="28" r="6" fill="#EE3A5A" stroke="#0D0D0D" stroke-width="1.5"/>
-    </svg></span>
-    <span class="ux-obj ux-obj--curve"><svg viewBox="0 0 190 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <rect x="6" y="6" width="178" height="138" fill="#0D0D0D" rx="3"/>
-      <rect x="2" y="2" width="178" height="138" fill="#F7F7F4" stroke="#0D0D0D" stroke-width="2" rx="3"/>
-      <path class="ux-cv-line" d="M 22 120 C 62 120 60 28 95 72 C 128 112 128 28 168 28" fill="none" stroke="#F9D100" stroke-width="3" stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="220"/>
-      <line class="ux-cv-arma" x1="22" y1="120" x2="62" y2="120" stroke="#0D0D0D" stroke-width="1.5" stroke-linecap="round"/>
-      <line class="ux-cv-armb" x1="168" y1="28" x2="128" y2="28" stroke="#0D0D0D" stroke-width="1.5" stroke-linecap="round"/>
-      <circle cx="22" cy="120" r="5" fill="white" stroke="#0D0D0D" stroke-width="2"/>
-      <circle cx="168" cy="28" r="5" fill="white" stroke="#0D0D0D" stroke-width="2"/>
-      <circle cx="62" cy="120" r="4" fill="#F9D100" stroke="#0D0D0D" stroke-width="1.5"/>
-      <circle cx="128" cy="28" r="4" fill="#F9D100" stroke="#0D0D0D" stroke-width="1.5"/>
-      <circle class="ux-cv-dot" cx="22" cy="120" r="6" fill="#EE3A5A" stroke="#0D0D0D" stroke-width="1.5"/>
-    </svg></span>
     <span class="ux-obj ux-obj--magnet"><svg viewBox="0 0 210 156" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <rect x="59" y="48" width="95" height="67" fill="#0D0D0D" rx="2"/>
       <rect x="54" y="43" width="95" height="67" fill="#F7F7F4" stroke="#0D0D0D" stroke-width="2" rx="2"/>
@@ -719,15 +737,6 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
   `;
   stage.appendChild(layer);
   const gear=layer.querySelector('.ux-dc-path-gear');
-  const gearBody=layer.querySelector('.ux-dc-gear-body');
-  const rdWrap=layer.querySelector('.ux-obj--radius');
-  const rdInner=rdWrap.querySelector('.ux-rd-inner');
-  const rdActive=rdWrap.querySelector('.ux-rd-active');
-  const cvWrap=layer.querySelector('.ux-obj--curve');
-  const cvLine=cvWrap.querySelector('.ux-cv-line');
-  const cvDot=cvWrap.querySelector('.ux-cv-dot');
-  const cvArma=cvWrap.querySelector('.ux-cv-arma');
-  const cvArmb=cvWrap.querySelector('.ux-cv-armb');
   const mbWrap=layer.querySelector('.ux-obj--magnet');
   const mbModa=mbWrap.querySelector('.ux-mb-moda');
   const mbModb=mbWrap.querySelector('.ux-mb-modb');
@@ -744,15 +753,13 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
   const rpBla=rpWrap.querySelector('.ux-rp-bla');
   const rpBlb=rpWrap.querySelector('.ux-rp-blb');
   const rpBlc=rpWrap.querySelector('.ux-rp-blc');
-  gsap.set([rdWrap,cvWrap,mbWrap,swWrap,rpWrap],{opacity:0});
+  gsap.set([mbWrap,swWrap,rpWrap],{opacity:0});
   let uxW=1,uxH=1,lastUxProgress=-1;
   function measureUx(){
     uxW=layer.clientWidth||stage.clientWidth||1;
     uxH=layer.clientHeight||stage.clientHeight||1;
   }
   measureUx();
-  ScrollTrigger.addEventListener('refreshInit',measureUx);
-  window.addEventListener('resize',measureUx,{passive:true});
 
   const clamp01=gsap.utils.clamp(0,1);
   const range=(p,a,b)=>clamp01((p-a)/(b-a));
@@ -761,6 +768,32 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
     {p:.10,x:50,y:9},{p:.28,x:50,y:24},{p:.46,x:82,y:41},
     {p:.62,x:22,y:62},{p:.78,x:66,y:84},{p:.94,x:54,y:97}
   ];
+  // Pixel arc lengths recomputed on resize so gear rotation ties to actual pixel
+  // distance — makes the gear physically roll rather than spin uniformly with progress.
+  const pixelSegLens=[];
+  let pixelTotalLen=0;
+  const GEAR_CIRC=2*Math.PI*32; // 64px CSS width → r=32 → circ≈201px
+  function recomputeGearPx(){
+    pixelSegLens.length=0; pixelTotalLen=0;
+    for(let i=1;i<gearPts.length;i++){
+      const dx=(gearPts[i].x-gearPts[i-1].x)/100*uxW;
+      const dy=(gearPts[i].y-gearPts[i-1].y)/100*uxH;
+      const len=Math.hypot(dx,dy);
+      pixelSegLens.push(len); pixelTotalLen+=len;
+    }
+  }
+  recomputeGearPx();
+  let mainTrigger=null;
+  function measureAndRecompute(){
+    measureUx();
+    recomputeGearPx();
+    // After dimensions change, force a re-render at the trigger's current progress
+    // so gear/chips reposition with the new pixel values (otherwise they stay where
+    // they were last drawn — which can be off-screen if layout hadn't settled at init).
+    if(mainTrigger) updateDesignerCoderObjects(mainTrigger.progress, true);
+  }
+  ScrollTrigger.addEventListener('refreshInit',measureAndRecompute);
+  window.addEventListener('resize',measureAndRecompute,{passive:true});
   function pointOnPath(p){
     for(let i=1;i<gearPts.length;i++){
       if(p<=gearPts[i].p){
@@ -770,70 +803,91 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
     }
     return gearPts[gearPts.length-1];
   }
+  function gearPixelArc(p){
+    let acc=0;
+    for(let i=1;i<gearPts.length;i++){
+      if(p<=gearPts[i].p){
+        const t=range(p,gearPts[i-1].p,gearPts[i].p);
+        return acc+t*pixelSegLens[i-1];
+      }
+      acc+=pixelSegLens[i-1];
+    }
+    return pixelTotalLen;
+  }
+  // Per-sub-tile last-applied values — gates writes when a chip's local progress
+  // hasn't moved meaningfully (no behavior change, just elides redundant SVG attr writes)
+  let lastMg=-1,lastSw=-1,lastRp=-1;
+  let _gX=null,_gY=null,_gR=null,_gS=null;
+  const SUB_EPS = 0.0008;
   function updateDesignerCoderObjects(progress,force=false){
-    if(!force && Math.abs(progress-lastUxProgress)<0.002) return;
+    if(!force && Math.abs(progress-lastUxProgress)<0.0003) return;
     lastUxProgress=progress;
-    const gp=range(progress,.10,.94),pt=pointOnPath(progress);
-    if(gear) gsap.set(gear,{
-      x:(pt.x/100)*uxW,
-      y:(pt.y/100)*uxH,
-      rotation:gp*980,
-      scale:1+pulseAt(progress,.46,.08)*.18+pulseAt(progress,.62,.08)*.14+pulseAt(progress,.78,.08)*.16,
-      force3D:true
-    });
-    if(gearBody) gsap.set(gearBody,{rotation:gp*120});
-
-    /* radius tile — 0.18 → 0.58 */
-    const rd=range(progress,.18,.58);
-    gsap.set(rdWrap,{opacity:rd,rotation:-7+rd*7,x:(1-rd)*-22});
-    gsap.set(rdInner,{attr:{rx:rd*34,ry:rd*34}});
-    gsap.set(rdActive,{attr:{cx:28+rd*43,cy:28+rd*43}});
-
-    /* curve dial — 0.35 → 0.82 */
-    const cv=range(progress,.35,.82);
-    gsap.set(cvWrap,{opacity:cv,scale:.84+cv*.16});
-    gsap.set(cvLine,{strokeDashoffset:220*(1-cv)});
-    gsap.set(cvArma,{rotation:-cv*14,svgOrigin:'22 120'});
-    gsap.set(cvArmb,{rotation:cv*14,svgOrigin:'168 28'});
-    const dtx=22+(168-22)*cv,dty=cv<.5?120+(72-120)*(cv*2):72+(28-72)*((cv-.5)*2);
-    gsap.set(cvDot,{attr:{cx:dtx,cy:dty}});
+    const pt=pointOnPath(progress);
+    // Direct style write with quantized cache — no GSAP overhead per frame.
+    // Pixel arc rolling: gear turns exactly as far as it travels in pixels.
+    const gx=+((pt.x/100)*uxW).toFixed(1);
+    const gy=+((pt.y/100)*uxH).toFixed(1);
+    const rolling=+(gearPixelArc(progress)/GEAR_CIRC*360).toFixed(1);
+    const gsPulse=1+pulseAt(progress,.46,.08)*.18+pulseAt(progress,.62,.08)*.14+pulseAt(progress,.78,.08)*.16;
+    const gs=+gsPulse.toFixed(3);
+    if(gear && (force || gx!==_gX || gy!==_gY || rolling!==_gR || gs!==_gS)){
+      _gX=gx; _gY=gy; _gR=rolling; _gS=gs;
+      gear.style.transform=`translate3d(${gx}px,${gy}px,0) rotate(${rolling}deg) scale(${gs})`;
+    }
 
     /* magnet board — 0.12 → 0.48 */
     const mg=range(progress,.12,.48);
-    gsap.set(mbWrap,{opacity:mg,x:(1-mg)*-32,y:(1-mg)*18});
-    gsap.set(mbModa,{x:(1-mg)*-44,y:(1-mg)*-20,rotation:(1-mg)*-8});
-    gsap.set(mbModb,{x:(1-mg)*-26,y:(1-mg)*34,rotation:(1-mg)*-5});
-    gsap.set(mbModc,{x:(1-mg)*42,y:(1-mg)*-28,rotation:(1-mg)*8});
-    gsap.set(mbGla,{attr:{x1:16+(1-mg)*-20,y1:55+(1-mg)*8}});
-    gsap.set(mbGlb,{attr:{x2:149+(1-mg)*22,y2:76+(1-mg)*-10}});
+    if(force || Math.abs(mg-lastMg)>SUB_EPS){
+      lastMg=mg;
+      gsap.set(mbWrap,{opacity:mg,x:(1-mg)*-32,y:(1-mg)*18,force3D:true});
+      gsap.set(mbModa,{x:(1-mg)*-44,y:(1-mg)*-20,rotation:(1-mg)*-8,force3D:true});
+      gsap.set(mbModb,{x:(1-mg)*-26,y:(1-mg)*34,rotation:(1-mg)*-5,force3D:true});
+      gsap.set(mbModc,{x:(1-mg)*42,y:(1-mg)*-28,rotation:(1-mg)*8,force3D:true});
+      gsap.set(mbGla,{attr:{x1:16+(1-mg)*-20,y1:55+(1-mg)*8}});
+      gsap.set(mbGlb,{attr:{x2:149+(1-mg)*22,y2:76+(1-mg)*-10}});
+    }
 
     /* component switcher — 0.28 → 0.70 */
     const sw=range(progress,.28,.70);
-    gsap.set(swWrap,{opacity:sw,x:(1-sw)*28,y:(1-sw)*-16});
-    let sY,sH,sRx;
-    if(sw<.45){sY=9;sH=42;sRx=19;}
-    else if(sw<.78){const t=(sw-.45)/.33;sY=9+t*42;sH=42-t*4;sRx=19-t*16;}
-    else{sY=51;sH=38;sRx=3;}
-    gsap.set(swSel,{attr:{y:sY,height:sH,rx:sRx}});
-    gsap.set(swDot,{attr:{cy:sY+sH*.5}});
+    if(force || Math.abs(sw-lastSw)>SUB_EPS){
+      lastSw=sw;
+      gsap.set(swWrap,{opacity:sw,x:(1-sw)*28,y:(1-sw)*-16,force3D:true});
+      let sY,sH,sRx;
+      if(sw<.45){sY=9;sH=42;sRx=19;}
+      else if(sw<.78){const t=(sw-.45)/.33;sY=9+t*42;sH=42-t*4;sRx=19-t*16;}
+      else{sY=51;sH=38;sRx=3;}
+      gsap.set(swSel,{attr:{y:sY,height:sH,rx:sRx}});
+      gsap.set(swDot,{attr:{cy:sY+sH*.5}});
+    }
 
     /* ripple pad — 0.55 → 0.95 */
     const rp=range(progress,.55,.95);
-    gsap.set(rpWrap,{opacity:rp,y:(1-rp)*24});
-    gsap.set(rpRa,{attr:{r:10+rp*20}});
-    gsap.set(rpRb,{attr:{r:18+rp*30}});
-    gsap.set(rpPress,{scale:1+pulseAt(progress,.72,.09)*.5,svgOrigin:'65 58'});
-    gsap.set(rpBla,{x:rp*12,y:-rp*10});
-    gsap.set(rpBlb,{x:rp*12,y:rp*6});
-    gsap.set(rpBlc,{x:rp*12,y:rp*16});
+    if(force || Math.abs(rp-lastRp)>SUB_EPS){
+      lastRp=rp;
+      gsap.set(rpWrap,{opacity:rp,y:(1-rp)*24,force3D:true});
+      gsap.set(rpRa,{attr:{r:10+rp*20}});
+      gsap.set(rpRb,{attr:{r:18+rp*30}});
+      gsap.set(rpPress,{scale:1+pulseAt(progress,.72,.09)*.5,svgOrigin:'65 58'});
+      gsap.set(rpBla,{x:rp*12,y:-rp*10,force3D:true});
+      gsap.set(rpBlb,{x:rp*12,y:rp*6,force3D:true});
+      gsap.set(rpBlc,{x:rp*12,y:rp*16,force3D:true});
+    }
   }
   updateDesignerCoderObjects(0,true);
 
-  ScrollTrigger.create({
+  // Direct scroll-driven update — no lerp, no trailing. ScrollTrigger.onUpdate fires
+  // inside GSAP's ticker so the gear's style write lands in the same frame as scroll.
+  // Combined with layer-promoted gear children (will-change in CSS), the rotation is
+  // a pure GPU composite op — no rasterization of clip-path/border/shadow per frame.
+  mainTrigger=ScrollTrigger.create({
     trigger:stage,start:'top 82%',end:'bottom 18%',
     onUpdate:self=>updateDesignerCoderObjects(self.progress),
     onLeaveBack:()=>updateDesignerCoderObjects(0,true)
   });
+  // Explicit initial sync — refreshInit during ScrollTrigger.create fires BEFORE
+  // mainTrigger gets the assignment above, so the first refresh skipped the re-render.
+  measureUx(); recomputeGearPx();
+  updateDesignerCoderObjects(mainTrigger.progress, true);
 })();
 
 /* ============================================================
@@ -1527,20 +1581,23 @@ function resetPanel(){
     return;
   }
 
-  /* Desktop: ~0.8VH per card — responsive like the reference */
+  /* Desktop: ~1.15VH per card — gives each card a brief dwell window via easeHold */
   function setSectionHeight(){
-    section.style.height = Math.round(N * window.innerHeight * 0.8) + 'px';
+    section.style.height = Math.round(N * window.innerHeight * 1.15) + 'px';
   }
   setSectionHeight();
   ScrollTrigger.addEventListener('refreshInit', setSectionHeight);
 
-  /* GSAP pin the inner wrap */
+  /* GSAP pin the inner wrap — pinType:'fixed' avoids the sub-pixel snap of the
+     default transform-based pin; the opacity fade on .cap-pin-wrap (toggled via
+     'is-live' class from camST onEnter/onLeave) masks any residual layout shift. */
   ScrollTrigger.create({
     trigger: section,
     start: 'top top',
     end: 'bottom bottom',
     pin: pinWrap,
     pinSpacing: false,
+    pinType: 'fixed',
     anticipatePin: 1,
     invalidateOnRefresh: true,
   });
@@ -1655,10 +1712,25 @@ function resetPanel(){
     animRaf = requestAnimationFrame(animLoop);
   }
 
-  // Linear camera — identical to reference's scroll→world mapping.
-  // Smoothness comes purely from the 0.08 lerp on smoothProgress (same as Lenis lerp).
+  // Soft-dwell camera: at each card center the camera slows down but never freezes,
+  // letting the user actually feel each focal card before sliding onward.
+  // HOLD = portion of each segment spent in the slow "dwell" zone.
+  // DWELL_SLOPE = how much the camera still moves during dwell (0 = frozen, 1 = linear).
+  const HOLD = 0.22, DWELL_SLOPE = 0.18;
+  const _holdEdge = HOLD * DWELL_SLOPE; // value at end of leading dwell / start of trailing dwell mirror
+  function easeHold(t){
+    if(t <= HOLD)      return t * DWELL_SLOPE;
+    if(t >= 1 - HOLD)  return 1 - (1 - t) * DWELL_SLOPE;
+    const lt = (t - HOLD) / (1 - 2 * HOLD);
+    const sm = lt * lt * (3 - 2 * lt);
+    return _holdEdge + (1 - 2 * _holdEdge) * sm;
+  }
   function cameraPos(progress){
-    return clamp(progress, 0, 1) * TOTAL_DEPTH;
+    const segs = N - 1;
+    if(!segs) return 0;
+    const sp  = clamp(progress, 0, 1) * segs;
+    const idx = Math.min(Math.floor(sp), segs - 1);
+    return (idx + easeHold(sp - idx)) * Z_GAP;
   }
 
   function render(progress, velocity){
@@ -1678,6 +1750,8 @@ function resetPanel(){
     }
 
     let bestAbs = Infinity, bestItem = null;
+    const stretch = Math.max(1, Math.min(1 + Math.abs(smoothVel) * 5, 8));
+    const stretchQ = (stretch * 100) | 0;
 
     for(let k = 0; k < items.length; k++){
       const it   = items[k];
@@ -1706,27 +1780,48 @@ function resetPanel(){
       }
       if(alpha < 0) alpha = 0;
 
-      if(alpha <= 0){
-        if(it.el.style.opacity !== '0') it.el.style.opacity = '0';
-        continue;
+      // Quantize alpha to 2 decimals → skip identical writes (huge paint savings on stars)
+      const aQ = (alpha * 100) | 0;
+      if(aQ !== it._aQ){
+        it._aQ = aQ;
+        it.el.style.opacity = aQ === 0 ? '0' : (aQ / 100);
       }
-      it.el.style.opacity = alpha;
 
+      // Hidden — skip transform write (original behavior also skipped best-card tracking)
+      if(aQ === 0) continue;
+
+      const sz = safeZ | 0; // int-quantize z so identical adjacent values short-circuit
+      let tx;
       if(it.type === 'star'){
-        const stretch = Math.max(1, Math.min(1 + Math.abs(smoothVel) * 5, 8));
-        it.el.style.transform = `translate3d(${it.x}px,${it.y}px,${safeZ}px) scale3d(1,1,${stretch})`;
+        // Stretch quantized so it doesn't invalidate every frame from tiny velocity jitter
+        if(stretchQ !== it._sQ || sz !== it._sz){
+          it._sQ = stretchQ; it._sz = sz;
+          tx = `translate3d(${it.x}px,${it.y}px,${sz}px) scale3d(1,1,${(stretchQ/100).toFixed(2)})`;
+        }
       } else if(it.type === 'text'){
+        // Yellow fill ramps as the text crosses the focal plane
         const fillAmt = clamp(1 - Math.abs(relZ + 80) / 440, 0, 1);
-        it.el.style.color = `rgba(249,209,0,${(fillAmt * 0.95).toFixed(3)})`;
-        it.el.style.setProperty('-webkit-text-stroke-color', `rgba(249,209,0,${(0.28 + fillAmt * 0.42).toFixed(3)})`);
-        it.el.style.setProperty('--glow', (fillAmt * 0.28).toFixed(3));
-        // Include -50%/-50% centering since text has no wrapper element
-        it.el.style.transform = `translate(-50%,-50%) translate3d(${it.x}px,${it.y}px,${safeZ}px) rotateZ(${it.rot}deg)`;
+        const fQ = (fillAmt * 100) | 0;
+        if(fQ !== it._fQ){
+          it._fQ = fQ;
+          const f = fQ / 100;
+          it.el.style.color = `rgba(249,209,0,${(f * 0.95).toFixed(3)})`;
+          it.el.style.setProperty('-webkit-text-stroke-color', `rgba(249,209,0,${(0.28 + f * 0.42).toFixed(3)})`);
+          it.el.style.setProperty('--glow', (f * 0.28).toFixed(3));
+        }
+        if(sz !== it._sz){
+          it._sz = sz;
+          tx = `translate(-50%,-50%) translate3d(${it.x}px,${it.y}px,${sz}px) rotateZ(${it.rot}deg)`;
+        }
       } else {
-        it.el.style.transform = `translate3d(${it.x}px,${it.y}px,${safeZ}px)`;
+        if(sz !== it._sz){
+          it._sz = sz;
+          tx = `translate3d(${it.x}px,${it.y}px,${sz}px)`;
+        }
         const a = Math.abs(relZ);
         if(a < bestAbs){ bestAbs = a; bestItem = it; }
       }
+      if(tx) it.el.style.transform = tx;
     }
 
     // Active card: closest to camera — toggle is-active on the card, not the item
@@ -1746,6 +1841,7 @@ function resetPanel(){
 
   function resetWorld(){
     sectionVisible = false;
+    pinWrap.classList.remove('is-live');
     stopCapabilityDemos();
     cancelAnimationFrame(animRaf); animRaf = null;
     mouse.x = mouse.y = mouse.tx = mouse.ty = 0;
@@ -1754,6 +1850,12 @@ function resetPanel(){
     world.style.transform   = 'rotateX(0deg) rotateY(0deg)';
     stage.style.perspective = '1000px';
   }
+  function activateWorld(){
+    sectionVisible = true;
+    pinWrap.classList.add('is-live');
+    startWorldLoop();
+    startCapabilityDemos();
+  }
 
   const camST = ScrollTrigger.create({
     trigger: section,
@@ -1761,8 +1863,8 @@ function resetPanel(){
     end:     'bottom bottom',
     invalidateOnRefresh: true,
     onUpdate:    self => { targetProgress = self.progress; lastVel = self.getVelocity(); startWorldLoop(); },
-    onEnter:     ()=>{ sectionVisible = true; startWorldLoop(); startCapabilityDemos(); },
-    onEnterBack: ()=>{ sectionVisible = true; startWorldLoop(); startCapabilityDemos(); },
+    onEnter:     activateWorld,
+    onEnterBack: activateWorld,
     onLeave:     resetWorld,
     onLeaveBack: resetWorld,
     onRefresh:   self => {
@@ -1771,9 +1873,7 @@ function resetPanel(){
       lastVel = 0;
       render(targetProgress, 0);
       if(targetProgress > 0 && targetProgress < 1){
-        sectionVisible = true;
-        startWorldLoop();
-        startCapabilityDemos();
+        activateWorld();
       }else{
         resetWorld();
       }
@@ -1784,7 +1884,7 @@ function resetPanel(){
   const initP = camST.progress || 0;
   targetProgress = initP;
   smoothProgress = initP;
-  if(initP > 0 && initP < 1){ sectionVisible = true; startWorldLoop(); }
+  if(initP > 0 && initP < 1){ activateWorld(); }
   render(initP, 0);
 
   initDemos();

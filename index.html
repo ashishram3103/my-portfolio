@@ -33,24 +33,24 @@ img,video{display:block;max-width:100%;}
   border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);
   transition:width .25s,height .25s,opacity .2s;}
 #cur-ring{position:fixed;top:0;left:0;width:36px;height:36px;border:1.5px solid var(--black);
-  border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);
-  transition:width .3s var(--ease-out-expo),height .3s,background .25s,border-color .25s,opacity .2s;}
+  border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);will-change:transform,background-color;
+  transition:width .3s var(--ease-out-expo),height .3s,background-color .14s linear,border-color .25s,opacity .2s;}
 #cur-label{position:fixed;top:0;left:0;pointer-events:none;z-index:9999;
   font-family:'Clash Display',sans-serif;font-weight:900;font-size:10px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--black);opacity:0;line-height:1;white-space:nowrap;
   transform:translate(-50%, calc(-50% + 22px));
   transition:opacity .25s var(--ease-out-expo),color .25s;}
 body.cur-hover #cur-dot{width:0;height:0;}
-body.cur-hover #cur-ring{width:72px;height:72px;background:var(--yellow);border-color:var(--yellow);mix-blend-mode:multiply;}
-body.cur-text #cur-ring{width:4px;height:32px;background:var(--black);border-color:var(--black);border-radius:1px;mix-blend-mode:difference;}
+body.cur-hover #cur-ring{width:72px;height:72px;background-color:var(--yellow);border-color:var(--yellow);mix-blend-mode:multiply;}
+body.cur-text #cur-ring{width:4px;height:32px;background-color:var(--black);border-color:var(--black);border-radius:1px;mix-blend-mode:difference;}
 body.cur-text #cur-dot{opacity:0;}
-body.cur-image #cur-ring{width:96px;height:96px;background:transparent;border-color:var(--white);border-width:2px;mix-blend-mode:difference;}
+body.cur-image #cur-ring{width:96px;height:96px;background-color:transparent;border-color:var(--white);border-width:2px;mix-blend-mode:difference;}
 body.cur-image #cur-dot{opacity:0;}
-body.cur-drag #cur-ring{width:60px;height:60px;background:var(--black);border-color:var(--black);}
+body.cur-drag #cur-ring{width:60px;height:60px;background-color:var(--black);border-color:var(--black);}
 body.cur-drag #cur-dot{background:var(--white);width:8px;height:8px;}
 body.cur-drag #cur-label{opacity:1;color:var(--white);}
-body.cur-work #cur-ring{width:84px;height:84px;background:var(--yellow);border:2px solid var(--black);
-  box-shadow:0 12px 34px rgba(13,13,13,.24), inset 0 0 0 1px rgba(255,255,255,.45);mix-blend-mode:normal;}
+body.cur-work #cur-ring{width:84px;height:84px;background-color:var(--cur-work-color,var(--yellow));border:2px solid var(--black);
+  box-shadow:0 8px 22px rgba(13,13,13,.22), inset 0 0 0 1px rgba(255,255,255,.45);mix-blend-mode:normal;}
 body.cur-work #cur-dot{opacity:0;}
 body.cur-work #cur-label{opacity:1;color:var(--black);}
 body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{opacity:0;}
@@ -422,7 +422,7 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 .wcard{display:block;position:relative;overflow:hidden;
   border-right:2px solid var(--black);border-bottom:2px solid var(--black);}
 .wcard:nth-child(2n){border-right:none;}
-.wcard:nth-child(5),.wcard:nth-child(6),.wcard:nth-child(7){border-bottom:none;}
+.wcard:nth-child(5),.wcard:nth-child(6){border-bottom:none;}
 .wcard-visual{position:relative;aspect-ratio:4/3;overflow:hidden;}
 .wcard-bg{position:absolute;inset:0;transition:transform .7s var(--ease-out-expo),filter .35s;}
 .wcard:hover .wcard-bg{transform:scale(1.06);filter:saturate(1.2) contrast(1.05);}
@@ -478,6 +478,7 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 
 /* WORD SCROLL */
 #word-section{background:var(--black);overflow:hidden;position:relative;min-height:0;}
+.word-flash-line{position:absolute;left:0;top:50%;width:100%;height:2px;background:var(--yellow);transform:scaleX(0);transform-origin:left center;pointer-events:none;z-index:4;opacity:0;will-change:transform,opacity;}
 .word-inner{min-height:58vh;display:flex;align-items:center;justify-content:center;
   flex-direction:column;padding:72px 40px;cursor:pointer;user-select:none;gap:10px;
   -webkit-tap-highlight-color:transparent;}
@@ -582,14 +583,12 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 
 /* Build UX cues — clean black/yellow scheme */
 .ux-build-layer{position:absolute;inset:0;pointer-events:none;z-index:2;overflow:visible;}
-.ux-dc-path-gear{position:absolute;left:0;top:0;width:64px;height:64px;margin:-32px 0 0 -32px;opacity:1;z-index:6;will-change:transform;}
-.ux-dc-gear-body{position:absolute;inset:0;background:var(--black);clip-path:polygon(50% 0,58% 12%,72% 7%,76% 22%,93% 28%,88% 42%,100% 50%,88% 58%,93% 72%,76% 78%,72% 93%,58% 88%,50% 100%,42% 88%,28% 93%,24% 78%,7% 72%,12% 58%,0 50%,12% 42%,7% 28%,24% 22%,28% 7%,42% 12%);}
-.ux-dc-gear-ring{position:absolute;inset:14px;border:7px solid var(--yellow);border-radius:50%;background:var(--surface);}
-.ux-dc-gear-hub{position:absolute;left:25px;top:25px;width:14px;height:14px;border-radius:50%;background:var(--red);box-shadow:0 0 0 5px rgba(238,58,90,.18);}
+.ux-dc-path-gear{position:absolute;left:0;top:0;width:64px;height:64px;margin:-32px 0 0 -32px;opacity:1;z-index:6;will-change:transform;contain:layout style paint;transform-style:preserve-3d;}
+.ux-dc-gear-body{position:absolute;inset:0;background:var(--black);clip-path:polygon(50% 0,58% 12%,72% 7%,76% 22%,93% 28%,88% 42%,100% 50%,88% 58%,93% 72%,76% 78%,72% 93%,58% 88%,50% 100%,42% 88%,28% 93%,24% 78%,7% 72%,12% 58%,0 50%,12% 42%,7% 28%,24% 22%,28% 7%,42% 12%);will-change:transform;transform:translateZ(0);}
+.ux-dc-gear-ring{position:absolute;inset:14px;border:7px solid var(--yellow);border-radius:50%;background:var(--surface);will-change:transform;transform:translateZ(0);}
+.ux-dc-gear-hub{position:absolute;left:25px;top:25px;width:14px;height:14px;border-radius:50%;background:var(--red);box-shadow:0 0 0 5px rgba(238,58,90,.18);will-change:transform;transform:translateZ(0);}
 .ux-obj{position:absolute;pointer-events:none;will-change:transform,opacity;}
 .ux-obj svg{display:block;overflow:visible;}
-.ux-obj--radius{left:2%;top:2%;width:152px;}
-.ux-obj--curve{right:2%;top:16%;width:190px;}
 .ux-obj--magnet{left:3%;top:36%;width:210px;}
 .ux-obj--switcher{right:3%;top:56%;width:230px;}
 .ux-obj--ripple{left:3%;top:77%;width:180px;}
@@ -827,18 +826,27 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   overflow:hidden;
   background:#030303;
 }
+/* Inner content fades in/out around the pin engagement to mask the layout snap.
+   Children stay invisible until JS toggles .is-live on the wrap (camST onEnter).
+   The wrap's dark background stays — so user just sees the dark stage approaching. */
+.cap-pin-wrap > *{opacity:0;transition:opacity .28s ease-out;}
+.cap-pin-wrap.is-live > *{opacity:1;}
 /* Scanlines */
 .cap-pin-wrap::before{
   content:'';position:absolute;inset:0;pointer-events:none;z-index:20;
   background:repeating-linear-gradient(
     to bottom,transparent,transparent 3px,rgba(0,0,0,.15) 3px,rgba(0,0,0,.15) 4px
   );
+  opacity:0;transition:opacity .28s ease-out;
 }
+.cap-pin-wrap.is-live::before{opacity:1;}
 /* Vignette */
 .cap-pin-wrap::after{
   content:'';position:absolute;inset:0;pointer-events:none;z-index:19;
   background:radial-gradient(ellipse at 50% 50%,transparent 35%,rgba(0,0,0,.8) 100%);
+  opacity:0;transition:opacity .28s ease-out;
 }
+.cap-pin-wrap.is-live::after{opacity:1;}
 /* HUD bar */
 .cap-hud{
   position:absolute;top:28px;left:40px;right:40px;z-index:30;pointer-events:none;
@@ -1031,6 +1039,8 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   #capability-section{height:auto;}
   .cap-pin-wrap{height:auto;position:relative;padding:80px 20px 60px;}
   .cap-pin-wrap::before,.cap-pin-wrap::after{display:none;}
+  /* Mobile has no pin — always show inner content */
+  .cap-pin-wrap > *{opacity:1;}
   .cap-hud,.cap-hint,.cap-progress-bar{display:none;}
   .cap-title-block{position:relative;left:auto;top:auto;transform:none;
     max-width:100%;margin-bottom:36px;padding:0;}
@@ -1424,10 +1434,6 @@ body.no-gsap .cap-card{position:relative;opacity:1;pointer-events:auto;transform
       </div>
       <div class="wcard-foot"><div class="wcard-foot-num">(06)</div><div class="wcard-foot-name">If a River Was a Memory — GSAP</div><div class="wcard-foot-tags">GSAP · ScrollTrigger · SVG · Solo Build</div></div>
     </a>
-    <div class="wcard-cta">
-      <div class="wcard-cta-ghost">Visual design &amp; UI work lives in the archive.</div>
-      <a href="#archive-section" class="wcard-cta-link">View Archive <span>&#8595;</span></a>
-    </div>
   </div>
 </section>
 
