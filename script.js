@@ -617,11 +617,13 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
   const safePlay=v=>{try{const p=v.play();if(p&&p.catch) p.catch(()=>{});}catch(e){}};
 
   if(isMobile){
+    // Save bandwidth: only the first video keeps its source on mobile. The rest
+    // unload. We DON'T return — the connector draw + copy/hook reveals still run
+    // so the full build-reel narrative is present on mobile, not just the video.
     allVideos.forEach((v,i)=>{
       if(i===0){v.preload='auto';safePlay(v);}
       else{v.pause();v.removeAttribute('src');v.querySelectorAll('source').forEach(s=>s.removeAttribute('src'));v.load();}
     });
-    return;
   }
 
   if(path){
@@ -689,7 +691,8 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
    BUILD UX CHIPS — section-scoped, paused outside
    ============================================================ */
 (function(){
-  if(IS_MOBILE) return;
+  // Gear runs at all widths; CSS controls visibility (shown >=600px, hidden below).
+  // Path + chips are percentage-based so they adapt to the stage size automatically.
   const stage=document.querySelector('#vid-section .vid-flow-stage');
   if(!stage || stage.querySelector('.ux-build-layer')) return;
   const layer=document.createElement('div');
@@ -1459,11 +1462,15 @@ function resetPanel(){
    ============================================================ */
 (function(){
   const board=document.getElementById('testi-board');
-  if(!board || IS_MOBILE) return;
+  if(!board) return;
   const notes=Array.from(board.querySelectorAll('.testi-note'));
   if(notes.length < 3) return;
   const noteRots=notes.map(n=>parseFloat(getComputedStyle(n).getPropertyValue('--rot'))||0);
 
+  /* Carousel runs only when the grid is multi-column (>=600px). Below that the
+     section is a single stacked column where the slot-shuffle makes no sense. */
+  const canRun=()=>window.matchMedia('(min-width:600px)').matches;
+  let inView=false;
   let positions=[];        /* original DOM-order coordinates */
   let slotIndex=[];        /* current slot occupied by each note (mod-wrapped) */
   let active=false;
@@ -1519,7 +1526,7 @@ function resetPanel(){
   }
 
   function startLoop(){
-    if(active) return;
+    if(active || !inView || !canRun()) return;
     measure();
     active=true;lastT=0;
     raf=requestAnimationFrame(tick);
@@ -1527,25 +1534,27 @@ function resetPanel(){
   function stopLoop(){
     active=false;
     if(raf){cancelAnimationFrame(raf);raf=null;}
-    /* Reset to resting position */
+    /* Reset to resting position. Below 600px clear the inline transform so the
+       stacked-column CSS (transform:none) applies instead of a forced tilt. */
     notes.forEach((n,i)=>{
-      n.style.transform=`rotate(${noteRots[i]}deg)`;
+      n.style.transform = canRun() ? `rotate(${noteRots[i]}deg)` : '';
     });
   }
 
   window.addEventListener('resize',()=>{
     clearTimeout(resizeTimer);
     resizeTimer=setTimeout(()=>{
-      const wasActive=active;
       stopLoop();
-      if(wasActive) startLoop();
+      startLoop();
     },250);
   },{passive:true});
 
   ScrollTrigger.create({
     trigger:board,start:'top 90%',end:'bottom 10%',
-    onEnter:startLoop,onEnterBack:startLoop,
-    onLeave:stopLoop,onLeaveBack:stopLoop
+    onEnter:()=>{inView=true;startLoop();},
+    onEnterBack:()=>{inView=true;startLoop();},
+    onLeave:()=>{inView=false;stopLoop();},
+    onLeaveBack:()=>{inView=false;stopLoop();}
   });
 })();
 
@@ -1561,7 +1570,13 @@ function resetPanel(){
   const pinWrap = document.getElementById('cap-pin-wrap');
   if(!section || !pinWrap) return;
 
-  const isMobile = window.matchMedia('(max-width:900px)').matches;
+  // Full pinned 3D world runs at virtually all widths (user wants max parity on
+  // mobile). Only flatten on very tiny/old screens (<360px) as a safety fallback.
+  const isMobile = window.matchMedia('(max-width:359px)').matches;
+  // Touch devices: scroll velocity is jerky, so velocity-driven effects (tilt, fov,
+  // star-stretch) flicker. Detect touch to neutralize them (depth is unaffected).
+  const isTouch = window.matchMedia('(hover:none)').matches
+    || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   const cards = Array.from(section.querySelectorAll('.cap-card'));
   const N = cards.length;
   if(!N) return;
@@ -1600,7 +1615,9 @@ function resetPanel(){
     end: 'bottom bottom',
     pin: pinWrap,
     pinSpacing: false,
-    pinType: 'fixed',
+    // 'fixed' is crisp on desktop but jumps on touch when the mobile address bar
+    // shows/hides. 'transform' pins by moving the element and is immune to that.
+    pinType: window.matchMedia('(min-width:901px)').matches ? 'fixed' : 'transform',
     anticipatePin: 1,
     invalidateOnRefresh: true,
   });
@@ -1700,8 +1717,10 @@ function resetPanel(){
     // Mouse tilt
     mouse.x += (mouse.tx - mouse.x) * 0.08;
     mouse.y += (mouse.ty - mouse.y) * 0.08;
-    const rx = clamp(mouse.y * -5 - smoothVel * 5, -8, 8);
-    const ry = clamp(mouse.x *  5,                 -8, 8);
+    // Touch: drop the velocity term — jerky touch-scroll velocity makes it vibrate.
+    const velTilt = isTouch ? 0 : smoothVel * 5;
+    const rx = clamp(mouse.y * -5 - velTilt, -8, 8);
+    const ry = clamp(mouse.x *  5,           -8, 8);
     world.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
     // Lerp scroll progress — matches Lenis lerp:0.1 feel
     smoothProgress += (targetProgress - smoothProgress) * 0.1;
@@ -1738,8 +1757,10 @@ function resetPanel(){
   }
 
   function render(progress, velocity){
-    // Normalize ScrollTrigger velocity (px/sec) to reference-style [-1, 1]
-    const vNorm = clamp((velocity || 0) / 2500, -1, 1);
+    // Normalize ScrollTrigger velocity (px/sec) to reference-style [-1, 1].
+    // Touch: force 0 — jerky touch-scroll velocity otherwise pulses the perspective
+    // (fov), world tilt and star-stretch every frame, which reads as flicker/vibration.
+    const vNorm = isTouch ? 0 : clamp((velocity || 0) / 2500, -1, 1);
     smoothVel  += (vNorm - smoothVel) * 0.1;
 
     const cameraZ = cameraPos(progress);

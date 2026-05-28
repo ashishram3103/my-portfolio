@@ -589,14 +589,24 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 .ux-obj--ripple{left:3%;top:77%;width:180px;}
 @media(max-width:900px){
   #vid-section.vid-flow-section{padding:74px 20px 86px;min-height:auto;overflow:hidden;contain:layout paint;}
-  #vid-section.vid-flow-section::before,.vid-orb{display:none;}
+  #vid-section.vid-flow-section::before{display:none;}
   .vid-flow-head{display:block;margin-bottom:42px;}
   .vid-flow-head p{margin-top:18px;justify-self:start;}
-  .vid-flow-stage{display:flex;flex-direction:column;gap:0;padding:0;}
-  .vid-flow-connector{display:none;}
+  /* Gap between items gives the rolling gear + chips room to breathe; center
+     the whole build-reel narrative (video, copy blocks, hook phrases). */
+  .vid-flow-stage{display:flex;flex-direction:column;gap:64px;padding:0;align-items:center;}
   .vid-reel-card{width:100%;max-width:320px;transform:none;opacity:1;margin:0 auto;box-shadow:4px 4px 0 var(--black);}
-  .vid-copy,.vid-break-hook,.ux-build-layer{display:none;}
   .vid-main{display:block;}
+  /* Build-reel story content stays on mobile (revealed on scroll by JS) */
+  .vid-copy{width:min(100%,420px);}
+  .vid-break-hook{font-size:clamp(30px,8vw,52px);margin:4px 0;}
+  /* Cards are z-index:3 with an opaque bg; lift the gear layer above them so it
+     rolls ON TOP of the stacked cards (on desktop it weaves through grid gaps). */
+  .ux-build-layer{z-index:5;}
+  /* Gear + chips run on mobile too; scale the chips down to fit a narrow column */
+  .ux-obj--magnet{width:128px;}
+  .ux-obj--switcher{width:138px;}
+  .ux-obj--ripple{width:112px;}
 }
 
 /* ARCHIVE */
@@ -745,10 +755,12 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 }
 @media(max-width:700px){
   #testimonials-section{padding:72px 20px 84px;}
+  .testi-board-head h2{font-size:clamp(36px,12vw,58px);}
+}
+@media(max-width:599px){
   .testi-evidence-board{grid-template-columns:1fr;gap:18px;}
   .testi-note{min-height:0;transform:none;}
   .testi-thread-svg{display:none;}
-  .testi-board-head h2{font-size:clamp(36px,12vw,58px);}
 }
 
 /* ABOUT */
@@ -1070,12 +1082,21 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   background:var(--yellow);border-radius:50%;
   transform-origin:left center;will-change:transform;
 }
+/* <=900px (incl. phones): full pinned 3D world, composition tuned for narrow width.
+   Shrink the 520px+ cards and hide the absolute title/hint that would overlap. */
 @media(max-width:900px){
+  .cap-title-block,.cap-hint{display:none;}
+  .cap-card{width:clamp(240px,84vw,470px);min-height:clamp(380px,58vh,540px);}
+  .cap-world-text{font-size:clamp(64px,15vw,150px);}
+}
+/* Below 360px only: no pin, flatten to a stacked list (tiny-screen safety) */
+@media(max-width:359px){
   #capability-section{height:auto;}
   .cap-pin-wrap{height:auto;position:relative;padding:80px 20px 60px;}
-  .cap-pin-wrap::before,.cap-pin-wrap::after{display:none;}
-  /* Mobile has no pin — always show inner content */
-  .cap-pin-wrap > *{opacity:1;}
+  .cap-pin-wrap::before,.cap-pin-wrap::after,.cap-pre-placeholder{display:none;}
+  /* ID selector (1,0,0) beats the base .cap-pin-wrap > *:not(...) rule (0,2,0)
+     that otherwise keeps children invisible when there's no .is-live class */
+  #cap-pin-wrap > *{opacity:1;}
   .cap-hud,.cap-hint,.cap-progress-bar{display:none;}
   .cap-title-block{position:relative;left:auto;top:auto;transform:none;
     max-width:100%;margin-bottom:36px;padding:0;}
