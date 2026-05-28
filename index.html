@@ -58,9 +58,9 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 
 /* INK TRAIL — single rule, coloured, no blend conflicts */
 .ink-blob{position:fixed;pointer-events:none;z-index:9997;
-  width:14px;height:14px;border-radius:50%;
+  width:14px;height:14px;border-radius:50%;opacity:0;
   background:var(--ink-color, var(--trail-color, #F9D100));
-  transform:translate(-50%,-50%);will-change:transform,opacity;mix-blend-mode:normal;}
+  transform:translate(-50%,-50%) scale(0.1);mix-blend-mode:normal;}
 @media(max-width:900px){.ink-blob{display:none;}}
 
 /* FILM GRAIN */
@@ -369,10 +369,6 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 @media(min-width:901px){
   .sband-track{animation:sbandScroll linear both;animation-timeline:scroll(root);animation-range:0% 15%;}
   @keyframes sbandScroll{from{transform:translateX(0);}to{transform:translateX(-33.33%);}}
-  @supports not (animation-timeline:scroll()){
-    .sband-track{animation:sbandFallback 12s linear infinite;}
-    @keyframes sbandFallback{from{transform:translateX(0);}to{transform:translateX(-33.33%);}}
-  }
 }
 @media(max-width:900px){
   .sband-track{animation:sbandMobile 5s linear infinite;}
@@ -826,11 +822,49 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   overflow:hidden;
   background:#030303;
 }
-/* Inner content fades in/out around the pin engagement to mask the layout snap.
-   Children stay invisible until JS toggles .is-live on the wrap (camST onEnter).
-   The wrap's dark background stays — so user just sees the dark stage approaching. */
-.cap-pin-wrap > *{opacity:0;transition:opacity .28s ease-out;}
-.cap-pin-wrap.is-live > *{opacity:1;}
+/* Placeholder shown before the 3D world activates */
+.cap-pre-placeholder{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:20px;
+  pointer-events:none;z-index:5;
+  background:#0d0d0d;
+  transition:opacity .6s ease-out;
+}
+.cap-pin-wrap.is-live .cap-pre-placeholder{opacity:0;pointer-events:none;}
+.cap-pre-placeholder .cph-eyebrow{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;
+  color:rgba(255,255,255,.4);margin-bottom:14px;
+}
+.cap-pre-placeholder .cph-eyebrow::before{
+  content:'';width:7px;height:7px;border-radius:50%;background:var(--yellow);flex-shrink:0;
+}
+.cap-pre-placeholder .cph-label{
+  font-family:'Clash Display','Arial Black',sans-serif;
+  font-size:clamp(42px,6vw,88px);
+  font-weight:700;letter-spacing:-.04em;line-height:.94;
+  text-transform:uppercase;color:#fff;
+  margin-bottom:14px;
+}
+.cap-pre-placeholder .cph-label em{
+  font-family:'Cabinet Grotesk','Arial Black',sans-serif;
+  font-weight:800;font-style:italic;color:var(--yellow);
+}
+.cap-pre-placeholder .cph-sub{
+  font-size:13px;line-height:1.5;
+  color:rgba(255,255,255,.4);
+  max-width:280px;margin-bottom:28px;
+}
+.cap-pre-placeholder .cph-hint{
+  font-family:'JetBrains Mono','Courier New',monospace;
+  font-size:11px;letter-spacing:.3em;text-transform:uppercase;
+  color:#F9D100;
+  animation:cphBlink 2s ease-in-out infinite;
+}
+@keyframes cphBlink{0%,100%{opacity:.35;}55%{opacity:1;}}
+/* Inner content fades in when live */
+.cap-pin-wrap > *:not(.cap-pre-placeholder){opacity:0;transition:opacity .28s ease-out;}
+.cap-pin-wrap.is-live > *:not(.cap-pre-placeholder){opacity:1;}
 /* Scanlines */
 .cap-pin-wrap::before{
   content:'';position:absolute;inset:0;pointer-events:none;z-index:20;
@@ -1627,6 +1661,12 @@ body.no-gsap .cap-card{position:relative;opacity:1;pointer-events:auto;transform
 
 <section id="capability-section" aria-label="Capability showcase">
   <div class="cap-pin-wrap" id="cap-pin-wrap">
+    <div class="cap-pre-placeholder">
+      <div class="cph-eyebrow">Keep going</div>
+      <div class="cph-label">Don't<br><em>stop</em><br>here.</div>
+      <div class="cph-sub">The good part is below.</div>
+      <div class="cph-hint">↓ SCROLL</div>
+    </div>
     <div class="cap-hud">
       <span>SYS.READY</span>
       <span class="cap-hud-line"></span>

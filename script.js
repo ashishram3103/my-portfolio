@@ -12,17 +12,13 @@ if(!window.gsap || !window.ScrollTrigger){
   throw new Error('GSAP or ScrollTrigger failed to load.');
 }
 
-/* ============================================================
-   v12 — CLEAN JS. All 10 A fixes applied. No patches on patches.
-   ============================================================ */
-
 gsap.registerPlugin(ScrollTrigger);
 ScrollTrigger.config({ignoreMobileResize:true,limitCallbacks:true,fastScrollEnd:true,preventOverlaps:true});
 gsap.defaults({ease:'expo.out',duration:0.9});
 gsap.ticker.lagSmoothing(500, 33);
 
 const IS_MOBILE = window.innerWidth < 900;
-const ENABLE_POINTER_TRAILS = false;
+const ENABLE_POINTER_TRAILS = true;
 let RESET_SCROLL_ON_LOAD = !window.location.hash;
 
 try{
@@ -116,9 +112,10 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   // only swaps the --cur-work-color CSS variable on body. Color is read from each
   // tile's own .wcard-bg / .wcard-overlay inline style so no markup change needed.
   const workSection = document.getElementById('work-section');
-  if(workSection){
-    workSection.addEventListener('mouseenter',()=>setState('work','LOOK'));
-    workSection.addEventListener('mouseleave',()=>{
+  const workGrid = workSection && workSection.querySelector('.work-grid');
+  if(workSection && workGrid){
+    workGrid.addEventListener('mouseenter',()=>setState('work','LOOK'));
+    workGrid.addEventListener('mouseleave',()=>{
       setState(null);
       ring.style.removeProperty('--cur-work-color');
     });
@@ -130,10 +127,10 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
         if(m) color = m[1].trim();
       }
       if(!color) return;
-      // Set custom property on ring (not body) — limits style recalc to one element
-      // instead of cascading through every descendant of <body>.
+      const isDark = /var\(--black\)|#0d0d0d|#000|^black$/i.test(color.trim());
+      const cursorColor = isDark ? '#ffffff' : color;
       card.addEventListener('mouseenter',()=>{
-        ring.style.setProperty('--cur-work-color', color);
+        ring.style.setProperty('--cur-work-color', cursorColor);
       });
     });
   }
@@ -156,12 +153,20 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
    ============================================================ */
 (function(){
   if(IS_MOBILE || !ENABLE_POINTER_TRAILS) return;
-  let trailActive=false, trailTimer=null;
+  const POOL=10, THROTTLE=80;
+  const pool=[];
+  for(let i=0;i<POOL;i++){
+    const b=document.createElement('div');
+    b.className='ink-blob';
+    document.body.appendChild(b);
+    pool.push(b);
+  }
+  let idx=0, lastT=0;
   document.addEventListener('mousemove',e=>{
-    if(trailActive) return;
-    trailActive=true;
-    const blob=document.createElement('div');
-    blob.className='ink-blob';
+    const now=performance.now();
+    if(now-lastT<THROTTLE) return;
+    lastT=now;
+    const blob=pool[idx%POOL]; idx++;
     const sectionColor=(window.__trailColor && window.__trailColor()) || '#F9D100';
     blob.style.setProperty('--ink-color', sectionColor);
     blob.style.left=e.clientX+'px';
@@ -169,15 +174,15 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     const size=10+Math.random()*8;
     blob.style.width=size+'px';
     blob.style.height=size+'px';
-    blob.style.opacity=0.45+Math.random()*0.20;
-    document.body.appendChild(blob);
-    gsap.fromTo(blob,
-      {scale:1},
-      {scale:0.2,opacity:0,duration:0.8,ease:'expo.out',onComplete:()=>blob.remove()}
-    );
-    clearTimeout(trailTimer);
-    trailTimer=setTimeout(()=>{trailActive=false;},38);
-  });
+    blob.style.transform='translate(-50%,-50%) scale(1)';
+    blob.style.opacity='0.55';
+    blob.style.transition='none';
+    requestAnimationFrame(()=>{
+      blob.style.transition='transform 0.7s ease-out, opacity 0.7s ease-out';
+      blob.style.transform='translate(-50%,-50%) scale(0.1)';
+      blob.style.opacity='0';
+    });
+  },{passive:true});
 })();
 
 /* ============================================================
@@ -410,16 +415,6 @@ function finishSiteLoader(){
 
 window.addEventListener('load',()=>setTimeout(finishSiteLoader,650));
 
-/* Emergency fallback — only if loader fails after 3s */
-setTimeout(()=>{
-  if(document.body.classList.contains('is-loading')){
-    document.body.classList.remove('is-loading');
-    const loader=document.getElementById('site-loader');
-    if(loader) loader.remove();
-    playHeroIntro();
-    refreshScrollSystems(400);
-  }
-},3000);
 
 /* ============================================================
    WORD SCROLL — verb auto-switch IO-guarded
@@ -882,7 +877,8 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
   mainTrigger=ScrollTrigger.create({
     trigger:stage,start:'top 82%',end:'bottom 18%',
     onUpdate:self=>updateDesignerCoderObjects(self.progress),
-    onLeaveBack:()=>updateDesignerCoderObjects(0,true)
+    onLeave:()=>updateDesignerCoderObjects(1,true),
+    onLeaveBack:()=>{ lastUxProgress=-1; updateDesignerCoderObjects(0,true); }
   });
   // Explicit initial sync — refreshInit during ScrollTrigger.create fires BEFORE
   // mainTrigger gets the assignment above, so the first refresh skipped the re-render.
