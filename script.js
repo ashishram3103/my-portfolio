@@ -17,7 +17,9 @@ ScrollTrigger.config({ignoreMobileResize:true,limitCallbacks:true,fastScrollEnd:
 gsap.defaults({ease:'expo.out',duration:0.9});
 gsap.ticker.lagSmoothing(500, 33);
 
-const IS_MOBILE = window.innerWidth < 900;
+// matchMedia matches the CSS @media(max-width:900px) exactly and is accurate in all
+// browsers/DevTools — unlike window.innerWidth which is stale in emulation mode.
+const IS_MOBILE = window.matchMedia('(max-width:900px)').matches;
 const ENABLE_POINTER_TRAILS = true;
 let RESET_SCROLL_ON_LOAD = !window.location.hash;
 
@@ -103,7 +105,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   }
 
   // Exclude work-tile anchors so the section-level cur-work state isn't overwritten
-  document.querySelectorAll('a:not(.wcard):not(.wcard-cta-link),button,.svc-row,.exp-item,.skill-tag,.cnt-btn-email,.cnt-btn-phone,.currently-badge,.testi-note').forEach(el=>{
+  document.querySelectorAll('a:not(.wcard):not(.wcard-cta-link),button,.svc-row,.exp-item,.skill-tag,.cnt-btn-email,.cnt-btn-phone,.currently-badge,.testi-glass').forEach(el=>{
     el.addEventListener('mouseenter',()=>setState('hover'));
     el.addEventListener('mouseleave',()=>setState(null));
   });
@@ -842,10 +844,15 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
       mbModa.style.transform=`translate3d(${+((1-mg)*-44).toFixed(1)}px,${+((1-mg)*-20).toFixed(1)}px,0) rotate(${+((1-mg)*-8).toFixed(2)}deg)`;
       mbModb.style.transform=`translate3d(${+((1-mg)*-26).toFixed(1)}px,${+((1-mg)*34).toFixed(1)}px,0) rotate(${+((1-mg)*-5).toFixed(2)}deg)`;
       mbModc.style.transform=`translate3d(${+((1-mg)*42).toFixed(1)}px,${+((1-mg)*-28).toFixed(1)}px,0) rotate(${+((1-mg)*8).toFixed(2)}deg)`;
-      mbGla.setAttribute('x1',+(16+(1-mg)*-20).toFixed(1));
-      mbGla.setAttribute('y1',+(55+(1-mg)*8).toFixed(1));
-      mbGlb.setAttribute('x2',+(149+(1-mg)*22).toFixed(1));
-      mbGlb.setAttribute('y2',+(76+(1-mg)*-10).toFixed(1));
+      // SVG geometry mutation forces per-frame re-rasterization (expensive on mobile GPUs).
+      // Skip the subtle glare-line shift on mobile — the markup defaults already sit at the
+      // revealed state, so the magnet still looks right; only the micro-detail is dropped.
+      if(!IS_MOBILE){
+        mbGla.setAttribute('x1',+(16+(1-mg)*-20).toFixed(1));
+        mbGla.setAttribute('y1',+(55+(1-mg)*8).toFixed(1));
+        mbGlb.setAttribute('x2',+(149+(1-mg)*22).toFixed(1));
+        mbGlb.setAttribute('y2',+(76+(1-mg)*-10).toFixed(1));
+      }
     }
 
     /* component switcher — 0.28 → 0.70 */
@@ -859,8 +866,12 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
       else if(sw<.78){const t=(sw-.45)/.33;sY=9+t*42;sH=42-t*4;sRx=19-t*16;}
       else{sY=51;sH=38;sRx=3;}
       swSel.style.transform=`translateY(${+(sY-9).toFixed(1)}px)`;
-      swSel.setAttribute('height',+sH.toFixed(1));
-      swSel.setAttribute('rx',+sRx.toFixed(1));
+      // Skip the rect height/rx morph on mobile — same per-frame SVG raster cost. The
+      // selection still slides (cheap transform); it just keeps its default size/corners.
+      if(!IS_MOBILE){
+        swSel.setAttribute('height',+sH.toFixed(1));
+        swSel.setAttribute('rx',+sRx.toFixed(1));
+      }
       swDot.style.transform=`translateY(${+((sY+sH*.5)-30).toFixed(2)}px)`;
     }
 
@@ -928,6 +939,26 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
   });
 })();
 
+(function(){
+  const cols=document.querySelector('.exp-cols');
+  const left=document.querySelector('.exp-sticky-copy');
+  const foot=document.querySelector('.exp-footnote');
+  if(!cols || !left || !foot || IS_MOBILE) return;
+
+  left.classList.add('is-gsap-pin-ready');
+  const pinTop=()=>Math.max(112,Math.min(148,Math.round(window.innerHeight*0.16)));
+  const endOffset=()=>pinTop()+left.offsetHeight+36;
+  ScrollTrigger.create({
+    trigger:cols,
+    start:()=>`top ${pinTop()}`,
+    endTrigger:foot,
+    end:()=>`top ${endOffset()}`,
+    pin:left,
+    pinSpacing:false,
+    invalidateOnRefresh:true
+  });
+})();
+
 /* ============================================================
    ABOUT — bio reveal with reverse, meta + photo
    ============================================================ */
@@ -939,6 +970,97 @@ gsap.fromTo('.about-meta-card',{opacity:0,x:45},{opacity:1,x:0,duration:.9,ease:
   scrollTrigger:{trigger:'.about-meta-card',start:'top 88%',toggleActions:'play none none reverse'}});
 gsap.fromTo('.about-photo-wrap',{opacity:0,scale:.94},{opacity:1,scale:1,duration:.9,ease:'power3.out',
   scrollTrigger:{trigger:'.about-photo-wrap',start:'top 88%',toggleActions:'play none none reverse'}});
+
+(function(){
+  const flow=document.querySelector('.about-skills-flow');
+  const photo=document.querySelector('.about-photo-wrap');
+  const skills=document.getElementById('skills-section');
+  if(!flow || !photo || !skills || IS_MOBILE) return;
+
+  photo.classList.add('is-gsap-pin-ready');
+  const pinTop=()=>Math.round(window.innerHeight * 0.18);
+  ScrollTrigger.create({
+    trigger:photo,
+    start:()=>`top ${pinTop()}`,
+    endTrigger:skills,
+    end:()=>`top ${pinTop()}`,
+    pin:photo,
+    pinSpacing:false,
+    invalidateOnRefresh:true
+  });
+})();
+
+(function(){
+  const flow=document.querySelector('.about-skills-flow');
+  const photo=document.querySelector('.about-photo-wrap');
+  const skills=document.getElementById('skills-section');
+  const svg=document.getElementById('about-dock-divider');
+  const path=document.getElementById('about-dock-path');
+  if(!flow || !photo || !skills || !svg || !path || IS_MOBILE) return;
+
+  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+  let raf=0;
+
+  function buildDockPath(){
+    raf=0;
+    const flowRect=flow.getBoundingClientRect();
+    const photoRect=photo.getBoundingClientRect();
+    const skillsRect=skills.getBoundingClientRect();
+    const width=Math.max(flow.scrollWidth,Math.round(flowRect.width));
+    const height=Math.max(flow.scrollHeight,Math.round(skills.offsetTop+skills.offsetHeight));
+    const seamY=skillsRect.top-flowRect.top;            // divider sits at the Skills seam (constant)
+    const photoBottom=photoRect.bottom-flowRect.top;    // photo bottom in flow coords (grows while pinned)
+    const m=28;                                          // breathing space (also clears the +10 red shadow)
+    const r=20;                                          // corner radius
+    const xL=clamp((photoRect.left-flowRect.left)-m,30,width-180);
+    const xR=clamp((photoRect.right-flowRect.left)+m,xL+150,width-(r+4));
+    const dipY=photoBottom+m;                            // pocket floor sits below the photo (with margin)
+    const f=n=>n.toFixed(1);
+
+    svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+    svg.setAttribute('width',width);
+    svg.setAttribute('height',height);
+
+    // Straight until the photo's bottom dips past the seam; then a rounded pocket wraps
+    // DOWN around the photo (down the left side, under the bottom, up the right) with an
+    // even margin — the photo sits docked in a clean cut-out. The pocket deepens as the
+    // pinned photo descends, so it hugs more of the photo's sides until Skills releases it.
+    if(dipY <= seamY + r){
+      path.setAttribute('d',`M0 ${f(seamY)} H${width}`); // straight divider
+    } else {
+      path.setAttribute('d',[
+        `M0 ${f(seamY)}`,
+        `H${f(xL-r)}`,
+        `Q${f(xL)} ${f(seamY)} ${f(xL)} ${f(seamY+r)}`,
+        `V${f(dipY-r)}`,
+        `Q${f(xL)} ${f(dipY)} ${f(xL+r)} ${f(dipY)}`,
+        `H${f(xR-r)}`,
+        `Q${f(xR)} ${f(dipY)} ${f(xR)} ${f(dipY-r)}`,
+        `V${f(seamY+r)}`,
+        `Q${f(xR)} ${f(seamY)} ${f(xR+r)} ${f(seamY)}`,
+        `H${width}`
+      ].join(' '));
+    }
+  }
+
+  function requestDockPath(){
+    if(raf) return;
+    raf=requestAnimationFrame(buildDockPath);
+  }
+
+  buildDockPath();
+  window.addEventListener('resize',requestDockPath);
+  window.addEventListener('scroll',requestDockPath,{passive:true});
+  if(window.ResizeObserver){
+    const ro=new ResizeObserver(requestDockPath);
+    ro.observe(flow);
+    ro.observe(photo);
+    ro.observe(skills);
+  }
+  ScrollTrigger.addEventListener('refresh',requestDockPath);
+  setTimeout(requestDockPath,80);
+  setTimeout(requestDockPath,320);
+})();
 
 /* ============================================================
    SKILLS TITLE — char reveal + colour shift, once
@@ -1405,7 +1527,7 @@ function resetPanel(){
    HERO FAKE-3D BUILD LAB — idle demo + mouse parallax + scroll payoff
    ============================================================ */
 (function(){
-  if(IS_MOBILE) return;
+  if(IS_MOBILE) return;   // mobile uses the dedicated #hero-buildm element instead
   const lab=document.getElementById('hero-build-lab');
   const obj=document.getElementById('hero-website-object');
   if(!lab || !obj) return;
@@ -1430,20 +1552,23 @@ function resetPanel(){
   function armIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(idleDemo,2400);}
   armIdle();
 
-  let labRect=lab.getBoundingClientRect();
-  window.addEventListener('resize',()=>{labRect=lab.getBoundingClientRect();},{passive:true});
-  lab.addEventListener('mousemove',e=>{
-    clearTimeout(idleTimer);
-    const px=(e.clientX-labRect.left)/labRect.width-.5;
-    const py=(e.clientY-labRect.top)/labRect.height-.5;
-    gsap.to(obj,{rotationY:px*18,rotationX:-py*14,x:px*14,y:py*10,duration:.35,ease:'power3.out',overwrite:'auto'});
-    gsap.to(bp,{x:px*20,y:py*16,opacity:.9,duration:.45,ease:'power3.out',overwrite:'auto'});
-  });
-  lab.addEventListener('mouseleave',()=>{
-    gsap.to(obj,{rotationY:0,rotationX:0,x:0,y:0,duration:.75,ease:'elastic.out(1,.55)',overwrite:'auto'});
-    gsap.to(bp,{x:0,y:0,opacity:.42,duration:.65,ease:'expo.out',overwrite:'auto'});
-    armIdle();
-  });
+  // Mouse parallax is desktop-only; on touch the lab runs the idle-demo loop + scroll payoff.
+  if(!IS_MOBILE){
+    let labRect=lab.getBoundingClientRect();
+    window.addEventListener('resize',()=>{labRect=lab.getBoundingClientRect();},{passive:true});
+    lab.addEventListener('mousemove',e=>{
+      clearTimeout(idleTimer);
+      const px=(e.clientX-labRect.left)/labRect.width-.5;
+      const py=(e.clientY-labRect.top)/labRect.height-.5;
+      gsap.to(obj,{rotationY:px*18,rotationX:-py*14,x:px*14,y:py*10,duration:.35,ease:'power3.out',overwrite:'auto'});
+      gsap.to(bp,{x:px*20,y:py*16,opacity:.9,duration:.45,ease:'power3.out',overwrite:'auto'});
+    });
+    lab.addEventListener('mouseleave',()=>{
+      gsap.to(obj,{rotationY:0,rotationX:0,x:0,y:0,duration:.75,ease:'elastic.out(1,.55)',overwrite:'auto'});
+      gsap.to(bp,{x:0,y:0,opacity:.42,duration:.65,ease:'expo.out',overwrite:'auto'});
+      armIdle();
+    });
+  }
 
   gsap.timeline({
     scrollTrigger:{trigger:'#hero-section',start:'top top',end:'38% top',scrub:.6}
@@ -1456,109 +1581,407 @@ function resetPanel(){
 })();
 
 /* ============================================================
-   TESTIMONIAL — SEAMLESS GSAP TRANSFORM LOOP
-   No DOM mutation. No hover pause. Pure infinite slot-swap.
-   Paused outside section, reset properly on re-entry.
+   HERO MOBILE BUILD ELEMENT (#hero-buildm) — scroll-scrubbed
+   A brutalist 3-layer deck fans apart in 3D while the front browser window assembles
+   itself (dots → content lines wipe → media fills → </>), tied to scroll. Mobile only;
+   the desktop build-lab above is untouched.
    ============================================================ */
 (function(){
-  const board=document.getElementById('testi-board');
-  if(!board) return;
-  const notes=Array.from(board.querySelectorAll('.testi-note'));
-  if(notes.length < 3) return;
-  const noteRots=notes.map(n=>parseFloat(getComputedStyle(n).getPropertyValue('--rot'))||0);
+  if(!IS_MOBILE) return;
+  const el=document.getElementById('hero-buildm');
+  if(!el || !window.gsap || !window.ScrollTrigger) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // CSS shows static assembled state
 
-  /* Carousel runs only when the grid is multi-column (>=600px). Below that the
-     section is a single stacked column where the slot-shuffle makes no sense. */
-  const canRun=()=>window.matchMedia('(min-width:600px)').matches;
-  let inView=false;
-  let positions=[];        /* original DOM-order coordinates */
-  let slotIndex=[];        /* current slot occupied by each note (mod-wrapped) */
-  let active=false;
-  let raf=null;
-  let lastT=0;
-  let resizeTimer=null;
+  const back=el.querySelector('.hbm-back');
+  const mid=el.querySelector('.hbm-mid');
+  const front=el.querySelector('.hbm-front');
+  const dots=el.querySelectorAll('.hbm-bar span');
+  const lines=el.querySelectorAll('.hbm-line');
+  const media=el.querySelector('.hbm-media');
+  const code=el.querySelector('.hbm-code');
+  const tags=el.querySelectorAll('.hbm-tag,.hbm-tag-front');
+  const cap=el.querySelector('.hbm-cap');
 
-  /* Speed: cycle one full slot in ~6 seconds */
-  const SLOT_DURATION_MS=6000;
+  // Initial state (matches CSS): deck stacked flush, window empty.
+  gsap.set([back,mid],{x:0,y:0,z:0,rotationY:0});
+  gsap.set(front,{z:0,rotationX:0});
 
-  function measure(){
-    positions=notes.map(n=>{
-      /* Read DOM-order resting position — clear any transform first */
-      const prev=n.style.transform;
-      n.style.transform='';
-      const r=n.getBoundingClientRect();
-      n.style.transform=prev;
-      return {left:r.left,top:r.top};
-    });
-    slotIndex=notes.map((_,i)=>i);
-  }
-
-  function applyPositions(progress){
-    /* progress = 0..1 within current cycle. Each note moves from its current slot
-       to the NEXT slot. When progress hits 1, slotIndex shifts forward by 1. */
-    const N=notes.length;
-    notes.forEach((note,i)=>{
-      const fromSlot=slotIndex[i];
-      const toSlot=(fromSlot+1)%N;
-      const from=positions[fromSlot];
-      const to=positions[toSlot];
-      const x=(to.left-from.left)*progress + (from.left-positions[i].left);
-      const y=(to.top-from.top)*progress + (from.top-positions[i].top);
-      note.style.transform=`translate(${x}px,${y}px) rotate(${noteRots[i]}deg)`;
-    });
-  }
-
-  function tick(t){
-    if(!active){raf=null;return;}
-    if(!lastT) lastT=t;
-    const dt=t-lastT;
-    const progress=(dt%SLOT_DURATION_MS)/SLOT_DURATION_MS;
-    /* When we cross a full cycle, advance slotIndex */
-    if(dt>=SLOT_DURATION_MS){
-      lastT=t;
-      const N=notes.length;
-      slotIndex=slotIndex.map(s=>(s+1)%N);
-      applyPositions(0);
-    } else {
-      applyPositions(progress);
-    }
-    raf=requestAnimationFrame(tick);
-  }
-
-  function startLoop(){
-    if(active || !inView || !canRun()) return;
-    measure();
-    active=true;lastT=0;
-    raf=requestAnimationFrame(tick);
-  }
-  function stopLoop(){
-    active=false;
-    if(raf){cancelAnimationFrame(raf);raf=null;}
-    /* Reset to resting position. Below 600px clear the inline transform so the
-       stacked-column CSS (transform:none) applies instead of a forced tilt. */
-    notes.forEach((n,i)=>{
-      n.style.transform = canRun() ? `rotate(${noteRots[i]}deg)` : '';
-    });
-  }
-
-  window.addEventListener('resize',()=>{
-    clearTimeout(resizeTimer);
-    resizeTimer=setTimeout(()=>{
-      stopLoop();
-      startLoop();
-    },250);
-  },{passive:true});
-
-  ScrollTrigger.create({
-    trigger:board,start:'top 90%',end:'bottom 10%',
-    onEnter:()=>{inView=true;startLoop();},
-    onEnterBack:()=>{inView=true;startLoop();},
-    onLeave:()=>{inView=false;stopLoop();},
-    onLeaveBack:()=>{inView=false;stopLoop();}
+  const tl=gsap.timeline({
+    scrollTrigger:{trigger:'#hero-section',start:'top top',end:'46% top',scrub:0.5}
   });
+
+  // 1) Deck fans apart in 3D + front lifts/tilts toward the viewer.
+  tl.to(back,{x:30,y:34,z:-66,rotationY:6,ease:'none'},0)
+    .to(mid,{x:16,y:18,z:-32,rotationY:4,ease:'none'},0)
+    .to(front,{z:36,rotationX:7,ease:'none'},0)
+    .to(tags,{opacity:0.75,ease:'none',stagger:0.04},0.05)
+    // 2) Window assembles top-to-bottom along the same scroll beat.
+    .to(dots,{scale:1,ease:'back.out(2)',stagger:0.05},0.12)
+    .to(lines,{scaleX:1,ease:'none',stagger:0.12},0.22)
+    .to(media,{scale:1,opacity:1,ease:'none'},0.66)
+    .to(code,{scale:1,opacity:1,ease:'back.out(2)'},0.8)
+    // 3) Caption fades as the build completes.
+    .to(cap,{opacity:0.25,ease:'none'},0.85);
 })();
 
+/* ============================================================
+   TESTIMONIAL — 3D GLASS CAROUSEL
+   One frosted card front, the rest fanned behind in 3D depth. Auto-advances,
+   pauses on hover/touch, dots to jump. Circular offset = seamless loop.
+   ============================================================ */
+(function(){
+  const carousel=document.getElementById('testi-carousel');
+  const dotsWrap=document.getElementById('testi-dots');
+  if(!carousel) return;
+  const cards=Array.from(carousel.querySelectorAll('.testi-card-container'));
+  const N=cards.length;
+  if(N < 2) return;
 
+  const AUTOPLAY_MS=4000;             // time each card stays front (tunable)
+  const RESUME_AFTER_IDLE_MS=4000;    // after manual interaction, wait then resume
+  const isMobile=()=>window.matchMedia('(max-width:599px)').matches;
+  const MAX_VISIBILITY=()=>isMobile()?1:2; // how many cards each side stay visible
+  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let active=0, inView=false, paused=false, timer=null, resumeTimer=null;
+
+  // Mobile-only: hold the auto-loop until the Experience→Testimonials sweeping arc has
+  // landed on card 1 (the connector fires 'proof-handoff-done'). On desktop the connector
+  // is a separate scroll effect and autoplay should start on-view as it always has, so the
+  // gate is OPEN by default there. Fallbacks ensure mobile never gets stuck.
+  const arcGateActive=window.matchMedia('(max-width:700px)').matches
+    && !reduceMotion && !document.body.classList.contains('no-gsap');
+  let handoffReady = !arcGateActive || carousel.dataset.handoffReady==='1';
+  if(arcGateActive && !handoffReady){
+    carousel.addEventListener('proof-handoff-done',()=>{ handoffReady=true; startAuto(); }, {once:true});
+    setTimeout(()=>{ if(!handoffReady){ handoffReady=true; startAuto(); } }, 9000);
+  }
+
+  // Build dots
+  const dots=[];
+  if(dotsWrap){
+    for(let i=0;i<N;i++){
+      const d=document.createElement('button');
+      d.className='testi-dot'+(i===0?' is-active':'');
+      d.type='button';
+      d.setAttribute('role','tab');
+      d.setAttribute('aria-label','Testimonial '+(i+1)+' of '+N);
+      d.addEventListener('click',()=>{ setActive(i); bumpPause(); });
+      dotsWrap.appendChild(d);
+      dots.push(d);
+    }
+  }
+
+  function update(){
+    const max=MAX_VISIBILITY();
+    cards.forEach((card,i)=>{
+      // Circular shortest-path offset so 6→0 rotates forward, not all the way back.
+      let raw=i-active;
+      if(raw> N/2) raw-=N;
+      else if(raw< -N/2) raw+=N;
+      const abs=Math.abs(raw);
+      card.style.setProperty('--offset', raw);
+      card.style.setProperty('--abs-offset', abs);
+      card.style.setProperty('--direction', Math.sign(raw));
+      card.style.opacity = abs>max ? '0' : '1';
+      card.style.display = abs>max ? 'none' : 'block';
+      card.style.pointerEvents = raw===0 ? 'auto' : 'none';
+      card.style.zIndex = String(N - abs);
+      if(raw===0) card.setAttribute('data-active','');
+      else card.removeAttribute('data-active');
+    });
+    dots.forEach((d,i)=>d.classList.toggle('is-active', i===active));
+  }
+
+  function setActive(i){ active=((i%N)+N)%N; update(); }
+  function next(){ setActive(active+1); }
+
+  function startAuto(){
+    if(reduceMotion || paused || !inView || timer || !handoffReady) return;
+    timer=setInterval(()=>{ if(!paused && inView) next(); }, AUTOPLAY_MS);
+  }
+  function stopAuto(){ if(timer){ clearInterval(timer); timer=null; } }
+
+  function bumpPause(){
+    // Manual interaction: pause, then resume after idle.
+    paused=true; stopAuto();
+    if(resumeTimer) clearTimeout(resumeTimer);
+    resumeTimer=setTimeout(()=>{ paused=false; startAuto(); }, RESUME_AFTER_IDLE_MS);
+  }
+
+  // Manual arrows
+  const prevBtn=document.querySelector('.testi-prev');
+  const nextBtn=document.querySelector('.testi-next');
+  if(prevBtn) prevBtn.addEventListener('click',()=>{ setActive(active-1); bumpPause(); });
+  if(nextBtn) nextBtn.addEventListener('click',()=>{ setActive(active+1); bumpPause(); });
+
+  // Pointer devices: pause while hovering so users can read (arrows/dots still work).
+  carousel.addEventListener('mouseenter',()=>{ paused=true; stopAuto(); });
+  carousel.addEventListener('mouseleave',()=>{ paused=false; startAuto(); });
+
+  // Touch devices (no arrows): swipe left/right to move between cards; auto-rotate continues.
+  let swipeX=null, swipeY=null, swiping=false;
+  carousel.addEventListener('touchstart',e=>{
+    const t=e.changedTouches[0];
+    swipeX=t.clientX; swipeY=t.clientY; swiping=true;
+    paused=true; stopAuto();                       // hold auto while the finger is down
+  }, {passive:true});
+  carousel.addEventListener('touchend',e=>{
+    if(!swiping) return;
+    swiping=false;
+    const t=e.changedTouches[0];
+    const dx=t.clientX-swipeX, dy=t.clientY-swipeY;
+    // Horizontal swipe past threshold (and not a vertical scroll) → change card.
+    if(Math.abs(dx)>40 && Math.abs(dx)>Math.abs(dy)){
+      setActive(active + (dx>0 ? 1 : -1));          // swipe right → next, left → prev
+    }
+    bumpPause();                                    // brief pause, then auto-rotate resumes
+  }, {passive:true});
+
+  // In-view gating via IntersectionObserver — fires immediately with the current
+  // state, so autoplay starts even when the section is already visible on load
+  // (the previous ScrollTrigger onEnter only fired on a fresh crossing → stuck).
+  if('IntersectionObserver' in window){
+    const io=new IntersectionObserver(entries=>{
+      entries.forEach(e=>{
+        inView=e.isIntersecting;
+        if(inView) startAuto(); else stopAuto();
+      });
+    }, {threshold:0.25});
+    io.observe(carousel);
+  } else {
+    inView=true; startAuto();
+  }
+
+  window.addEventListener('resize',()=>{ update(); }, {passive:true});
+  update();
+})();
+
+/* ============================================================
+   EXPERIENCE TO TESTIMONIALS CONNECTOR
+   One restrained SVG path lives in the shared proof-flow wrapper, so the route
+   measures cleanly across both sections instead of bleeding backward from one.
+   ============================================================ */
+(function(){
+  const flow=document.querySelector('.proof-flow');
+  const exp=document.getElementById('exp-section');
+  const testi=document.getElementById('testimonials-section');
+  const svg=document.getElementById('proof-connector');
+  const path=document.getElementById('proof-connector-path');
+  const cometPath=document.getElementById('proof-connector-comet');
+  const tipPath=document.getElementById('proof-connector-tip');
+  const l1=document.getElementById('exp-line-1');
+  const l2=document.getElementById('exp-line-2');
+  if(!flow || !exp || !testi || !svg || !path || !l1 || !l2 || !window.gsap || !window.ScrollTrigger) return;
+  const handoffCard=testi.querySelector('.testi-card-container');
+
+  let ctrl=null;
+  let resizeRaf=null;
+  let isCometRoute=false;          // true while the ≤700px comet route is active
+  const COMET_LEN=48, TIP_LEN=14;  // bright head + white-hot tip lengths (px)
+  const f=n=>Number.isFinite(n) ? n.toFixed(1) : '0.0';
+  const clamp01=n=>Math.max(0,Math.min(1,n));
+
+  function applyDraw(progress){
+    const len=parseFloat(path.dataset.len)||0;
+    const draw=clamp01(progress/0.92);
+    const handoff=clamp01((progress-0.88)/0.12);
+    if(len) path.style.strokeDashoffset=(len*(1-draw)).toFixed(1);
+    if(isCometRoute){
+      const landedNow=handoff>=0.999;
+      // Faint track follows behind; a short bright head + white tip ride the draw front.
+      // The comet stays FULLY bright + sharp right up to the card edge, then hard-cuts the
+      // instant the card ring takes over — a clean baton-pass at one point, not a cross-fade,
+      // so it reads as ONE comet passing from the path into the ring.
+      path.style.opacity=landedNow ? '0' : '0.18';
+      if(len){
+        const head=clamp01(progress/0.97)*len;         // comet head distance (reaches the very end)
+        const vis=landedNow ? '0' : '1';
+        cometPath.style.strokeDasharray=`${COMET_LEN} ${len}`;
+        cometPath.style.strokeDashoffset=(COMET_LEN-head).toFixed(1);
+        cometPath.style.opacity=vis;
+        tipPath.style.strokeDasharray=`${TIP_LEN} ${len}`;
+        tipPath.style.strokeDashoffset=(TIP_LEN-head).toFixed(1);
+        tipPath.style.opacity=vis;
+      }
+    } else {
+      path.style.opacity=(0.95*(1-handoff)).toFixed(3);
+    }
+    flow.style.setProperty('--proof-card-arc', handoff.toFixed(3));
+    flow.classList.toggle('is-proof-handoff', handoff>0);
+    const landed=handoff>=0.999;
+    if(isCometRoute){
+      // Mobile: NO in-flight card ring during the comet's approach — only the SVG comet shows
+      // (mobile-arc-pending keeps the ring hidden). At the landing instant the comet hard-cuts
+      // and the card's from-top ring takes over at the same point → one comet, not two.
+      if(handoffCard) handoffCard.classList.remove('is-connector-handoff');
+      flow.classList.toggle('mobile-arc-pending', !landed);
+      flow.classList.toggle('mobile-arc-landed', landed);
+    } else {
+      if(handoffCard) handoffCard.classList.toggle('is-connector-handoff', handoff>0);
+    }
+    // Mobile-only: signal the carousel once the sweeping arc has fully landed on card 1
+    // so its auto-loop can begin (held until then). Desktop autoplay is unaffected.
+    if(landed){
+      const car=document.getElementById('testi-carousel');
+      if(car && !car.dataset.handoffReady){
+        car.dataset.handoffReady='1';
+        car.dispatchEvent(new CustomEvent('proof-handoff-done'));
+      }
+    }
+  }
+
+  function cornerPath(x,y,mergeY,cX,endY){
+    const dir=cX>=x ? 1 : -1;
+    const dx=Math.abs(cX-x);
+    const dy=Math.abs(mergeY-y);
+    const r=Math.max(0,Math.min(12,dx/2,dy/2));
+    if(r < 1){
+      return `M ${f(x)} ${f(y)} V ${f(mergeY)} H ${f(cX)} V ${f(endY)}`;
+    }
+    return `M ${f(x)} ${f(y)} V ${f(mergeY-r)} `+
+      `Q ${f(x)} ${f(mergeY)} ${f(x+dir*r)} ${f(mergeY)} `+
+      `H ${f(cX-dir*r)} Q ${f(cX)} ${f(mergeY)} ${f(cX)} ${f(mergeY+r)} `+
+      `V ${f(endY)}`;
+  }
+
+  function joinPath(x,y,mergeY,cX){
+    const dir=cX>=x ? 1 : -1;
+    const dx=Math.abs(cX-x);
+    const dy=Math.abs(mergeY-y);
+    const r=Math.max(0,Math.min(12,dx/2,dy/2));
+    if(r < 1){
+      return `M ${f(x)} ${f(y)} V ${f(mergeY)} H ${f(cX)}`;
+    }
+    return `M ${f(x)} ${f(y)} V ${f(mergeY-r)} `+
+      `Q ${f(x)} ${f(mergeY)} ${f(x+dir*r)} ${f(mergeY)} H ${f(cX)}`;
+  }
+
+  function build(){
+    const fr=flow.getBoundingClientRect();
+    const stage=testi.querySelector('.testi-stage') || testi.querySelector('.testi-carousel');
+    const card=testi.querySelector('.testi-carousel') || stage;
+    const foot=exp.querySelector('.exp-footnote');
+    if(!fr.width || !fr.height || !stage || !card) return;
+
+    const cardRect=card.getBoundingClientRect();
+    const footRect=foot ? foot.getBoundingClientRect() : null;
+    const g1=l1.parentElement.getBoundingClientRect();
+    const g2=l2.parentElement.getBoundingClientRect();
+    const r1=l1.getBoundingClientRect();
+    const r2=l2.getBoundingClientRect();
+    const w=Math.max(1,Math.round(fr.width));
+    const h=Math.max(1,Math.round(fr.height));
+
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svg.style.height=h+'px';
+
+    // ── MOBILE (≤700px): a comet sweep (faint track + bright glowing head + white tip,
+    //    mirroring the card's .testi-glow ring) runs from the Experience line, DOWN THE
+    //    RIGHT LINING of the title (never crossing the heading text), then curves into the
+    //    first card's top edge and cross-fades into that card's own ring. Desktop route below
+    //    is unchanged.
+    if(window.matchMedia('(max-width:700px)').matches){
+      isCometRoute=true;
+      const title=testi.querySelector('.testi-board-head h2');
+      const tRect=title ? title.getBoundingClientRect() : null;
+      const lineX=(r1.left-fr.left)+r1.width/2;        // Experience line origin (left side on mobile)
+      const lineY=g1.bottom-fr.top;
+      const tTop=tRect ? (tRect.top-fr.top) : lineY+60;
+      const cTop=(cardRect.top-fr.top)-2;
+      const cX=(cardRect.left-fr.left)+cardRect.width/2;
+      // Right lining: just past the title's right edge, clamped inside the section.
+      const rightX=Math.min(tRect ? (tRect.right-fr.left)+6 : w-14, w-12);
+      const turnY=Math.max(lineY+24, tTop-26);         // cross above the title, never through it
+      // Stay on the right margin past the title AND the lede/body copy; only curve into the
+      // card near its top so the route never crosses any text.
+      const curveY=Math.max(turnY+40, cTop-64);
+      const r=10;
+      const dirX=rightX>=lineX ? 1 : -1;
+
+      // line down → rounded turn across the empty band ABOVE the title → straight down the
+      // right lining (past the title + copy) → smooth curve into the first card's top-centre.
+      const d=
+        `M ${f(lineX)} ${f(lineY)} V ${f(turnY-r)} `+
+        `Q ${f(lineX)} ${f(turnY)} ${f(lineX+dirX*r)} ${f(turnY)} `+
+        `H ${f(rightX-dirX*r)} `+
+        `Q ${f(rightX)} ${f(turnY)} ${f(rightX)} ${f(turnY+r)} `+
+        `V ${f(curveY)} `+
+        `C ${f(rightX)} ${f((curveY+cTop)/2)} ${f(cX)} ${f((curveY+cTop)/2)} ${f(cX)} ${f(cTop)}`;
+      path.setAttribute('d',d);
+      cometPath.setAttribute('d',d);
+      tipPath.setAttribute('d',d);
+
+      let mlen=0;
+      try{ const m=path.getTotalLength(); if(m>1) mlen=m; }catch(e){}
+      path.dataset.len=mlen;
+      path.style.strokeDasharray=mlen?mlen:'none';
+      path.style.opacity='0.18';                       // faint track; the comet head is the bright part
+      flow.classList.add('mobile-arc-pending');        // suppress card sweep until arc lands
+      if(ctrl) applyDraw(ctrl.progress);
+      return;
+    }
+
+    // Desktop route: ensure the mobile comet overlay + pending flag are cleared.
+    isCometRoute=false;
+    cometPath.setAttribute('d','');
+    tipPath.setAttribute('d','');
+    path.style.opacity='';
+    flow.classList.remove('mobile-arc-pending','mobile-arc-landed');
+
+    const xL=(r1.left-fr.left)+r1.width/2;
+    const xR=(r2.left-fr.left)+r2.width/2;
+    const yL=g1.bottom-fr.top;
+    const yR=g2.bottom-fr.top;
+    const footBottom=footRect ? footRect.bottom-fr.top : Math.max(yL,yR);
+    const mergeY=Math.max(yL,yR,footBottom+36);
+    const cX=(cardRect.left-fr.left)+cardRect.width/2;
+    const endY=Math.max(mergeY+90,(cardRect.top-fr.top)-4);
+    const isStacked=window.matchMedia('(max-width:900px)').matches || Math.abs(xL-xR)<40;
+
+    const d=isStacked
+      ? cornerPath(xR,yR,mergeY,cX,endY)
+      : `${cornerPath(xL,yL,mergeY,cX,endY)} ${joinPath(xR,yR,mergeY,cX)}`;
+
+    path.setAttribute('d',d);
+
+    let len=0;
+    try{
+      const measured=path.getTotalLength();
+      if(measured>1) len=measured;
+    }catch(e){}
+    path.dataset.len=len;
+    path.style.strokeDasharray=len?len:'none';
+    if(ctrl) applyDraw(ctrl.progress);
+  }
+
+  function queueBuild(){
+    if(resizeRaf) cancelAnimationFrame(resizeRaf);
+    resizeRaf=requestAnimationFrame(()=>{
+      resizeRaf=null;
+      build();
+      if(ctrl) applyDraw(ctrl.progress);
+    });
+  }
+
+  function init(){
+    build();
+    const stage=testi.querySelector('.testi-stage') || testi;
+    ctrl=ScrollTrigger.create({
+      trigger:exp,
+      start:'bottom 96%',
+      endTrigger:stage,
+      end:'top 44%',
+      invalidateOnRefresh:true,
+      onUpdate:self=>applyDraw(self.progress),
+      onRefresh:self=>{ build(); applyDraw(self.progress); }
+    });
+    applyDraw(ctrl.progress);
+  }
+
+  window.addEventListener('resize',queueBuild,{passive:true});
+  requestAnimationFrame(()=>setTimeout(init,80));
+})();
 
 /* ============================================================
    CAPABILITY SECTION — GSAP ScrollTrigger pin
@@ -1599,27 +2022,48 @@ function resetPanel(){
     return;
   }
 
-  /* Desktop: ~1.15VH per card — gives each card a brief dwell window via easeHold */
+  // Touch: lock pinWrap height to a stable pixel value at load time.
+  // CSS `height:100vh` recomputes live when Chrome's address bar shows/hides (adds ~56px),
+  // which resizes the pin container mid-scroll → the 3D stage shifts → visible flicker.
+  // Inline pixel value overrides the CSS 100vh and never changes during scroll.
+  if(isTouch){
+    pinWrap.style.height = window.innerHeight + 'px';
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => { pinWrap.style.height = window.innerHeight + 'px'; }, 350);
+    }, { passive: true });
+  }
+
+  /* Desktop: ~1.15VH per card — gives each card a brief dwell window via easeHold.
+     Use screen.height on touch so address-bar show/hide (which changes window.innerHeight
+     but not screen.height) doesn't trigger a section reheight → pin recalc → flicker. */
   function setSectionHeight(){
-    section.style.height = Math.round(N * window.innerHeight * 1.15) + 'px';
+    const h = isTouch ? screen.height : window.innerHeight;
+    section.style.height = Math.round(N * h * 1.15) + 'px';
   }
   setSectionHeight();
-  ScrollTrigger.addEventListener('refreshInit', setSectionHeight);
+  // On touch: only re-measure on real orientation change, not address-bar-triggered resize.
+  // On desktop: keep refreshInit so pin recalculates correctly on browser resize.
+  if(isTouch){
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => { setSectionHeight(); ScrollTrigger.refresh(); }, 350);
+    }, { passive: true });
+  } else {
+    ScrollTrigger.addEventListener('refreshInit', setSectionHeight);
+  }
 
-  /* GSAP pin the inner wrap — pinType:'fixed' avoids the sub-pixel snap of the
-     default transform-based pin; the opacity fade on .cap-pin-wrap (toggled via
-     'is-live' class from camST onEnter/onLeave) masks any residual layout shift. */
+  /* GSAP pin the inner wrap. pinType:'fixed' = compositor-driven, no JS lag. */
   ScrollTrigger.create({
     trigger: section,
     start: 'top top',
     end: 'bottom bottom',
     pin: pinWrap,
     pinSpacing: false,
-    // 'fixed' is crisp on desktop but jumps on touch when the mobile address bar
-    // shows/hides. 'transform' pins by moving the element and is immune to that.
-    pinType: window.matchMedia('(min-width:901px)').matches ? 'fixed' : 'transform',
-    anticipatePin: 1,
-    invalidateOnRefresh: true,
+    // Always 'fixed': compositor-driven, zero RAF lag. 'transform' pin compensates
+    // for scroll position via JS RAF which lags 1-2 frames behind the compositor on
+    // touch, producing the characteristic vibration. The address-bar height issue that
+    // used to motivate 'transform' is now neutralised by locking pinWrap height above.
+    pinType: 'fixed',
+    invalidateOnRefresh: !isTouch, // touch: heights are locked, no remeasure needed
   });
 
   /* ── Reference-faithful camera world ──
@@ -1632,7 +2076,9 @@ function resetPanel(){
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
   const Z_GAP       = 1200;
-  const FOCUS_X     = Math.round(window.innerWidth * 0.10);
+  // Desktop offsets cards 10% right of center to leave room for the big words flying
+  // in from the left. On touch/narrow screens there's no such room — centre the cards.
+  const FOCUS_X     = isTouch ? 0 : Math.round(window.innerWidth * 0.10);
   const TOTAL_DEPTH = (N - 1) * Z_GAP;
   const items       = [];
 
@@ -1672,7 +2118,7 @@ function resetPanel(){
   });
 
   // Stars — kept intentionally light; too many 3D layers cost frames during scroll.
-  const STAR_COUNT = window.innerWidth > 1280 ? 36 : 20;
+  const STAR_COUNT = isTouch ? 6 : (window.innerWidth > 1280 ? 36 : 20);
   for(let i = 0; i < STAR_COUNT; i++){
     const s = document.createElement('span');
     s.className = 'cap-star';
@@ -1701,7 +2147,13 @@ function resetPanel(){
 
   function startCapabilityDemos(){startDemoLoops.forEach(fn=>fn());}
   function stopCapabilityDemos(){stopDemoLoops.forEach(fn=>fn());}
-  function startWorldLoop(){if(sectionVisible && !animRaf) animRaf=requestAnimationFrame(animLoop);}
+  // Touch: render synchronously at the exact scroll progress (like the gear's onUpdate)
+  // — NO lerp, NO separate RAF. The lerp+RAF desyncs from the compositor-driven fixed
+  // pin every frame, which is the vibration. Desktop keeps the lerp loop for butter+tilt.
+  function startWorldLoop(){
+    if(isTouch){ render(targetProgress, 0); return; }
+    if(sectionVisible && !animRaf) animRaf=requestAnimationFrame(animLoop);
+  }
 
   let pinRect = pinWrap.getBoundingClientRect();
   ScrollTrigger.addEventListener('refresh',()=>{ pinRect = pinWrap.getBoundingClientRect(); });
@@ -1714,14 +2166,16 @@ function resetPanel(){
 
   // Unified RAF: lerps scroll progress (Lenis-style butter) + mouse tilt
   function animLoop(){
-    // Mouse tilt
-    mouse.x += (mouse.tx - mouse.x) * 0.08;
-    mouse.y += (mouse.ty - mouse.y) * 0.08;
-    // Touch: drop the velocity term — jerky touch-scroll velocity makes it vibrate.
-    const velTilt = isTouch ? 0 : smoothVel * 5;
-    const rx = clamp(mouse.y * -5 - velTilt, -8, 8);
-    const ry = clamp(mouse.x *  5,           -8, 8);
-    world.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+    // Mouse tilt — desktop only; touch has no pointer so rx/ry are always 0.
+    // Skip the style write entirely on touch to avoid per-frame composite invalidation.
+    if(!isTouch){
+      mouse.x += (mouse.tx - mouse.x) * 0.08;
+      mouse.y += (mouse.ty - mouse.y) * 0.08;
+      const velTilt = smoothVel * 5;
+      const rx = clamp(mouse.y * -5 - velTilt, -8, 8);
+      const ry = clamp(mouse.x *  5,           -8, 8);
+      world.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+    }
     // Lerp scroll progress — matches Lenis lerp:0.1 feel
     smoothProgress += (targetProgress - smoothProgress) * 0.1;
     render(smoothProgress, lastVel);
@@ -1765,11 +2219,12 @@ function resetPanel(){
 
     const cameraZ = cameraPos(progress);
 
-    // Dynamic perspective on STAGE — mirrors reference viewport.style.perspective
-    // fov range [600, 1000]; never low enough for cards to approach the plane
-    const fov    = 1000 - Math.min(Math.abs(smoothVel) * 400, 400);
-    const MAX_Z  = fov - 300; // safety cap so translateZ can't cross the plane
-    if(Math.abs(fov - lastFov) > 1){
+    // Dynamic perspective on STAGE (desktop only).
+    // Touch: lock to constant 1000px — velocity-driven fov change causes visible flicker
+    // on mobile GPUs. fov range on desktop [600, 1000].
+    const fov   = isTouch ? 1000 : (1000 - Math.min(Math.abs(smoothVel) * 400, 400));
+    const MAX_Z = fov - 300;
+    if(!isTouch && Math.abs(fov - lastFov) > 1){
       lastFov = fov;
       stage.style.perspective = fov + 'px';
     }
@@ -1887,7 +2342,7 @@ function resetPanel(){
     start:   'top top',
     end:     'bottom bottom',
     invalidateOnRefresh: true,
-    onUpdate:    self => { targetProgress = self.progress; lastVel = self.getVelocity(); startWorldLoop(); },
+    onUpdate:    self => { targetProgress = self.progress; lastVel = self.getVelocity(); if(isTouch) smoothProgress = self.progress; startWorldLoop(); },
     onEnter:     activateWorld,
     onEnterBack: activateWorld,
     onLeave:     resetWorld,
@@ -2068,6 +2523,16 @@ function resetPanel(){
         try_= ((e.clientX-wrapRect.left)/wrapRect.width-0.5)*34;
       });
       wrap.addEventListener('mouseleave',()=>{isAuto=true;});
+      // Touch: mirror the mouse behaviour with the first touch point. Passive so the
+      // user's vertical page scroll through the pinned section keeps working.
+      wrap.addEventListener('touchmove',e=>{
+        if(!e.touches[0]) return;
+        isAuto=false;
+        const t=e.touches[0];
+        trx=-((t.clientY-wrapRect.top)/wrapRect.height-0.5)*34;
+        try_= ((t.clientX-wrapRect.left)/wrapRect.width-0.5)*34;
+      },{passive:true});
+      wrap.addEventListener('touchend',()=>{ setTimeout(()=>{isAuto=true;},1200); },{passive:true});
       function tick(){
         if(!sectionVisible){raf=null;return;}
         at+=0.013;
@@ -2122,4 +2587,152 @@ function resetPanel(){
       },80);
     })();
   }
+})();
+
+/* ============================================================
+   WORK SLIDER — mobile-only auto-rotating 2-up of work cards.
+   4 pages × 2 cards, 4s per page. Pauses on user touch/swipe, resumes after
+   ~7s idle. Skips auto-advance if prefers-reduced-motion. "View all 8"
+   toggles `.is-expanded` on the grid which reverts to the stacked 1-col layout.
+   Desktop (>=600px): the IIFE inits but never starts the loop; the grid stays
+   as the original 2-col layout via the existing CSS.
+   ============================================================ */
+(function(){
+  const grid = document.getElementById('work-grid');
+  const ctrls = document.getElementById('work-slider-ctrls');
+  if(!grid || !ctrls) return;
+
+  const dots = Array.from(ctrls.querySelectorAll('.work-slider-dot'));
+  const timer = ctrls.querySelector('.work-slider-timer');
+  const viewAllBtn = ctrls.querySelector('#work-slider-viewall');
+  if(!dots.length || !timer || !viewAllBtn) return;
+
+  const PAGE_COUNT = 4;            // 8 cards in pairs
+  const PAGE_DURATION_MS = 4000;   // 4s per pair (user spec)
+  const RESUME_AFTER_IDLE_MS = 7000;
+
+  const mqMobile = window.matchMedia('(max-width:599px)');
+  const mqReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const isMobileSlider = () => mqMobile.matches && !grid.classList.contains('is-expanded');
+  const canAuto = () => isMobileSlider() && !mqReduced.matches;
+
+  let currentPage = 0;
+  let isPaused = false;
+  let inView = false;
+  let pauseTimer = null;
+  let advanceRaf = null;
+  let advanceStart = 0;
+  let scrollSyncTimer = null;
+
+  const pageWidth = () => grid.clientWidth;
+
+  function setActiveDot(idx){
+    if(idx === currentPage) return;
+    currentPage = idx;
+    dots.forEach((d,i)=>d.classList.toggle('is-active', i===idx));
+  }
+
+  function goToPage(idx, smooth){
+    grid.scrollTo({left: idx * pageWidth(), behavior: smooth ? 'smooth' : 'auto'});
+    setActiveDot(idx);
+  }
+
+  function stopAutoLoop(){
+    if(advanceRaf){ cancelAnimationFrame(advanceRaf); advanceRaf = null; }
+    timer.style.transform = 'scaleX(0)';
+  }
+
+  function tickAuto(now){
+    if(!canAuto() || isPaused || !inView){ advanceRaf = null; timer.style.transform='scaleX(0)'; return; }
+    const elapsed = now - advanceStart;
+    const progress = Math.min(elapsed / PAGE_DURATION_MS, 1);
+    timer.style.transform = `scaleX(${progress.toFixed(3)})`;
+    if(progress >= 1){
+      goToPage((currentPage + 1) % PAGE_COUNT, true);
+      advanceStart = now;
+    }
+    advanceRaf = requestAnimationFrame(tickAuto);
+  }
+
+  function startAutoLoop(){
+    if(!canAuto() || isPaused || !inView || advanceRaf) return;
+    advanceStart = performance.now();
+    advanceRaf = requestAnimationFrame(tickAuto);
+  }
+
+  function pauseFor(idleMs){
+    isPaused = true;
+    stopAutoLoop();
+    if(pauseTimer) clearTimeout(pauseTimer);
+    pauseTimer = setTimeout(()=>{ isPaused = false; startAutoLoop(); }, idleMs);
+  }
+
+  // User-initiated swipe / manual scroll → keep dot in sync + pause auto-advance.
+  grid.addEventListener('scroll', ()=>{
+    if(scrollSyncTimer) clearTimeout(scrollSyncTimer);
+    scrollSyncTimer = setTimeout(()=>{
+      const w = pageWidth();
+      if(w > 0){
+        const idx = Math.max(0, Math.min(PAGE_COUNT - 1, Math.round(grid.scrollLeft / w)));
+        setActiveDot(idx);
+      }
+    }, 90);
+  }, {passive:true});
+  grid.addEventListener('touchstart', ()=>{ if(canAuto()) pauseFor(RESUME_AFTER_IDLE_MS); }, {passive:true});
+
+  // Dot taps: jump + pause.
+  dots.forEach((d,i)=>{
+    d.addEventListener('click', ()=>{
+      goToPage(i, true);
+      if(canAuto()) pauseFor(RESUME_AFTER_IDLE_MS);
+    });
+  });
+
+  // View all toggle: expand → stacked list, collapse → slider.
+  function setExpanded(expanded){
+    grid.classList.toggle('is-expanded', expanded);
+    viewAllBtn.innerHTML = expanded ? 'Show slider ↑' : 'View all 8 ↓';
+    if(expanded){
+      stopAutoLoop();
+    } else {
+      // Reset to page 0 cleanly when collapsing back to the slider.
+      currentPage = -1; // force setActiveDot to update
+      setActiveDot(0);
+      goToPage(0, false);
+      startAutoLoop();
+    }
+  }
+  viewAllBtn.addEventListener('click', ()=>{
+    setExpanded(!grid.classList.contains('is-expanded'));
+  });
+
+  // Section visibility — only burn frames while the section is on screen.
+  if(window.ScrollTrigger){
+    ScrollTrigger.create({
+      trigger: grid,
+      start: 'top 95%',
+      end: 'bottom 5%',
+      onEnter: ()=>{ inView = true; startAutoLoop(); },
+      onEnterBack: ()=>{ inView = true; startAutoLoop(); },
+      onLeave: ()=>{ inView = false; stopAutoLoop(); },
+      onLeaveBack: ()=>{ inView = false; stopAutoLoop(); },
+    });
+  } else {
+    inView = true;
+  }
+
+  // Cross-breakpoint resize: clean up state when switching to/from mobile.
+  mqMobile.addEventListener?.('change', e=>{
+    if(!e.matches){
+      // Now desktop — drop is-expanded so the original 2-col CSS applies cleanly.
+      grid.classList.remove('is-expanded');
+      viewAllBtn.innerHTML = 'View all 8 ↓';
+      stopAutoLoop();
+    } else if(inView){
+      startAutoLoop();
+    }
+  });
+
+  // Init dot to whatever the scroll position is on load (in case of restored scroll).
+  setActiveDot(0);
 })();
