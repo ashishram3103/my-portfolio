@@ -20,20 +20,15 @@ gsap.ticker.lagSmoothing(500, 33);
 // matchMedia matches the CSS @media(max-width:900px) exactly and is accurate in all
 // browsers/DevTools — unlike window.innerWidth which is stale in emulation mode.
 const IS_MOBILE = window.matchMedia('(max-width:900px)').matches;
-const ENABLE_POINTER_TRAILS = true;
-let RESET_SCROLL_ON_LOAD = !window.location.hash;
 
+let RESET_SCROLL_ON_LOAD = !window.location.hash;
 try{
   const nav = performance.getEntriesByType('navigation')[0];
-  RESET_SCROLL_ON_LOAD = RESET_SCROLL_ON_LOAD || (nav && nav.type === 'reload');
+  if(nav && nav.type === 'reload') RESET_SCROLL_ON_LOAD = true;
 }catch(e){}
 
 if('scrollRestoration' in window.history){
   window.history.scrollRestoration = 'manual';
-}
-
-if(window.ScrollTrigger && ScrollTrigger.clearScrollMemory){
-  ScrollTrigger.clearScrollMemory('manual');
 }
 
 function hardResetScroll(){
@@ -55,8 +50,10 @@ function refreshScrollSystems(delay=0){
 }
 
 window.addEventListener('pageshow', e=>{
-  if(e.persisted && RESET_SCROLL_ON_LOAD) hardResetScroll();
-  refreshScrollSystems(0);
+  if(e.persisted){
+    if(RESET_SCROLL_ON_LOAD) hardResetScroll();
+    refreshScrollSystems(0);
+  }
 });
 
 /* ============================================================
@@ -154,7 +151,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
    INK TRAIL — single source, coloured per section
    ============================================================ */
 (function(){
-  if(IS_MOBILE || !ENABLE_POINTER_TRAILS) return;
+  if(IS_MOBILE) return;
   const POOL=10, THROTTLE=80;
   const pool=[];
   for(let i=0;i<POOL;i++){
@@ -191,7 +188,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
    TRAIL COLOUR PER SECTION
    ============================================================ */
 (function(){
-  if(IS_MOBILE || !ENABLE_POINTER_TRAILS) return;
+  if(IS_MOBILE) return;
   const sections=[
     {id:'hero-section',color:'#F9D100'},
     {id:'work-section',color:'#EE3A5A'},
@@ -265,7 +262,7 @@ function __splitChars(t){
    VARIED SECTION TITLE ENTRANCES — by data-anim, once
    ============================================================ */
 (function(){
-  if(IS_MOBILE && window.innerWidth < 600) return;
+  if(window.matchMedia('(max-width:599px)').matches) return;
   const variants = {
     drop:(chars)=>{
       gsap.set(chars,{yPercent:-120,opacity:0,rotate:-8,force3D:true});
@@ -535,11 +532,10 @@ window.addEventListener('load',()=>setTimeout(finishSiteLoader,650));
 })();
 
 /* ============================================================
-   HERO MAGNETIC + LIGHT STREAK TRAILS
-   (hero shapes removed from HTML, but trail spawn still works in hero)
+   HERO LIGHT STREAK TRAILS
    ============================================================ */
 (function(){
-  if(IS_MOBILE || !ENABLE_POINTER_TRAILS) return;
+  if(IS_MOBILE) return;
   const hero=document.getElementById('hero-section');if(!hero) return;
   const trails=[];
   const TRAIL_MAX=8;
@@ -607,7 +603,6 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
    VIDEO / BUILD REEL — connector scrub, IO autoplay, card reveal
    ============================================================ */
 (function(){
-  const isMobile=window.matchMedia('(max-width:900px)').matches;
   const path=document.getElementById('vid-conn-path');
   const allVideos=document.querySelectorAll('#vid-section video');
 
@@ -618,7 +613,7 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
 
   const safePlay=v=>{try{const p=v.play();if(p&&p.catch) p.catch(()=>{});}catch(e){}};
 
-  if(isMobile){
+  if(IS_MOBILE){
     // Save bandwidth: only the first video keeps its source on mobile. The rest
     // unload. We DON'T return — the connector draw + copy/hook reveals still run
     // so the full build-reel narrative is present on mobile, not just the video.
@@ -955,6 +950,7 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
     end:()=>`top ${endOffset()}`,
     pin:left,
     pinSpacing:false,
+    anticipatePin:1,
     invalidateOnRefresh:true
   });
 })();
@@ -986,6 +982,7 @@ gsap.fromTo('.about-photo-wrap',{opacity:0,scale:.94},{opacity:1,scale:1,duratio
     end:()=>`top ${pinTop()}`,
     pin:photo,
     pinSpacing:false,
+    anticipatePin:1,
     invalidateOnRefresh:true
   });
 })();
@@ -1781,8 +1778,15 @@ function resetPanel(){
   const COMET_LEN=48, TIP_LEN=14;  // bright head + white-hot tip lengths (px)
   const f=n=>Number.isFinite(n) ? n.toFixed(1) : '0.0';
   const clamp01=n=>Math.max(0,Math.min(1,n));
+  // Mobile: skip applyDraw when progress hasn't moved enough to produce a visible change.
+  // Comet head moves ~len px per unit; at typical path lengths (400–600px) a 0.004 step
+  // = 1.6–2.4px movement — sub-pixel, invisible. Halves style-write frequency on mobile.
+  const DRAW_EPS = IS_MOBILE ? 0.004 : 0;
+  let lastDrawProgress = -1;
 
   function applyDraw(progress){
+    if(DRAW_EPS && Math.abs(progress - lastDrawProgress) < DRAW_EPS && progress > 0 && progress < 0.999) return;
+    lastDrawProgress = progress;
     const len=parseFloat(path.dataset.len)||0;
     const draw=clamp01(progress/0.92);
     const handoff=clamp01((progress-0.88)/0.12);
@@ -2058,12 +2062,9 @@ function resetPanel(){
     end: 'bottom bottom',
     pin: pinWrap,
     pinSpacing: false,
-    // Always 'fixed': compositor-driven, zero RAF lag. 'transform' pin compensates
-    // for scroll position via JS RAF which lags 1-2 frames behind the compositor on
-    // touch, producing the characteristic vibration. The address-bar height issue that
-    // used to motivate 'transform' is now neutralised by locking pinWrap height above.
+    anticipatePin: 1,
     pinType: 'fixed',
-    invalidateOnRefresh: !isTouch, // touch: heights are locked, no remeasure needed
+    invalidateOnRefresh: !isTouch,
   });
 
   /* ── Reference-faithful camera world ──

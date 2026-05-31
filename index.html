@@ -241,7 +241,6 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   flex-wrap:wrap;margin-bottom:24px;position:relative;z-index:2;}
 .hero-tag{font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;
   color:var(--muted);display:flex;align-items:center;gap:10px;}
-@keyframes statusPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.7);}}
 .hero-hl-wrap{position:relative;display:inline-block;z-index:2;
   max-width:min(76vw,1220px);transform-origin:left top;}
 .hero-hl-wrap::before{content:'';position:absolute;inset:-10px -16px -10px -6px;
@@ -365,7 +364,6 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   #hero-icon-terminal{width:64px;right:12%;top:23%;}
   .hero-bio{font-size:13.5px;line-height:1.42;max-width:430px;}
 }
-.desktop-title-lines{display:block;}
 .mobile-title-lines{display:none;}
 @media(max-width:900px){
   /* Remove the max-height cap so the hero can grow beyond 100svh to fit the headline +
@@ -495,9 +493,6 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 .wcard-overlay-txt em{font-family:'Cabinet Grotesk','Arial Black',sans-serif;font-weight:800;font-style:italic;color:var(--yellow);}
 .wcard-foot{padding:16px 20px;background:var(--white);border-top:1px solid var(--line);transition:background .3s;}
 .wcard:hover .wcard-foot{background:var(--surface);}
-.wcard-foot-name{font-family:'Clash Display','Arial Black',sans-serif;font-weight:600;font-size:15px;
-  letter-spacing:-.01em;text-transform:uppercase;margin-top:4px;transition:color .2s;}
-.wcard:hover .wcard-foot-name{color:var(--red);}
 .wcard-foot-tags{font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:0;}
 .wcard-cta{display:flex;flex-direction:column;justify-content:space-between;
   align-items:flex-start;padding:48px 40px;background:linear-gradient(135deg,#0d0d0d 0%,#171717 100%);
@@ -975,6 +970,9 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   /* Mobile connector stays visible: the line sweeps into a comet arc past the title and
      onto the first card. Faint track also transitions yellow→card colour. */
   #proof-connector-path{stroke:url(#proofConnGrad);}
+  /* Drop the feGaussianBlur glow filter on mobile — SVG blur re-rasterizes every scroll
+     tick causing frame drops. The comet is still fully visible at 3px stroke; no glow needed. */
+  #proof-connector-comet{filter:none;}
   .testi-board-head h2{font-size:clamp(26px,9vw,48px);}
   .testi-head-body{font-size:14px;line-height:1.6;}
 }
