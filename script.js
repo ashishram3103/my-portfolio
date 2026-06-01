@@ -748,14 +748,6 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
   const rpBla=rpWrap.querySelector('.ux-rp-bla');
   const rpBlb=rpWrap.querySelector('.ux-rp-blb');
   const rpBlc=rpWrap.querySelector('.ux-rp-blc');
-  gsap.set([mbWrap,swWrap,rpWrap],{opacity:0});
-  let uxW=1,uxH=1,lastUxProgress=-1;
-  function measureUx(){
-    uxW=layer.clientWidth||stage.clientWidth||1;
-    uxH=layer.clientHeight||stage.clientHeight||1;
-  }
-  measureUx();
-
   const clamp01=gsap.utils.clamp(0,1);
   const range=(p,a,b)=>clamp01((p-a)/(b-a));
   const pulseAt=(p,c,w)=>Math.max(0,1-Math.abs(p-c)/w);
@@ -763,6 +755,60 @@ gsap.utils.toArray('.wcard,.wcard-cta').forEach((c,i)=>{
     {p:.10,x:50,y:9},{p:.28,x:50,y:24},{p:.46,x:82,y:41},
     {p:.62,x:22,y:62},{p:.78,x:66,y:84},{p:.94,x:54,y:97}
   ];
+  gsap.set([mbWrap,swWrap,rpWrap],{opacity:0});
+  let uxW=1,uxH=1,lastUxProgress=-1;
+
+  function clampPx(v,min,max){
+    return Math.max(min,Math.min(max,v));
+  }
+  function stageItem(selector){
+    return stage.querySelector(selector);
+  }
+  function gapCenter(prev,next,fallbackPct){
+    const fallback=uxH*fallbackPct;
+    if(!prev || !next) return fallback;
+    const prevBottom=prev.offsetTop+prev.offsetHeight;
+    const nextTop=next.offsetTop;
+    const gap=nextTop-prevBottom;
+    if(gap<24) return fallback;
+    return prevBottom+gap*.5;
+  }
+  function gapTop(prev,next,objH,fallbackPct){
+    return clampPx(gapCenter(prev,next,fallbackPct)-objH*.5,0,Math.max(0,uxH-objH));
+  }
+  function setMobileBuildPositions(){
+    if(!IS_MOBILE) return;
+    const copyMain=stageItem('.vid-copy-main');
+    const hookB=stageItem('.vid-hook-b');
+    const copyRight=stageItem('.vid-copy-right');
+    const hookC=stageItem('.vid-hook-c');
+    const copyLeft=stageItem('.vid-copy-left');
+    const hookD=stageItem('.vid-hook-d');
+    const mbW=mbWrap.offsetWidth||108;
+    const mbH=mbWrap.offsetHeight||80;
+    const swW=swWrap.offsetWidth||116;
+    const swH=swWrap.offsetHeight||77;
+    const rpW=rpWrap.offsetWidth||96;
+    const rpH=rpWrap.offsetHeight||70;
+
+    mbWrap.style.left=`${clampPx(18,8,Math.max(8,uxW-mbW-8))}px`;
+    mbWrap.style.right='auto';
+    mbWrap.style.top=`${gapTop(copyMain,hookB,mbH,.39)}px`;
+
+    swWrap.style.left=`${clampPx(uxW-swW-22,8,Math.max(8,uxW-swW-8))}px`;
+    swWrap.style.right='auto';
+    swWrap.style.top=`${gapTop(copyRight,hookC,swH,.61)}px`;
+
+    rpWrap.style.left=`${clampPx(20,8,Math.max(8,uxW-rpW-8))}px`;
+    rpWrap.style.right='auto';
+    rpWrap.style.top=`${gapTop(copyLeft,hookD,rpH,.80)}px`;
+  }
+  function measureUx(){
+    uxW=layer.clientWidth||stage.clientWidth||1;
+    uxH=layer.clientHeight||stage.clientHeight||1;
+    setMobileBuildPositions();
+  }
+  measureUx();
   // Pixel arc lengths recomputed on resize so gear rotation ties to actual pixel
   // distance — makes the gear physically roll rather than spin uniformly with progress.
   const pixelSegLens=[];

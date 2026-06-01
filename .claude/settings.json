@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($f='d:\\\\ashishram.in\\\\script.js'; $c=Get-Content $f -Raw; foreach\\($ch in @\\('{','}','\\(','\\)','[',']'\\)\\){ $count=\\([regex]::Matches\\($c,[regex]::Escape\\($ch\\)\\)\\).Count; Write-Output \"$ch : $count\" }; Write-Output \\(\"backtick: \" + \\([regex]::Matches\\($c,'`'\\)\\).Count\\))",
+      "PowerShell($js='d:\\\\ashishram.in\\\\script.js'; $c=Get-Content $js -Raw; foreach\\($ch in @\\('{','}','\\(','\\)','[',']'\\)\\){ $n=\\([regex]::Matches\\($c,[regex]::Escape\\($ch\\)\\)\\).Count; Write-Output \"$ch : $n\" }; Write-Output \\(\"backtick: \" + \\([regex]::Matches\\($c,'`'\\)\\).Count\\))",
+      "PowerShell($js='d:\\\\ashishram.in\\\\script.js'; $c=Get-Content $js -Raw; foreach\\($ch in @\\('{','}','\\(','\\)'\\)\\){ $n=\\([regex]::Matches\\($c,[regex]::Escape\\($ch\\)\\)\\).Count; Write-Output \"$ch : $n\" }; Write-Output \\(\"backtick: \" + \\([regex]::Matches\\($c,'`'\\)\\).Count\\))"
+    ]
+  }
+}
