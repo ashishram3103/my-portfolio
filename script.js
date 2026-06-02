@@ -2060,6 +2060,16 @@ function resetPanel(){
   const stage = section.querySelector('.cap-cards-stage');
   const prog  = document.getElementById('cap-prog');
   const bar   = document.getElementById('cap-bar');
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const Z_GAP = 1200;
+  let sectionVisible = false; // gates all demo RAF work when section is off-screen
+  const startDemoLoops = [];
+  const stopDemoLoops = [];
+  const scrollDemoUpdaters = [];
+
+  function startCapabilityDemos(){startDemoLoops.forEach(fn=>fn());}
+  function stopCapabilityDemos(){stopDemoLoops.forEach(fn=>fn());}
+  function updateScrollDemos(cameraZ){scrollDemoUpdaters.forEach(fn=>fn(cameraZ));}
 
   if(isMobile){
     /* Mobile: just show all cards stacked, no pinning */
@@ -2069,6 +2079,7 @@ function resetPanel(){
       c.classList.add('is-active');
     });
     initDemos();
+    updateScrollDemos(Z_GAP);
     return;
   }
 
@@ -2120,9 +2131,6 @@ function resetPanel(){
      Items live in world and use translate3d(x,y,z).
      This is the only correct way: applying perspective and rotateX to the SAME
      element causes perspective to evaluate in the rotated local frame → world flip. */
-  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-
-  const Z_GAP       = 1200;
   // Desktop offsets cards 10% right of center to leave room for the big words flying
   // in from the left. On touch/narrow screens there's no such room — centre the cards.
   const FOCUS_X     = isTouch ? 0 : Math.round(window.innerWidth * 0.10);
@@ -2158,6 +2166,7 @@ function resetPanel(){
     world.appendChild(el);
     items.push({
       el, type:'text',
+      slot:i,
       x:(i % 2 ? -60 : 60), y:0,
       rot:b.rot,
       baseZ:-(i + 0.5) * Z_GAP
@@ -2185,15 +2194,9 @@ function resetPanel(){
   let smoothProgress = 0;
   let lastVel        = 0;
   let animRaf        = null;
-  let sectionVisible = false; // gates all demo RAF work when section is off-screen
   let activeCard     = cards[0] || null;
   let lastPct        = -1;
   let lastFov        = 1000;
-  const startDemoLoops = [];
-  const stopDemoLoops = [];
-
-  function startCapabilityDemos(){startDemoLoops.forEach(fn=>fn());}
-  function stopCapabilityDemos(){stopDemoLoops.forEach(fn=>fn());}
   // Touch: render synchronously at the exact scroll progress (like the gear's onUpdate)
   // — NO lerp, NO separate RAF. The lerp+RAF desyncs from the compositor-driven fixed
   // pin every frame, which is the vibration. Desktop keeps the lerp loop for butter+tilt.
@@ -2242,6 +2245,10 @@ function resetPanel(){
   // DWELL_SLOPE = how much the camera still moves during dwell (0 = frozen, 1 = linear).
   const HOLD = 0.22, DWELL_SLOPE = 0.18;
   const _holdEdge = HOLD * DWELL_SLOPE; // value at end of leading dwell / start of trailing dwell mirror
+  const FIRST_AWAKE_END_Z = 520;
+  const FIRST_CARD_HOLD_Z = 820;
+  const FIRST_CARD_EXIT_Z = 1000;
+  const FIRST_NEXT_REVEAL_Z = 1040;
   function easeHold(t){
     if(t <= HOLD)      return t * DWELL_SLOPE;
     if(t >= 1 - HOLD)  return 1 - (1 - t) * DWELL_SLOPE;
@@ -2265,6 +2272,7 @@ function resetPanel(){
     smoothVel  += (vNorm - smoothVel) * 0.1;
 
     const cameraZ = cameraPos(progress);
+    updateScrollDemos(cameraZ);
 
     // Dynamic perspective on STAGE (desktop only).
     // Touch: lock to constant 1000px — velocity-driven fov change causes visible flicker
@@ -2287,9 +2295,15 @@ function resetPanel(){
 
       // Alpha per type
       let alpha;
+      const firstTransitionItem =
+        (it.type === 'card' && it.card !== cards[0]) || (it.type === 'text' && it.slot === 0);
       if(it.type === 'card'){
         // Tight exit: card never lingers past camera plane
-        if(relZ >  250 || relZ < -1800) alpha = 0;
+        if(it.card === cards[0] && relZ >= 0){
+          if(relZ > FIRST_CARD_EXIT_Z) alpha = 0;
+          else if(relZ > FIRST_CARD_HOLD_Z) alpha = 1 - (relZ - FIRST_CARD_HOLD_Z) / (FIRST_CARD_EXIT_Z - FIRST_CARD_HOLD_Z);
+          else alpha = 1;
+        } else if(relZ >  250 || relZ < -1800) alpha = 0;
         else if(relZ < -200)            alpha = (relZ + 1800) / 1600;
         else if(relZ >   50)            alpha = 1 - (relZ - 50) / 200;
         else                            alpha = 1;
@@ -2304,6 +2318,9 @@ function resetPanel(){
         else if(relZ < -300)            alpha = (relZ + 2800) / 2500 * 0.6;
         else if(relZ >  150)            alpha = (1 - (relZ - 150) / 350) * 0.6;
         else                            alpha = 0.6;
+      }
+      if(firstTransitionItem){
+        alpha *= clamp((cameraZ - FIRST_NEXT_REVEAL_Z) / 180, 0, 1);
       }
       if(alpha < 0) alpha = 0;
 
@@ -2420,37 +2437,63 @@ function resetPanel(){
   /* ── DEMOS ── */
   function initDemos(){
 
-    /* Demo 1 — Scramble */
+    /* Demo 1 - Website Awakens */
     (function(){
-      const el = document.getElementById('cap-scramble');
-      if(!el) return;
-      const WORDS = ['MOTION','SCROLL','DEPTH','BUILD','SYSTEM'];
-      const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&*!';
-      let wi = 0, loopId=null, scrambleId=null;
-      function scramble(target){
-        let f=0; const max=16;
-        clearInterval(scrambleId);
-        scrambleId=setInterval(()=>{
-          if(f>=max){el.textContent=target;clearInterval(scrambleId);scrambleId=null;return;}
-          el.textContent=target.split('').map((ch,i)=>
-            i<f*target.length/max?ch:CHARS[Math.floor(Math.random()*CHARS.length)]
-          ).join('');
-          f++;
-        },36);
+      const demo = document.getElementById('cap-awake');
+      if(!demo) return;
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const smooth=t=>t*t*(3-2*t);
+      const phase=(p,a,b)=>smooth(clamp((p-a)/(b-a),0,1));
+      let lastQ=-1;
+
+      function setVar(name,value){demo.style.setProperty(name,value);}
+      function renderAwake(cameraZ){
+        const p = (reduceMotion.matches || isMobile) ? 1 : clamp(cameraZ / FIRST_AWAKE_END_Z, 0, 1);
+        const q = Math.round(p * 1000);
+        if(q === lastQ) return;
+        lastQ = q;
+
+        const structure = phase(p,.02,.30);
+        const content   = phase(p,.18,.58);
+        const light     = phase(p,.35,.82);
+        const live      = phase(p,.68,1);
+        const depth     = phase(p,.12,.76);
+        const scan      = (0.08 + light * .34) * (1 - live * .7);
+
+        setVar('--awake-dim',(0.78 - light * .64).toFixed(3));
+        setVar('--awake-grid',(0.12 + structure * .32).toFixed(3));
+        setVar('--awake-glow',(light * .72).toFixed(3));
+        setVar('--awake-glow-scale',(.72 + light * .42).toFixed(3));
+        setVar('--awake-y',`${(18 * (1 - structure)).toFixed(1)}px`);
+        setVar('--awake-scale',(.94 + structure * .06).toFixed(3));
+        setVar('--awake-blur',`${(4 * (1 - structure)).toFixed(2)}px`);
+        setVar('--awake-sat',(.55 + light * .45).toFixed(3));
+        setVar('--awake-shadow',`${(6 + depth * 18).toFixed(1)}px`);
+        setVar('--awake-sleep-o',(1 - phase(p,.04,.34)).toFixed(3));
+        setVar('--awake-sleep-scale',(1 - content * .14).toFixed(3));
+        setVar('--awake-hero-o',content.toFixed(3));
+        setVar('--awake-hero-y',`${(18 * (1 - content)).toFixed(1)}px`);
+        setVar('--awake-panel-o',content.toFixed(3));
+        setVar('--awake-panel-y',`${(22 * (1 - content)).toFixed(1)}px`);
+        setVar('--awake-color-o',light.toFixed(3));
+        setVar('--awake-cta-o',live.toFixed(3));
+        setVar('--awake-cta-y',`${(14 * (1 - live)).toFixed(1)}px`);
+        setVar('--awake-live-o',live.toFixed(3));
+        setVar('--awake-live-scale',(.78 + live * .22).toFixed(3));
+        setVar('--awake-scan-o',scan.toFixed(3));
+        setVar('--awake-scan-x',`${(-115 + p * 230).toFixed(1)}%`);
+        setVar('--awake-spark-o',Math.min(.9, structure * .7 + live * .2).toFixed(3));
+        setVar('--awake-spark-y',`${(20 * (1 - structure)).toFixed(1)}px`);
       }
-      function start(){
-        if(loopId) return;
-        scramble(WORDS[wi]);
-        loopId=setInterval(()=>{ wi=(wi+1)%WORDS.length; scramble(WORDS[wi]); },2400);
+
+      scrollDemoUpdaters.push(renderAwake);
+      renderAwake((reduceMotion.matches || isMobile) ? Z_GAP : cameraPos(targetProgress || 0));
+      if(reduceMotion.addEventListener){
+        reduceMotion.addEventListener('change',()=>{
+          lastQ=-1;
+          renderAwake((reduceMotion.matches || isMobile) ? Z_GAP : cameraPos(targetProgress || 0));
+        });
       }
-      function stop(){
-        clearInterval(loopId);loopId=null;
-        clearInterval(scrambleId);scrambleId=null;
-        el.textContent=WORDS[wi];
-      }
-      el.textContent=WORDS[0];
-      startDemoLoops.push(start);
-      stopDemoLoops.push(stop);
     })();
 
     /* Demo 2 — Magnetic dots */
@@ -2739,14 +2782,27 @@ function resetPanel(){
   function setExpanded(expanded){
     grid.classList.toggle('is-expanded', expanded);
     viewAllBtn.innerHTML = expanded ? 'Show slider ↑' : 'View all 8 ↓';
+    if(pauseTimer){ clearTimeout(pauseTimer); pauseTimer = null; }
+    isPaused = false;
     if(expanded){
       stopAutoLoop();
+      refreshScrollSystems(80);
     } else {
       // Reset to page 0 cleanly when collapsing back to the slider.
+      stopAutoLoop();
       currentPage = -1; // force setActiveDot to update
       setActiveDot(0);
       goToPage(0, false);
-      startAutoLoop();
+      requestAnimationFrame(()=>{
+        const anchor = grid.closest('.work-slider-shell') || document.getElementById('work-section') || grid;
+        const y = anchor.getBoundingClientRect().top + window.pageYOffset - 88;
+        window.scrollTo({top:Math.max(0, y), behavior:'auto'});
+        refreshScrollSystems(0);
+        setTimeout(()=>{
+          refreshScrollSystems(0);
+          startAutoLoop();
+        }, 120);
+      });
     }
   }
   viewAllBtn.addEventListener('click', ()=>{

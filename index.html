@@ -542,6 +542,18 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   .wcard-meta{font-size:9px;}
   .wcard-foot{padding:10px 12px;}
   .wcard-foot-tags{font-size:9px;letter-spacing:.04em;}
+  .wcard-content{padding-bottom:44px;}
+  .wcard-overlay{inset:auto 10px 10px;height:28px;transform:none;
+    background:rgba(13,13,13,.9)!important;border:1px solid rgba(255,255,255,.28);
+    border-radius:999px;box-shadow:0 8px 18px rgba(13,13,13,.18);
+    animation:workCtaGlow 2.4s ease-in-out infinite;}
+  .wcard-overlay-txt{display:flex;align-items:center;justify-content:center;
+    font-size:10.5px;line-height:1;letter-spacing:.13em;}
+  .wcard-overlay-txt br{display:none;}
+  .wcard-overlay-txt em{margin-left:4px;animation:workCtaArrow 1.8s ease-in-out infinite;}
+  @keyframes workCtaGlow{0%,100%{box-shadow:0 8px 18px rgba(13,13,13,.18);}
+    50%{box-shadow:0 10px 22px rgba(13,13,13,.28);}}
+  @keyframes workCtaArrow{0%,100%{transform:translateX(0);}50%{transform:translateX(3px);}}
   /* Controls below the track */
   .work-slider-ctrls{display:flex;flex-direction:column;align-items:stretch;gap:14px;margin-top:18px;}
   .work-slider-hint{font-family:'JetBrains Mono','Courier New',monospace;
@@ -569,6 +581,9 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   .work-grid.is-expanded ~ .work-slider-ctrls .work-slider-track,
   .work-grid.is-expanded ~ .work-slider-ctrls .work-slider-dots,
   .work-grid.is-expanded ~ .work-slider-ctrls .work-slider-hint{display:none;}
+}
+@media(max-width:599px) and (prefers-reduced-motion:reduce){
+  .wcard-overlay,.wcard-overlay-txt em{animation:none;}
 }
 
 /* WORD SCROLL */
@@ -1324,10 +1339,93 @@ body.no-gsap .hbm-back{transform:translate3d(28px,32px,-60px);}
   .cap-lbl-mobile{display:inline;}
 }
 /* Demo-specific styles */
-.cap-demo-scramble{
-  font-family:'Clash Display','Arial Black',sans-serif;font-weight:800;
-  font-size:38px;letter-spacing:-.02em;color:var(--yellow);text-transform:uppercase;
-  text-align:center;
+.cap-demo-awake{display:block;padding:0;isolation:isolate;
+  --awake-dim:.78;--awake-grid:.12;--awake-glow:0;--awake-glow-scale:.7;
+  --awake-y:18px;--awake-scale:.94;--awake-blur:4px;--awake-sat:.55;--awake-shadow:6px;
+  --awake-sleep-o:1;--awake-sleep-scale:1;--awake-hero-o:0;--awake-hero-y:18px;
+  --awake-panel-o:0;--awake-panel-y:22px;--awake-color-o:0;--awake-cta-o:0;--awake-cta-y:14px;
+  --awake-live-o:0;--awake-live-scale:.78;--awake-scan-o:0;--awake-scan-x:-115%;
+  --awake-spark-o:0;--awake-spark-y:20px;}
+.cap-awake-stage{position:absolute;inset:14px;overflow:hidden;background:#050505;
+  border:1px solid rgba(255,255,255,.08);}
+.cap-awake-grid{position:absolute;inset:-24px;opacity:var(--awake-grid);
+  background:linear-gradient(rgba(249,209,0,.16) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.12) 1px,transparent 1px);
+  background-size:28px 28px;transform:rotate(-2deg);pointer-events:none;}
+.cap-awake-glow{position:absolute;left:50%;top:48%;width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(249,209,0,.48),rgba(247,74,110,.2) 42%,transparent 70%);
+  opacity:var(--awake-glow);transform:translate(-50%,-50%) scale(var(--awake-glow-scale));
+  filter:blur(6px);pointer-events:none;}
+.cap-awake-browser{position:absolute;left:8%;right:8%;top:11%;bottom:11%;z-index:2;
+  background:#f6f5ef;border:2px solid var(--black);box-shadow:var(--awake-shadow) var(--awake-shadow) 0 rgba(0,0,0,.9);
+  overflow:hidden;transform:translateY(var(--awake-y)) scale(var(--awake-scale));
+  filter:blur(var(--awake-blur)) saturate(var(--awake-sat));will-change:transform,filter,box-shadow;}
+.cap-awake-bar{height:30px;background:#e8e6dd;border-bottom:2px solid var(--black);
+  display:flex;align-items:center;gap:7px;padding:0 11px;}
+.cap-awake-bar span{width:8px;height:8px;border-radius:50%;background:var(--red);}
+.cap-awake-bar span:nth-child(2){background:var(--yellow);}.cap-awake-bar span:nth-child(3){background:var(--green);}
+.cap-awake-bar i{height:6px;flex:1;margin-left:7px;border-radius:999px;background:rgba(13,13,13,.14);}
+.cap-awake-screen{position:absolute;left:0;right:0;top:30px;bottom:0;background:#fffef8;overflow:hidden;
+  display:grid;grid-template-rows:auto minmax(54px,1fr) auto;gap:9px;padding:16px;}
+.cap-awake-screen::after{content:'';position:absolute;inset:0;z-index:8;pointer-events:none;
+  background:#050505;opacity:var(--awake-dim);}
+.cap-awake-sleep{position:absolute;left:50%;top:50%;z-index:9;
+  transform:translate(-50%,-50%) scale(var(--awake-sleep-scale));
+  font-family:'JetBrains Mono','Courier New',monospace;font-size:10px;font-weight:800;
+  letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.68);
+  opacity:var(--awake-sleep-o);white-space:nowrap;}
+.cap-awake-sleep::before{content:'';display:block;width:44px;height:1px;background:var(--yellow);
+  margin:0 auto 9px;box-shadow:0 7px 0 rgba(255,255,255,.22);}
+.cap-awake-hero{position:relative;z-index:3;align-self:start;min-width:0;
+  font-family:'Clash Display','Arial Black',sans-serif;font-size:clamp(20px,3.2vw,32px);
+  line-height:.84;font-weight:800;letter-spacing:-.04em;text-transform:uppercase;color:var(--black);
+  opacity:var(--awake-hero-o);transform:translateY(var(--awake-hero-y));will-change:transform,opacity;}
+.cap-awake-hero em{font-family:'Cabinet Grotesk','Arial Black',sans-serif;font-style:italic;
+  color:var(--red);}
+.cap-awake-layout{position:relative;z-index:3;min-height:0;
+  display:grid;grid-template-columns:1.08fr .92fr;gap:10px;}
+.cap-awake-panel{position:relative;min-height:0;border:2px solid var(--black);background:#ebe9df;
+  opacity:var(--awake-panel-o);transform:translateY(var(--awake-panel-y));
+  box-shadow:4px 4px 0 rgba(13,13,13,.9);will-change:transform,opacity;overflow:hidden;}
+.cap-awake-panel--image::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--yellow),var(--red) 55%,var(--blue));
+  opacity:var(--awake-color-o);}
+.cap-awake-panel--image span{position:absolute;left:14%;right:14%;top:50%;height:2px;
+  background:rgba(255,255,255,.62);box-shadow:18px -15px 0 rgba(255,255,255,.32),-12px 15px 0 rgba(255,255,255,.28);}
+.cap-awake-panel--copy{display:grid;align-content:center;gap:8px;padding:12px;}
+.cap-awake-panel--copy span{height:7px;border-radius:999px;background:rgba(13,13,13,.2);}
+.cap-awake-panel--copy span:nth-child(1){width:90%;}.cap-awake-panel--copy span:nth-child(2){width:66%;}
+.cap-awake-panel--copy span:nth-child(3){width:78%;background:rgba(247,74,110,.42);}
+.cap-awake-cta{position:relative;z-index:4;justify-self:start;align-self:end;padding:8px 14px;border-radius:999px;
+  background:var(--black);color:#fff;font-family:'JetBrains Mono','Courier New',monospace;
+  font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  opacity:var(--awake-cta-o);transform:translateY(var(--awake-cta-y));will-change:transform,opacity;}
+.cap-awake-badge{position:absolute;right:14px;top:14px;z-index:5;padding:7px 9px;
+  background:var(--green);color:var(--black);border:2px solid var(--black);
+  font-family:'JetBrains Mono','Courier New',monospace;font-size:9px;font-weight:900;
+  letter-spacing:.14em;text-transform:uppercase;box-shadow:4px 4px 0 var(--black);
+  opacity:var(--awake-live-o);transform:scale(var(--awake-live-scale));transform-origin:top right;}
+.cap-awake-scan{position:absolute;inset:0;z-index:7;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(249,209,0,.34),transparent);
+  opacity:var(--awake-scan-o);transform:translateX(var(--awake-scan-x));mix-blend-mode:multiply;}
+.cap-awake-spark{position:absolute;z-index:1;width:42px;height:42px;border:2px solid var(--yellow);
+  opacity:var(--awake-spark-o);transform:translateY(var(--awake-spark-y)) rotate(8deg);}
+.cap-awake-spark--a{left:9%;top:17%;}.cap-awake-spark--b{right:11%;bottom:18%;border-color:var(--blue);width:34px;height:34px;}
+@media(max-width:900px){
+  .cap-awake-stage{inset:12px;}
+  .cap-awake-browser{left:7%;right:7%;top:12%;bottom:12%;}
+  .cap-awake-screen{padding:13px;gap:8px;grid-template-rows:auto minmax(44px,1fr) auto;}
+  .cap-awake-hero{font-size:clamp(18px,5.4vw,28px);}
+  .cap-awake-layout{gap:8px;}
+  .cap-awake-cta{font-size:8px;padding:7px 12px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .cap-demo-awake{--awake-dim:.14;--awake-grid:.34;--awake-glow:.68;--awake-glow-scale:1.12;
+    --awake-y:0px;--awake-scale:1;--awake-blur:0px;--awake-sat:1;--awake-shadow:20px;
+    --awake-sleep-o:0;--awake-sleep-scale:.86;--awake-hero-o:1;--awake-hero-y:0px;
+    --awake-panel-o:1;--awake-panel-y:0px;--awake-color-o:1;--awake-cta-o:1;--awake-cta-y:0px;
+    --awake-live-o:1;--awake-live-scale:1;--awake-scan-o:0;--awake-scan-x:115%;
+    --awake-spark-o:.8;--awake-spark-y:0px;}
 }
 .cap-demo-magnetic{position:absolute;inset:0;cursor:crosshair;}
 .cap-mag-dot{
@@ -2131,11 +2229,32 @@ body.no-gsap .testi-glow,body.no-gsap .testi-arrow,body.no-gsap #proof-connector
     <div class="cap-progress-bar" id="cap-bar"></div>
     <div class="cap-cards-stage">
       <article class="cap-card is-active" id="cap-card-0">
-        <div class="cap-card-head"><span class="cap-card-id">01 / TEXT</span><div class="cap-card-dot"></div></div>
-        <h3>Scramble<br>text engine.</h3>
-        <div class="cap-card-sub">Char animation · RAF</div>
-        <div class="cap-demo"><div class="cap-demo-scramble" id="cap-scramble">MOTION</div></div>
-        <div class="cap-card-foot"><span>FX_01</span><span>LIVE</span></div>
+        <div class="cap-card-head"><span class="cap-card-id">01 / AWAKEN</span><div class="cap-card-dot"></div></div>
+        <h3>Website<br>awakens.</h3>
+        <div class="cap-card-sub">Scroll-triggered launch sequence</div>
+        <div class="cap-demo cap-demo-awake" id="cap-awake" aria-label="Scroll-triggered website awakening from dormant mockup to live site">
+          <div class="cap-awake-stage">
+            <div class="cap-awake-grid"></div>
+            <div class="cap-awake-glow"></div>
+            <span class="cap-awake-spark cap-awake-spark--a"></span>
+            <span class="cap-awake-spark cap-awake-spark--b"></span>
+            <div class="cap-awake-browser">
+              <div class="cap-awake-bar"><span></span><span></span><span></span><i></i></div>
+              <div class="cap-awake-screen">
+                <div class="cap-awake-sleep">Sleep mode</div>
+                <div class="cap-awake-hero">Live<br><em>site.</em></div>
+                <div class="cap-awake-layout">
+                  <div class="cap-awake-panel cap-awake-panel--image"><span></span></div>
+                  <div class="cap-awake-panel cap-awake-panel--copy"><span></span><span></span><span></span></div>
+                </div>
+                <div class="cap-awake-cta">Launch</div>
+                <div class="cap-awake-scan"></div>
+              </div>
+            </div>
+            <div class="cap-awake-badge">Live</div>
+          </div>
+        </div>
+        <div class="cap-card-foot"><span>FX_01</span><span>LIVE BUILD</span></div>
       </article>
       <article class="cap-card" id="cap-card-1">
         <div class="cap-card-head"><span class="cap-card-id">02 / FIELD</span><div class="cap-card-dot"></div></div>
