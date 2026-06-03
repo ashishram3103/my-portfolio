@@ -102,7 +102,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   }
 
   // Exclude work-tile anchors so the section-level cur-work state isn't overwritten
-  document.querySelectorAll('a:not(.wcard):not(.wcard-cta-link),button,.svc-row,.exp-item,.skill-tag,.cnt-btn-email,.cnt-btn-phone,.currently-badge,.testi-glass').forEach(el=>{
+  document.querySelectorAll('a:not(.wcard):not(.wcard-cta-link),button,.svc-row,.exp-item,.skill-tag,.cnt-btn-email,.cnt-btn-phone,.currently-badge,.testi-glass,.rs-stage').forEach(el=>{
     el.addEventListener('mouseenter',()=>setState('hover'));
     el.addEventListener('mouseleave',()=>setState(null));
   });
@@ -1010,8 +1010,11 @@ gsap.utils.toArray('.about-bio-block p').forEach((p,i)=>{
 });
 gsap.fromTo('.about-meta-card',{opacity:0,x:45},{opacity:1,x:0,duration:.9,ease:'power3.out',
   scrollTrigger:{trigger:'.about-meta-card',start:'top 88%',toggleActions:'play none none reverse'}});
+// once:true (no reverse) + clearProps so the pinned wrapper is transform-clean when GSAP
+// pins it — a leftover inline transform from the scale reveal is what flickered at pin engage.
 gsap.fromTo('.about-photo-wrap',{opacity:0,scale:.94},{opacity:1,scale:1,duration:.9,ease:'power3.out',
-  scrollTrigger:{trigger:'.about-photo-wrap',start:'top 88%',toggleActions:'play none none reverse'}});
+  scrollTrigger:{trigger:'.about-photo-wrap',start:'top 88%',once:true},
+  onComplete:()=>gsap.set('.about-photo-wrap',{clearProps:'transform'})});
 
 (function(){
   const flow=document.querySelector('.about-skills-flow');
@@ -1093,7 +1096,13 @@ gsap.fromTo('.about-photo-wrap',{opacity:0,scale:.94},{opacity:1,scale:1,duratio
 
   buildDockPath();
   window.addEventListener('resize',requestDockPath);
-  window.addEventListener('scroll',requestDockPath,{passive:true});
+  // Only rebuild the dock path on scroll while the about→skills region is near the viewport.
+  // Previously this ran 3× getBoundingClientRect + an SVG path rebuild on EVERY scroll frame
+  // across the whole page (desktop). Off-region scrolls now cost one cheap rect read and bail.
+  window.addEventListener('scroll',()=>{
+    const r=flow.getBoundingClientRect();
+    if(r.bottom > -300 && r.top < (window.innerHeight||0)+300) requestDockPath();
+  },{passive:true});
   if(window.ResizeObserver){
     const ro=new ResizeObserver(requestDockPath);
     ro.observe(flow);
@@ -1668,6 +1677,137 @@ function resetPanel(){
 })();
 
 /* ============================================================
+   REVEAL SLAB — extrude × liquid × spotlight (IO-gated; idle off-screen)
+   Desktop: pointer aims the light + 3D tilt; idle >2.5s → gentle auto-orbit.
+   Touch:   auto-orbit + sway by default; touch aims the light, gyro tilts if available.
+   Scroll:  --fill via ScrollTrigger scrub (drains on scroll-up).
+   Reduced-motion / no-gsap: bailed early — CSS shows the static assembled state.
+   ============================================================ */
+(function(){
+  const slab=document.getElementById('reveal-slab');
+  const stage=document.getElementById('rs-stage');
+  if(!slab || !stage) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if(document.body.classList.contains('no-gsap')) return;
+
+  const isTouch = window.matchMedia('(hover:none)').matches
+    || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+  // Current + target values, lerped each frame for smooth motion.
+  let mx=50,my=42,tmx=50,tmy=42;     // spotlight centre (%)
+  let ex=0,ey=0,tex=0,tey=0;         // tilt / extrusion vector [-1..1]
+  let lastPointer=-99999;            // ms of last pointer/touch activity
+  let gyroActive=false;
+  let visible=false, raf=null, t=0;
+
+  const lerp=(a,b,n)=>a+(b-a)*n;
+  const clamp=(v,lo,hi)=>v<lo?lo:(v>hi?hi:v);
+
+  function setVars(){
+    slab.style.setProperty('--mx', mx.toFixed(2)+'%');
+    slab.style.setProperty('--my', my.toFixed(2)+'%');
+    slab.style.setProperty('--ex', ex.toFixed(3));
+    slab.style.setProperty('--ey', ey.toFixed(3));
+  }
+
+  if(!isTouch){
+    slab.addEventListener('pointermove', e=>{
+      if(!visible) return;
+      const r=slab.getBoundingClientRect();
+      if(!r.width||!r.height) return;
+      const px=(e.clientX-r.left)/r.width, py=(e.clientY-r.top)/r.height;
+      tmx=clamp(px*100,0,100); tmy=clamp(py*100,0,100);
+      tex=clamp((px-0.5)*2,-1,1); tey=clamp((py-0.5)*2,-1,1);
+      lastPointer=performance.now();
+    }, {passive:true});
+  } else {
+    slab.addEventListener('touchmove', e=>{
+      const tch=e.touches&&e.touches[0]; if(!tch||!visible) return;
+      const r=slab.getBoundingClientRect();
+      if(!r.width||!r.height) return;
+      tmx=clamp((tch.clientX-r.left)/r.width*100,0,100);
+      tmy=clamp((tch.clientY-r.top)/r.height*100,0,100);
+      lastPointer=performance.now();
+    }, {passive:true});
+    // Gyroscope tilt where exposed (no permission prompt forced; auto-sway covers it if absent).
+    if(window.DeviceOrientationEvent){
+      window.addEventListener('deviceorientation', e=>{
+        if(e.gamma==null || e.beta==null) return;
+        gyroActive=true;
+        if(!visible) return;
+        tex=clamp(e.gamma/30,-1,1);
+        tey=clamp((e.beta-45)/30,-1,1);
+      }, {passive:true});
+    }
+  }
+
+  function frame(){
+    if(!visible){ raf=null; return; }
+    t+=0.016;
+    const idle = performance.now()-lastPointer > 2500;
+    if(idle){
+      // Wide Lissajous orbit so the light sweeps the whole field; livelier sway for the tilt.
+      tmx=50+Math.sin(t*0.9)*40;
+      tmy=50+Math.cos(t*1.2)*32;
+      if(!gyroActive){
+        tex=Math.sin(t*0.8)*(isTouch?0.6:0.5);
+        tey=Math.cos(t*0.6)*(isTouch?0.5:0.4);
+      }
+    }
+    mx=lerp(mx,tmx,0.08); my=lerp(my,tmy,0.08);
+    ex=lerp(ex,tex,0.07); ey=lerp(ey,tey,0.07);
+    setVars();
+    raf=requestAnimationFrame(frame);
+  }
+
+  // Tactile press + light ripple — user research showed people try to click/tap this,
+  // so reward it. Pure transform on the stage (springs back via CSS) + one ripple element.
+  function press(on){ stage.style.transform = on ? 'scale(0.95)' : 'scale(1)'; }
+  function ripple(x,y){
+    const r=slab.getBoundingClientRect();
+    const d=document.createElement('span');
+    d.className='rs-ripple';
+    d.style.left=(x-r.left)+'px';
+    d.style.top=(y-r.top)+'px';
+    slab.appendChild(d);
+    d.addEventListener('animationend',()=>d.remove(),{once:true});
+  }
+  slab.addEventListener('pointerdown', e=>{ press(true); ripple(e.clientX,e.clientY); }, {passive:true});
+  window.addEventListener('pointerup', ()=>press(false), {passive:true});
+
+  // --fill: scroll progress through the band; ScrollTrigger handles the scroll-up drain.
+  if(window.ScrollTrigger){
+    ScrollTrigger.create({
+      trigger:slab, start:'top bottom', end:'bottom top',
+      onUpdate:()=>{
+        // Fill tracks how CENTRED the band is in the viewport: full when the word sits
+        // dead-centre (you're looking right at it), draining to 0 as its centre reaches a
+        // viewport edge. So the fill/drain happens while it's on screen — not before/after.
+        const r=slab.getBoundingClientRect();
+        const vh=window.innerHeight||1;
+        const centre=r.top + r.height/2;
+        const fill=clamp(1 - Math.abs(centre - vh/2)/(vh*0.5), 0, 1);
+        slab.style.setProperty('--fill', fill.toFixed(3));
+      }
+    });
+  }
+
+  // IO master switch — the rAF only runs while the band is on screen.
+  if('IntersectionObserver' in window){
+    const io=new IntersectionObserver(entries=>{
+      entries.forEach(en=>{
+        visible=en.isIntersecting;
+        if(visible && !raf) raf=requestAnimationFrame(frame);
+        else if(!visible && raf){ cancelAnimationFrame(raf); raf=null; }
+      });
+    }, {threshold:0});
+    io.observe(slab);
+  } else {
+    visible=true; raf=requestAnimationFrame(frame);
+  }
+})();
+
+/* ============================================================
    TESTIMONIAL — 3D GLASS CAROUSEL
    One frosted card front, the rest fanned behind in 3D depth. Auto-advances,
    pauses on hover/touch, dots to jump. Circular offset = seamless loop.
@@ -1789,6 +1929,10 @@ function resetPanel(){
       entries.forEach(e=>{
         inView=e.isIntersecting;
         if(inView) startAuto(); else stopAuto();
+        // Pause the heavy conic-gradient glow sweep while testimonials are off-screen so
+        // it stops repainting in the background (it was a constant cost the whole time you
+        // were past it). Resumes seamlessly on re-entry. Zero visual change.
+        carousel.classList.toggle('sweep-paused', !inView);
       });
     }, {threshold:0.25});
     io.observe(carousel);
@@ -2383,6 +2527,17 @@ function resetPanel(){
     }
   }
 
+  // Release the ~40 GPU layers (world + items + cards) while the section is OFF-screen so they
+  // stop burdening the compositor for the rest of the page (this is the "accumulated weight" that
+  // makes scrolling back up heavier than the first trip down). Restored before the scrub renders.
+  // will-change toggling never affects rendered pixels — zero visual change.
+  function setWorldLayers(on){
+    const v = on ? '' : 'auto';   // '' = fall back to CSS will-change (promoted); 'auto' = release
+    world.style.willChange = v;
+    for(let i=0;i<items.length;i++) items[i].el.style.willChange = v;
+    for(let i=0;i<cards.length;i++) cards[i].style.willChange = v;
+  }
+
   function resetWorld(){
     sectionVisible = false;
     pinWrap.classList.remove('is-live');
@@ -2393,8 +2548,10 @@ function resetPanel(){
     smoothProgress = targetProgress;
     world.style.transform   = 'rotateX(0deg) rotateY(0deg)';
     stage.style.perspective = '1000px';
+    setWorldLayers(false);   // off-screen → drop the layers
   }
   function activateWorld(){
+    setWorldLayers(true);    // re-promote before rendering the 3D scrub
     sectionVisible = true;
     pinWrap.classList.add('is-live');
     startWorldLoop();

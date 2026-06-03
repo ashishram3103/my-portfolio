@@ -393,8 +393,7 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
     perspective:1000px;}
   .hbm-stage{height:clamp(260px,70vw,340px);}
   #hero-canvas{opacity:.18;}
-  .hero-headline .h-li,.hl-cab{backface-visibility:hidden;-webkit-backface-visibility:hidden;
-    will-change:transform;}
+  .hero-headline .h-li,.hl-cab{backface-visibility:hidden;-webkit-backface-visibility:hidden;}
 }
 @media(max-width:480px){
   .hero-headline{font-size:clamp(35px,10.9vw,54px);line-height:.98;}
@@ -407,6 +406,95 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 }
 .hero-trail{position:fixed;pointer-events:none;z-index:1;border-radius:50%;
   mix-blend-mode:screen;will-change:transform,opacity;}
+
+/* ============================================================
+   REVEAL SLAB — extrude × liquid × spotlight hybrid.
+   One giant word: (1) extrudes as a 3D slab tracking pointer/gyro via --ex/--ey,
+   (2) fills with wavy brand liquid via --fill (scroll), (3) sits in dark hiding a
+   tagline + marks revealed only under a spotlight at --mx/--my. JS sets the vars;
+   all motion is transform/mask (GPU). Idle when off-screen (IO-gated rAF).
+   ============================================================ */
+#reveal-slab{position:relative;background:#0D0D0D;overflow:hidden;
+  border-top:2px solid var(--black);
+  --mx:50%;--my:42%;--ex:0;--ey:0;--fill:0;--trail-color:#F9D100;}
+.rs-inner{position:relative;width:100%;
+  min-height:clamp(340px,52vh,520px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:clamp(44px,6vw,80px) 24px;}
+.rs-eyebrow{position:relative;z-index:4;font-weight:800;font-size:12px;letter-spacing:.28em;
+  text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:clamp(20px,3vw,36px);}
+/* Soft ambient glow following the light. */
+.rs-light{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(circle at var(--mx) var(--my),rgba(249,209,0,.2),transparent 36%);
+  mix-blend-mode:screen;}
+/* Full-bleed field of ghost words + brand glyphs, revealed only under the moving spotlight. */
+.rs-reveal{position:absolute;inset:0;z-index:2;pointer-events:none;
+  -webkit-mask:radial-gradient(circle at var(--mx) var(--my),#000 0,#000 13%,transparent 36%);
+  mask:radial-gradient(circle at var(--mx) var(--my),#000 0,#000 13%,transparent 36%);}
+.rs-rword{position:absolute;font-family:'Clash Display','Arial Black',sans-serif;font-weight:700;
+  font-size:clamp(26px,5vw,64px);letter-spacing:-.02em;text-transform:uppercase;white-space:nowrap;
+  color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.6);}
+.rs-mark{position:absolute;font-size:clamp(20px,2.4vw,32px);line-height:1;
+  animation:rsMarkPulse 3s ease-in-out infinite;}
+@keyframes rsMarkPulse{0%,100%{transform:scale(1);opacity:.82;}50%{transform:scale(1.18);opacity:1;}}
+.rs-mark-a{left:22%;top:12%;color:var(--yellow);}
+.rs-mark-b{right:24%;top:40%;color:var(--red);animation-delay:.4s;}
+.rs-mark-c{left:32%;bottom:26%;color:var(--green);animation-delay:.8s;}
+.rs-mark-d{right:16%;bottom:14%;color:var(--bluel);animation-delay:1.2s;}
+.rs-mark-e{left:48%;top:26%;color:var(--yellow);animation-delay:1.6s;}
+.rs-mark-f{right:40%;bottom:40%;color:var(--green);animation-delay:2s;}
+/* Stage owns perspective; the word swivels inside it. Spring-back on press. */
+.rs-stage{position:relative;z-index:3;perspective:1100px;transform:scale(1);
+  transition:transform .35s var(--ease-out-back);}
+/* Click/tap ripple — invites play; spawned + removed by JS. */
+.rs-ripple{position:absolute;z-index:6;width:16px;height:16px;border-radius:50%;pointer-events:none;
+  border:2px solid rgba(249,209,0,.85);transform:translate(-50%,-50%) scale(0);
+  animation:rsRipple .62s ease-out forwards;}
+@keyframes rsRipple{to{transform:translate(-50%,-50%) scale(20);opacity:0;}}
+.rs-word{position:relative;margin:0;
+  font-family:'Clash Display','Arial Black',sans-serif;font-weight:700;
+  font-size:clamp(62px,16vw,220px);line-height:.9;letter-spacing:-.04em;text-transform:uppercase;
+  transform-style:preserve-3d;will-change:transform;
+  transform:rotateY(calc(var(--ex)*16deg)) rotateX(calc(var(--ey)*-12deg));}
+.rs-word .rs-extrude,.rs-word .rs-fill{position:absolute;inset:0;}
+/* Always-visible white stroke outline = the in-flow sizer for the stack. */
+.rs-outline{position:relative;display:block;color:transparent;
+  -webkit-text-stroke:2px rgba(255,255,255,.92);z-index:10;}
+/* Extrusion stack — chromatic depth, baseline down-right + pointer-directed shift. */
+.rs-extrude{z-index:1;will-change:transform;
+  transform:translate(calc(var(--ex)*var(--k)*4.5px + var(--k)*1.6px),
+                       calc(var(--ey)*var(--k)*4.5px + var(--k)*2.2px));}
+/* Monochrome amber→black depth — reads as a yellow block with a hard dimensional shadow,
+   matching the site's yellow-on-dark + brutalist offset-shadow language. */
+.rs-word .rs-extrude:nth-child(1){color:#120d04;} /* k=6 deepest */
+.rs-word .rs-extrude:nth-child(2){color:#241a08;}
+.rs-word .rs-extrude:nth-child(3){color:#45330c;}
+.rs-word .rs-extrude:nth-child(4){color:#6e4d10;}
+.rs-word .rs-extrude:nth-child(5){color:#9a6a00;}
+.rs-word .rs-extrude:nth-child(6){color:#c98a00;} /* k=1 nearest the face */
+/* Liquid fill — brand-gradient clipped text, rises bottom-up with --fill. */
+.rs-fill{z-index:11;color:transparent;
+  background:linear-gradient(180deg,#FCDC3B 0%,#F9D100 52%,#E2A600 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  clip-path:inset(calc((1 - var(--fill))*100%) 0 0 0);}
+/* Liquid surface line riding the fill level (brightest mid-fill). */
+.rs-wave{position:absolute;left:-2%;right:-2%;height:10px;z-index:12;pointer-events:none;
+  bottom:calc(var(--fill)*100%);border-radius:50%;
+  background:linear-gradient(90deg,transparent,rgba(249,209,0,.9),rgba(255,255,255,.96),rgba(249,209,0,.9),transparent);
+  opacity:calc(var(--fill) * (1 - var(--fill)) * 4);}
+@media(max-width:600px){
+  .rs-rword{font-size:clamp(22px,7vw,40px);-webkit-text-stroke-width:1.2px;}
+  .rs-mark{font-size:20px;}
+}
+/* Reduced-motion / no-GSAP: static assembled state — word filled, copy shown, no tilt. */
+@media(prefers-reduced-motion:reduce){
+  #reveal-slab{--fill:.85;--ex:0;--ey:0;}
+  .rs-reveal{-webkit-mask:none;mask:none;}
+  .rs-word{transform:none;}
+}
+body.no-gsap #reveal-slab{--fill:.85;}
+body.no-gsap .rs-reveal{-webkit-mask:none;mask:none;}
+body.no-gsap .rs-word{transform:none;}
 
 /* SCROLL BAND */
 #scrollband-section{padding:30px 0;overflow:hidden;background:var(--black);
@@ -455,7 +543,7 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   hyphens:none;word-break:normal;}
 .sec-title em{font-family:'Cabinet Grotesk','Arial Black',sans-serif;font-weight:800;
   font-style:italic;color:var(--red);display:inline-block;line-height:1.14;padding-block:.035em;}
-.split-char{display:inline-block;will-change:transform,opacity;overflow:visible;}
+.split-char{display:inline-block;overflow:visible;}
 @media(max-width:900px){.sec{padding:80px 20px;}}
 
 /* WORK GRID */
@@ -536,6 +624,13 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   .wcard:nth-child(odd){scroll-snap-align:start;}
   .wcard:nth-child(7),.wcard:nth-child(8){border-bottom:none;}
   .wcard:nth-child(8){border-right:none;}
+  /* On the small 2-up slider the white line-art merges with the white title.
+     Soften the art and drop a bottom-weighted scrim BETWEEN the SVG (z-index:1) and
+     the content (z-index:2) so titles stay readable over any bg colour. (::after paints
+     after the SVG child, so equal z-index:1 resolves above it; content z-index:2 stays on top.) */
+  .wcard-svg{opacity:.6;}
+  .wcard-visual::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:linear-gradient(to top,rgba(13,13,13,.82) 0%,rgba(13,13,13,.5) 32%,transparent 64%);}
   /* Tighten card internals so the 2-up at ~190px reads cleanly. */
   .wcard-content{padding:14px 12px;}
   .wcard-title{font-size:clamp(13px,3.8vw,16px);line-height:1.05;letter-spacing:-.01em;}
@@ -588,7 +683,7 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 
 /* WORD SCROLL */
 #word-section{background:var(--black);overflow:hidden;position:relative;min-height:0;}
-.word-flash-line{position:absolute;left:0;top:50%;width:100%;height:2px;background:var(--yellow);transform:scaleX(0);transform-origin:left center;pointer-events:none;z-index:4;opacity:0;will-change:transform,opacity;}
+.word-flash-line{position:absolute;left:0;top:50%;width:100%;height:2px;background:var(--yellow);transform:scaleX(0);transform-origin:left center;pointer-events:none;z-index:4;opacity:0;}
 .word-inner{min-height:58vh;display:flex;align-items:center;justify-content:center;
   flex-direction:column;padding:72px 40px;cursor:pointer;user-select:none;gap:10px;
   -webkit-tap-highlight-color:transparent;}
@@ -915,6 +1010,9 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
 .testi-card-container[data-active] .testi-glow{opacity:1;
   animation:testiBorderSweep 4s linear infinite;}
+/* Stop the conic sweep repainting while testimonials are scrolled off-screen (id+class
+   specificity beats the rules below; !important so it also overrides the mobile-arc shorthands). */
+#testi-carousel.sweep-paused .testi-glow{animation-play-state:paused!important;}
 /* Mobile hand-off: while the connector comet arc is still travelling, fully suppress the
    first card's own ring sweep so it doesn't run alongside the incoming arc. When the arc
    lands the flag is removed → the ring appears and its sweep starts fresh from the top
@@ -1077,7 +1175,7 @@ body.no-gsap .hbm-back{transform:translate3d(28px,32px,-60px);}
 #skills-section .sec-head{margin-bottom:32px;width:calc(100% - var(--about-photo-reserve));}
 #skills-title{margin-bottom:clamp(156px,12vw,220px);width:calc(100% - var(--about-photo-reserve));}
 .sec-title-reveal .char{display:inline-block;opacity:0;transform:translateY(40px);
-  transition:none;will-change:transform,opacity,color;}
+  transition:none;}
 .sec-title-reveal .char.is-space{display:inline-block;width:.3em;}
 .skills-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;position:relative;z-index:2;}
 .skill-group-title{font-family:'Clash Display','Arial Black',sans-serif;font-weight:700;font-size:14px;
@@ -1328,15 +1426,22 @@ body.no-gsap .hbm-back{transform:translate3d(28px,32px,-60px);}
 }
 .cap-card-foot{
   font-family:'JetBrains Mono','Courier New',monospace;
-  font-size:9px;color:rgba(255,255,255,.28);
+  font-size:10px;color:rgba(255,255,255,.45);
   display:flex;justify-content:space-between;letter-spacing:.1em;
 }
+/* The action cue (LIVE / HOVER · CLICK REPEL / TAP · DRAG / etc.) reads as interactive —
+   the FX index stays quiet. Small pulsing dot signals "live demo". */
+.cap-cue{color:var(--yellow);font-weight:700;letter-spacing:.14em;
+  display:inline-flex;align-items:center;gap:6px;}
+.cap-cue::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);animation:statusPulse 2s ease-in-out infinite;}
 /* Cursor-dependent demo labels: show desktop variant by default; swap to mobile
    variant on touch (no hover) so labels match what the device can actually do. */
 .cap-lbl-mobile{display:none;}
 @media(hover:none){
   .cap-lbl-desktop{display:none;}
-  .cap-lbl-mobile{display:inline;}
+  /* inline-flex (not inline) so the .cap-cue dot+gap layout survives on touch */
+  .cap-lbl-mobile{display:inline-flex;}
 }
 /* Demo-specific styles */
 .cap-demo-awake{display:block;padding:0;isolation:isolate;
@@ -1563,7 +1668,7 @@ body.no-gsap .hbm-back{transform:translate3d(28px,32px,-60px);}
   border:2px solid rgba(255,255,255,.3);color:var(--white);border-radius:4px;
   font-family:'Clash Display','Arial Black',sans-serif;font-weight:600;font-size:clamp(15px,1.6vw,22px);
   letter-spacing:-.01em;text-transform:lowercase;position:relative;overflow:hidden;
-  transition:border-color .3s;will-change:transform;}
+  transition:border-color .3s;}
 .cnt-btn-phone:hover{border-color:var(--white);}
 .cnt-phone-icon{display:inline-block;transition:transform .1s;}
 .cnt-btn-phone:hover .cnt-phone-icon{animation:phoneRing .3s ease infinite;}
@@ -1820,6 +1925,42 @@ body.no-gsap .testi-glow,body.no-gsap .testi-arrow,body.no-gsap #proof-connector
     <div class="hero-bottom-row">
       <p class="hero-bio">I design, build, and ship complete digital products — <strong>from brand identity and UI/UX to frontend motion, backend systems, and live deployment.</strong> End to end. No handoff. No agency chain.</p>
     </div>
+  </div>
+</section>
+
+<!-- REVEAL SLAB — signature hybrid moment. One giant word that (1) extrudes as a 3D slab
+     tracking the pointer / gyro, (2) fills with wavy brand-colour liquid on scroll, and
+     (3) sits in dark that hides a tagline + marks revealed only under a moving spotlight.
+     All driven by CSS custom properties + one IO-gated rAF (idle when off-screen). -->
+<section id="reveal-slab" aria-label="The practice: design, develop, deploy, deliver">
+  <div class="rs-inner">
+    <span class="rs-eyebrow">— the practice</span>
+    <div class="rs-stage" id="rs-stage">
+      <h2 class="rs-word" aria-hidden="true">
+        <span class="rs-extrude" style="--k:6">MAKE</span>
+        <span class="rs-extrude" style="--k:5">MAKE</span>
+        <span class="rs-extrude" style="--k:4">MAKE</span>
+        <span class="rs-extrude" style="--k:3">MAKE</span>
+        <span class="rs-extrude" style="--k:2">MAKE</span>
+        <span class="rs-extrude" style="--k:1">MAKE</span>
+        <span class="rs-outline">MAKE</span>
+        <span class="rs-fill">MAKE</span>
+        <span class="rs-wave" aria-hidden="true"></span>
+      </h2>
+    </div>
+    <div class="rs-reveal" id="rs-reveal" aria-hidden="true">
+      <span class="rs-rword" style="left:5%;top:8%">DESIGN</span>
+      <span class="rs-rword" style="right:5%;top:8%">DEVELOP</span>
+      <span class="rs-rword" style="left:6%;bottom:9%">DEPLOY</span>
+      <span class="rs-rword" style="right:5%;bottom:9%">DELIVER</span>
+      <span class="rs-mark rs-mark-a">&#10033;</span>
+      <span class="rs-mark rs-mark-b">&#9679;</span>
+      <span class="rs-mark rs-mark-c">&#9650;</span>
+      <span class="rs-mark rs-mark-d">&#10022;</span>
+      <span class="rs-mark rs-mark-e">+</span>
+      <span class="rs-mark rs-mark-f">&#9679;</span>
+    </div>
+    <div class="rs-light" id="rs-light" aria-hidden="true"></div>
   </div>
 </section>
 
@@ -2254,14 +2395,14 @@ body.no-gsap .testi-glow,body.no-gsap .testi-arrow,body.no-gsap #proof-connector
             <div class="cap-awake-badge">Live</div>
           </div>
         </div>
-        <div class="cap-card-foot"><span>FX_01</span><span>LIVE BUILD</span></div>
+        <div class="cap-card-foot"><span>FX_01</span><span class="cap-cue">LIVE BUILD</span></div>
       </article>
       <article class="cap-card" id="cap-card-1">
         <div class="cap-card-head"><span class="cap-card-id">02 / FIELD</span><div class="cap-card-dot"></div></div>
         <h3>Magnetic<br>particle field.</h3>
         <div class="cap-card-sub">Vanilla JS · Pointer-driven</div>
         <div class="cap-demo"><div class="cap-demo-magnetic" id="cap-magnetic"></div></div>
-        <div class="cap-card-foot"><span>FX_02</span><span class="cap-lbl-desktop">HOVER · CLICK REPEL</span><span class="cap-lbl-mobile">TAP · DRAG</span></div>
+        <div class="cap-card-foot"><span>FX_02</span><span class="cap-cue cap-lbl-desktop">HOVER · CLICK REPEL</span><span class="cap-cue cap-lbl-mobile">TAP · DRAG</span></div>
       </article>
       <article class="cap-card" id="cap-card-2">
         <div class="cap-card-head"><span class="cap-card-id">03 / DEPTH</span><div class="cap-card-dot"></div></div>
@@ -2275,14 +2416,14 @@ body.no-gsap .testi-glow,body.no-gsap .testi-arrow,body.no-gsap #proof-connector
             </div>
           </div>
         </div>
-        <div class="cap-card-foot"><span>FX_03</span><span class="cap-lbl-desktop">MOVE CURSOR</span><span class="cap-lbl-mobile">DRAG TO TILT</span></div>
+        <div class="cap-card-foot"><span>FX_03</span><span class="cap-cue cap-lbl-desktop">MOVE CURSOR</span><span class="cap-cue cap-lbl-mobile">DRAG TO TILT</span></div>
       </article>
       <article class="cap-card" id="cap-card-3">
         <div class="cap-card-head"><span class="cap-card-id">04 / WARP</span><div class="cap-card-dot"></div></div>
         <h3>Velocity<br>warp engine.</h3>
         <div class="cap-card-sub">RAF · Scroll-velocity stretch</div>
         <div class="cap-demo"><div class="cap-demo-warp" id="cap-warp"></div></div>
-        <div class="cap-card-foot"><span>FX_04</span><span>SCROLL FAST</span></div>
+        <div class="cap-card-foot"><span>FX_04</span><span class="cap-cue">SCROLL FAST</span></div>
       </article>
     </div>
   </div>
