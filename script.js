@@ -1700,6 +1700,13 @@ function resetPanel(){
   let gyroActive=false;
   let visible=false, raf=null, t=0;
 
+  // Liquid fill: a rippling wave path (#rs-liquid-wave) clips the gold .rs-fill text.
+  // curFill (0..1) is the level set by scroll; fillW/H are cached so the per-frame wave
+  // rebuild does no layout reads (re-measured on resize / on becoming visible).
+  const fillEl=slab.querySelector('.rs-fill');
+  const wavePath=document.getElementById('rs-liquid-wave');
+  let curFill=0, fillW=0, fillH=0;
+
   const lerp=(a,b,n)=>a+(b-a)*n;
   const clamp=(v,lo,hi)=>v<lo?lo:(v>hi?hi:v);
 
@@ -1709,6 +1716,22 @@ function resetPanel(){
     slab.style.setProperty('--ex', ex.toFixed(3));
     slab.style.setProperty('--ey', ey.toFixed(3));
   }
+
+  function measureFill(){ if(fillEl){ fillW=fillEl.offsetWidth; fillH=fillEl.offsetHeight; } }
+  function updateLiquid(){
+    if(!wavePath || !fillW || !fillH) return;
+    const surface=(1-curFill)*fillH;
+    const amp=Math.min(9, fillH*0.035) * ((curFill>0 && curFill<1) ? 1 : 0.5);
+    const k=2*Math.PI/(fillW*0.6), N=10;
+    let d='M0 '+(surface+Math.sin(t*2)*amp).toFixed(1);
+    for(let i=1;i<=N;i++){
+      const x=fillW*i/N;
+      d+=' L'+x.toFixed(1)+' '+(surface+Math.sin(k*x+t*2)*amp).toFixed(1);
+    }
+    d+=' L'+fillW+' '+fillH+' L0 '+fillH+' Z';
+    wavePath.setAttribute('d', d);
+  }
+  window.addEventListener('resize', measureFill, {passive:true});
 
   if(!isTouch){
     slab.addEventListener('pointermove', e=>{
@@ -1757,6 +1780,7 @@ function resetPanel(){
     mx=lerp(mx,tmx,0.08); my=lerp(my,tmy,0.08);
     ex=lerp(ex,tex,0.07); ey=lerp(ey,tey,0.07);
     setVars();
+    updateLiquid();   // rippling liquid surface (uses cached size + curFill)
     raf=requestAnimationFrame(frame);
   }
 
@@ -1775,19 +1799,15 @@ function resetPanel(){
   slab.addEventListener('pointerdown', e=>{ press(true); ripple(e.clientX,e.clientY); }, {passive:true});
   window.addEventListener('pointerup', ()=>press(false), {passive:true});
 
-  // --fill: scroll progress through the band; ScrollTrigger handles the scroll-up drain.
+  // Fill level — monotonic with viewport position: rises as the band scrolls up into view,
+  // full by the time its top is ~25% down, clamped so it HOLDS full when scrolled past and
+  // only DRAINS on reverse scroll (no centre back-and-forth). vh-relative = responsive.
   if(window.ScrollTrigger){
     ScrollTrigger.create({
       trigger:slab, start:'top bottom', end:'bottom top',
       onUpdate:()=>{
-        // Fill tracks how CENTRED the band is in the viewport: full when the word sits
-        // dead-centre (you're looking right at it), draining to 0 as its centre reaches a
-        // viewport edge. So the fill/drain happens while it's on screen — not before/after.
-        const r=slab.getBoundingClientRect();
-        const vh=window.innerHeight||1;
-        const centre=r.top + r.height/2;
-        const fill=clamp(1 - Math.abs(centre - vh/2)/(vh*0.5), 0, 1);
-        slab.style.setProperty('--fill', fill.toFixed(3));
+        const r=slab.getBoundingClientRect(), vh=window.innerHeight||1;
+        curFill=clamp((vh - r.top)/(vh*0.75), 0, 1);
       }
     });
   }
@@ -1797,13 +1817,13 @@ function resetPanel(){
     const io=new IntersectionObserver(entries=>{
       entries.forEach(en=>{
         visible=en.isIntersecting;
-        if(visible && !raf) raf=requestAnimationFrame(frame);
+        if(visible && !raf){ measureFill(); updateLiquid(); raf=requestAnimationFrame(frame); }
         else if(!visible && raf){ cancelAnimationFrame(raf); raf=null; }
       });
     }, {threshold:0});
     io.observe(slab);
   } else {
-    visible=true; raf=requestAnimationFrame(frame);
+    visible=true; measureFill(); raf=requestAnimationFrame(frame);
   }
 })();
 

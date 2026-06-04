@@ -472,29 +472,29 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 .rs-word .rs-extrude:nth-child(4){color:#6e4d10;}
 .rs-word .rs-extrude:nth-child(5){color:#9a6a00;}
 .rs-word .rs-extrude:nth-child(6){color:#c98a00;} /* k=1 nearest the face */
-/* Liquid fill — brand-gradient clipped text, rises bottom-up with --fill. */
+/* Liquid fill — gold gradient text, clipped to a rippling wave surface (JS-generated
+   #rs-liquid-wave path). Rises/drains with scroll; the wave gives the liquid meniscus. */
 .rs-fill{z-index:11;color:transparent;
   background:linear-gradient(180deg,#FCDC3B 0%,#F9D100 52%,#E2A600 100%);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  clip-path:inset(calc((1 - var(--fill))*100%) 0 0 0);}
-/* Liquid surface line riding the fill level (brightest mid-fill). */
-.rs-wave{position:absolute;left:-2%;right:-2%;height:10px;z-index:12;pointer-events:none;
-  bottom:calc(var(--fill)*100%);border-radius:50%;
-  background:linear-gradient(90deg,transparent,rgba(249,209,0,.9),rgba(255,255,255,.96),rgba(249,209,0,.9),transparent);
-  opacity:calc(var(--fill) * (1 - var(--fill)) * 4);}
+  -webkit-clip-path:url(#rs-liquid);clip-path:url(#rs-liquid);}
+.rs-defs{position:absolute;width:0;height:0;overflow:hidden;}
 @media(max-width:600px){
   .rs-rword{font-size:clamp(22px,7vw,40px);-webkit-text-stroke-width:1.2px;}
   .rs-mark{font-size:20px;}
 }
-/* Reduced-motion / no-GSAP: static assembled state — word filled, copy shown, no tilt. */
+/* Reduced-motion / no-GSAP: static assembled state — word filled, copy shown, no tilt.
+   JS won't build the liquid wave path, so fall back to a straight ~85% fill. */
 @media(prefers-reduced-motion:reduce){
   #reveal-slab{--fill:.85;--ex:0;--ey:0;}
   .rs-reveal{-webkit-mask:none;mask:none;}
   .rs-word{transform:none;}
+  .rs-fill{-webkit-clip-path:inset(15% 0 0 0);clip-path:inset(15% 0 0 0);}
 }
 body.no-gsap #reveal-slab{--fill:.85;}
 body.no-gsap .rs-reveal{-webkit-mask:none;mask:none;}
 body.no-gsap .rs-word{transform:none;}
+body.no-gsap .rs-fill{-webkit-clip-path:inset(15% 0 0 0);clip-path:inset(15% 0 0 0);}
 
 /* SCROLL BAND */
 #scrollband-section{padding:30px 0;overflow:hidden;background:var(--black);
@@ -624,26 +624,30 @@ body.no-gsap .rs-word{transform:none;}
   .wcard:nth-child(odd){scroll-snap-align:start;}
   .wcard:nth-child(7),.wcard:nth-child(8){border-bottom:none;}
   .wcard:nth-child(8){border-right:none;}
-  /* On the small 2-up slider the white line-art merges with the white title.
-     Soften the art and drop a bottom-weighted scrim BETWEEN the SVG (z-index:1) and
-     the content (z-index:2) so titles stay readable over any bg colour. (::after paints
-     after the SVG child, so equal z-index:1 resolves above it; content z-index:2 stays on top.) */
-  .wcard-svg{opacity:.6;}
+  /* Declutter the small 2-up slider: drop the line-art entirely, keep a soft bottom scrim
+     so white titles stay readable over the solid card colour. */
+  .wcard-svg{display:none;}
   .wcard-visual::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
-    background:linear-gradient(to top,rgba(13,13,13,.82) 0%,rgba(13,13,13,.5) 32%,transparent 64%);}
+    background:linear-gradient(to top,rgba(13,13,13,.72) 0%,rgba(13,13,13,.42) 34%,transparent 62%);}
   /* Tighten card internals so the 2-up at ~190px reads cleanly. */
   .wcard-content{padding:14px 12px;}
-  .wcard-title{font-size:clamp(13px,3.8vw,16px);line-height:1.05;letter-spacing:-.01em;}
+  .wcard-title{font-size:clamp(12px,3.3vw,15px);line-height:1.05;letter-spacing:-.01em;}
   .wcard-meta{font-size:9px;}
+  /* Subtle-but-readable NEW badge (only shows on the dark orange/blue cards). */
+  .wcard-badge{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.38);
+    font-size:8.5px;padding:2px 7px;letter-spacing:.12em;}
+  /* Tap feedback — the whole card presses in, so it clearly reads as clickable. */
+  .wcard{transition:transform .15s var(--ease-out-expo);}
+  .wcard:active{transform:scale(.985);}
   .wcard-foot{padding:10px 12px;}
   .wcard-foot-tags{font-size:9px;letter-spacing:.04em;}
   .wcard-content{padding-bottom:44px;}
-  .wcard-overlay{inset:auto 10px 10px;height:28px;transform:none;
+  .wcard-overlay{inset:auto 10px 9px;height:24px;transform:none;
     background:rgba(13,13,13,.9)!important;border:1px solid rgba(255,255,255,.28);
     border-radius:999px;box-shadow:0 8px 18px rgba(13,13,13,.18);
     animation:workCtaGlow 2.4s ease-in-out infinite;}
   .wcard-overlay-txt{display:flex;align-items:center;justify-content:center;
-    font-size:10.5px;line-height:1;letter-spacing:.13em;}
+    font-size:9px;line-height:1;letter-spacing:.12em;}
   .wcard-overlay-txt br{display:none;}
   .wcard-overlay-txt em{margin-left:4px;animation:workCtaArrow 1.8s ease-in-out infinite;}
   @keyframes workCtaGlow{0%,100%{box-shadow:0 8px 18px rgba(13,13,13,.18);}
@@ -1945,7 +1949,6 @@ body.no-gsap .testi-glow,body.no-gsap .testi-arrow,body.no-gsap #proof-connector
         <span class="rs-extrude" style="--k:1">MAKE</span>
         <span class="rs-outline">MAKE</span>
         <span class="rs-fill">MAKE</span>
-        <span class="rs-wave" aria-hidden="true"></span>
       </h2>
     </div>
     <div class="rs-reveal" id="rs-reveal" aria-hidden="true">
@@ -1961,6 +1964,11 @@ body.no-gsap .testi-glow,body.no-gsap .testi-arrow,body.no-gsap #proof-connector
       <span class="rs-mark rs-mark-f">&#9679;</span>
     </div>
     <div class="rs-light" id="rs-light" aria-hidden="true"></div>
+    <svg class="rs-defs" width="0" height="0" aria-hidden="true" focusable="false">
+      <defs><clipPath id="rs-liquid" clipPathUnits="userSpaceOnUse">
+        <path id="rs-liquid-wave" d=""></path>
+      </clipPath></defs>
+    </svg>
   </div>
 </section>
 
