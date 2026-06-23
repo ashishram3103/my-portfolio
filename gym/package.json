@@ -1,0 +1,13 @@
+{
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "cssnano": "^8.0.2",
+    "html-minifier-terser": "^7.2.0",
+    "postcss": "^8.5.15",
+    "sharp": "^0.35.2",
+    "terser": "^5.48.0"
+  }
+}

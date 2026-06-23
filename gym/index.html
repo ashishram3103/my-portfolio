@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="ARC/01 is a fictional high-performance club concept created by Ashish Ram.">
+  <title>ARC/01 Performance Club</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23080808'/%3E%3Cpath d='M13 47 27 15h10l14 32H40l-2-6H25l-2 6H13Zm15-15h7l-3.5-10L28 32Z' fill='%23ff2a18'/%3E%3C/svg%3E">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three.module.min.js",
+      "jsm/": "./vendor/jsm/"
+    }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="loader" id="loader">
+    <div class="loader__grid" aria-hidden="true"></div>
+    <div class="loader__top">
+      <span>ARC/01 // PERFORMANCE OS</span>
+      <span id="loader-status" role="status">CALIBRATING</span>
+    </div>
+    <div class="loader__center">
+      <div class="loader__mark">
+        <span>A</span><i></i><span>01</span>
+      </div>
+      <p>Human performance, engineered.</p>
+    </div>
+    <div class="loader__bottom">
+      <div class="loader__bar"><span id="loader-bar"></span></div>
+      <span id="loader-count">000</span>
+    </div>
+  </div>
+  <script>
+    window.__arcLoaderFailsafe = window.setTimeout(function () {
+      var loader = document.getElementById("loader");
+      if (loader) loader.remove();
+    }, 8000);
+  </script>
+
+  <div class="grain" aria-hidden="true"></div>
+  <canvas id="performance-canvas" aria-hidden="true"></canvas>
+  <div class="canvas-vignette" aria-hidden="true"></div>
+
+  <header class="site-header" id="site-header">
+    <a class="brand" href="#entry" aria-label="ARC 01 home">
+      <span class="brand__arc">ARC</span><span class="brand__slash">/</span><span>01</span>
+    </a>
+    <div class="header__status">
+      <span class="pulse"></span>
+      <a href="https://ashishram.in" target="_blank" rel="noopener" id="header-credit">BUILT BY ASHISH RAM // BRAND ASSETS &amp; DETAILS ALTERED AT CLIENT REQUEST</a>
+    </div>
+    <nav class="desktop-nav" aria-label="Primary navigation">
+      <a href="#method">Method</a>
+      <a href="#arena">Arena</a>
+      <a href="#membership">Membership</a>
+    </nav>
+    <button class="header__cta" type="button" data-open-assessment>
+      <span>Get assessed</span><b aria-hidden="true">↗</b>
+    </button>
+    <button class="menu-toggle" type="button" aria-label="Menu" aria-controls="mobile-menu" aria-expanded="false">
+      <span></span><span></span>
+    </button>
+  </header>
+
+  <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+    <div class="mobile-menu__index">ARC/01 // MENU</div>
+    <a href="#method">The method <span>01</span></a>
+    <a href="#coaching">Intelligence <span>02</span></a>
+    <a href="#arena">The arena <span>03</span></a>
+    <a href="#membership">Membership <span>04</span></a>
+    <button type="button" data-open-assessment>Begin assessment ↗</button>
+  </div>
+
+  <div class="progress-rail" aria-hidden="true">
+    <span class="progress-rail__label">DEPTH</span>
+    <div class="progress-rail__track"><i id="page-progress"></i></div>
+    <span class="progress-rail__value" id="page-progress-value">000</span>
+  </div>
+
+  <nav class="section-sidebar" id="section-sidebar" aria-hidden="true">
+    <button class="section-sidebar__dot is-active" data-target="entry" title="Hero"></button>
+    <button class="section-sidebar__dot" data-target="scan" title="Scan"></button>
+    <button class="section-sidebar__dot" data-target="method" title="Method"></button>
+    <button class="section-sidebar__dot" data-target="coaching" title="Coaching"></button>
+    <button class="section-sidebar__dot" data-target="membership" title="Membership"></button>
+  </nav>
+
+  <main>
+    <section class="chapter hero" id="entry" data-chapter="entry">
+      <div class="sticky-frame hero__frame">
+        <img class="hero__image" src="assets/images/hero-athlete.webp" alt="Elite sprinter in the ARC/01 performance chamber" fetchpriority="high" decoding="async">
+        <div class="hero__image-mask" aria-hidden="true"></div>
+        <div class="hero__hud hero__hud--left">
+          <span>STATUS</span>
+          <strong>PRIME</strong>
+        </div>
+        <div class="hero__hud hero__hud--right">
+          <span>PROTOCOL</span>
+          <strong>01 / HUMAN</strong>
+        </div>
+        <div class="hero__copy">
+          <p class="eyebrow reveal">PRIVATE PERFORMANCE INSTITUTE</p>
+          <h1 aria-label="Built beyond limits">
+            <span class="hero-line hero-line--one">BUILT</span>
+            <span class="hero-line hero-line--two">BEYOND</span>
+            <span class="hero-line hero-line--three">LIMITS.</span>
+          </h1>
+          <div class="hero__bottom">
+            <p>Data-led coaching. Private environments. A system engineered around the only metric that matters: your next level.</p>
+            <button class="magnetic-button" type="button" data-open-assessment>
+              <span>Enter the system</span>
+              <i aria-hidden="true">↗</i>
+            </button>
+          </div>
+        </div>
+        <div class="scroll-cue" aria-hidden="true">
+          <span>SCROLL TO CALIBRATE</span>
+          <i></i>
+        </div>
+        <div class="hud-corner hud-corner--tl" aria-hidden="true">
+          <svg width="40" height="40" fill="none"><path d="M40 1H1v39" stroke="rgba(255,42,24,.35)" stroke-width="1"/></svg>
+        </div>
+        <div class="hud-corner hud-corner--br" aria-hidden="true">
+          <svg width="40" height="40" fill="none" style="transform:rotate(180deg)"><path d="M40 1H1v39" stroke="rgba(255,42,24,.35)" stroke-width="1"/></svg>
+        </div>
+        <div class="hud-readout" id="hud-readout" aria-hidden="true">X: +0.000<br>Y: +0.000</div>
+      </div>
+    </section>
+
+    <section class="manifesto" aria-label="Positioning statement">
+      <div class="manifesto__line" aria-hidden="true"></div>
+      <p class="eyebrow reveal">NOT A GYM. A PERFORMANCE SYSTEM.</p>
+      <h2 class="manifesto__statement reveal">
+        Most facilities sell access.<br>
+        <em>We engineer adaptation.</em>
+      </h2>
+      <div class="manifesto__proof reveal">
+        <div><strong>01:04</strong><span>Coach-to-member ceiling</span></div>
+        <div><strong>24/7</strong><span>Performance intelligence</span></div>
+        <div><strong>360°</strong><span>Human system view</span></div>
+      </div>
+    </section>
+
+    <section class="chapter scan" id="scan" data-chapter="scan">
+      <div class="sticky-frame scan__frame">
+        <div class="chapter-index"><span>01</span><i></i><b>CALIBRATION</b></div>
+        <div class="scan__visual">
+          <img src="assets/images/scan-athlete.webp" alt="" aria-hidden="true" loading="lazy">
+          <div class="scan__thermal" aria-hidden="true"></div>
+          <div class="scan__line" aria-hidden="true"></div>
+          <div class="scan__crosshair scan__crosshair--a" aria-hidden="true"></div>
+          <div class="scan__crosshair scan__crosshair--b" aria-hidden="true"></div>
+        </div>
+        <div class="scan__headline">
+          <p class="eyebrow">YOUR BODY IS NOT A GUESS.</p>
+          <h2>IT IS<br><em>DATA.</em></h2>
+          <p>We map force, movement, recovery and readiness before writing a single rep.</p>
+        </div>
+        <div class="metrics-panel">
+          <div class="metric">
+            <span>FORCE OUTPUT</span>
+            <strong><b data-metric="94">00</b><small>%</small></strong>
+            <i style="--target:.94"></i>
+          </div>
+          <div class="metric">
+            <span>MOBILITY INDEX</span>
+            <strong><b data-metric="87">00</b><small>%</small></strong>
+            <i style="--target:.87"></i>
+          </div>
+          <div class="metric">
+            <span>NEURAL READINESS</span>
+            <strong><b data-metric="91">00</b><small>%</small></strong>
+            <i style="--target:.91"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter method" id="method" data-chapter="method">
+      <div class="sticky-frame method__frame">
+        <div class="chapter-index chapter-index--light"><span>02</span><i></i><b>THE ARC SYSTEM</b></div>
+        <div class="method__intro">
+          <p class="eyebrow">ONE BODY. THREE OPERATING MODES.</p>
+          <h2>ADAPTATION<br>IS DESIGNED.</h2>
+        </div>
+        <div class="method__modes">
+          <article class="mode mode--build" data-mode="build">
+            <div class="mode__num">01</div>
+            <div>
+              <span>BUILD</span>
+              <h3>FORCE<br>WITHOUT WASTE.</h3>
+              <p>Structural strength, power output and resilient tissue built around your exact mechanics.</p>
+            </div>
+            <b>STRENGTH // POWER</b>
+          </article>
+          <article class="mode mode--move" data-mode="move">
+            <div class="mode__num">02</div>
+            <div>
+              <span>MOVE</span>
+              <h3>SPEED<br>WITH INTENT.</h3>
+              <p>Acceleration, change of direction and athletic intelligence trained at game velocity.</p>
+            </div>
+            <b>VELOCITY // CONTROL</b>
+          </article>
+          <article class="mode mode--recover" data-mode="recover">
+            <div class="mode__num">03</div>
+            <div>
+              <span>RECOVER</span>
+              <h3>RETURN<br>STRONGER.</h3>
+              <p>Readiness protocols that turn recovery from downtime into competitive advantage.</p>
+            </div>
+            <b>RESTORE // ADAPT</b>
+          </article>
+        </div>
+        <div class="method__counter">
+          <span id="mode-current">01</span><i></i><span>03</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter coaching" id="coaching" data-chapter="coaching">
+      <div class="sticky-frame coaching__frame">
+        <img class="coaching__image" src="assets/images/coach-lab.webp" alt="Performance coach guiding an athlete in the ARC/01 strength lab" loading="lazy">
+        <div class="coaching__wipe" aria-hidden="true"></div>
+        <svg class="coaching__path" viewBox="0 0 800 900" fill="none" aria-hidden="true">
+          <path d="M92 736C180 602 192 448 312 388C432 328 528 354 608 252C662 184 682 116 708 68"/>
+          <circle cx="312" cy="388" r="8"/><circle cx="608" cy="252" r="8"/>
+        </svg>
+        <div class="coaching__copy">
+          <div class="chapter-index"><span>03</span><i></i><b>COACH INTELLIGENCE</b></div>
+          <p class="eyebrow">TECHNOLOGY SEES THE SIGNAL.</p>
+          <h2>A COACH<br>READS THE<br><em>HUMAN.</em></h2>
+          <p>Every session is observed, adjusted and progressed by specialists who understand the difference between more work and the right work.</p>
+          <div class="coach-signature">
+            <strong>MARA SEN</strong>
+            <span>DIRECTOR OF HUMAN PERFORMANCE</span>
+          </div>
+        </div>
+        <div class="annotation annotation--one"><span>BAR PATH</span><b>OPTIMAL</b></div>
+        <div class="annotation annotation--two"><span>LOAD VECTOR</span><b>+12.4%</b></div>
+      </div>
+    </section>
+
+    <section class="chapter recovery" id="recovery" data-chapter="recovery">
+      <div class="sticky-frame recovery__frame">
+        <img src="assets/images/recovery-athlete.webp" alt="Athlete recovering inside the ARC/01 recovery laboratory" loading="lazy">
+        <div class="recovery__glass" aria-hidden="true"></div>
+        <div class="recovery__steam" aria-hidden="true">
+          <i class="steam__wisp steam__wisp--1"></i>
+          <i class="steam__wisp steam__wisp--2"></i>
+          <i class="steam__wisp steam__wisp--3"></i>
+          <i class="steam__wisp steam__wisp--4"></i>
+        </div>
+        <div class="recovery__copy">
+          <div class="chapter-index chapter-index--light"><span>04</span><i></i><b>RECOVERY LAB</b></div>
+          <p class="eyebrow">THE WORK CONTINUES AFTER THE WORK.</p>
+          <h2>RECOVER<br>AT THE SPEED<br>YOU <em>TRAIN.</em></h2>
+        </div>
+        <div class="recovery__readout">
+          <span>PARASYMPATHETIC SHIFT</span>
+          <strong id="recovery-value">+00.0</strong>
+          <small>LIVE RESPONSE</small>
+        </div>
+        <div class="breath-guide" aria-hidden="true">
+          <i></i><span>INHALE // EXHALE</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter arena" id="arena" data-chapter="arena">
+      <div class="sticky-frame arena__frame">
+        <img src="assets/images/facility-arena.webp" alt="ARC/01's premium strength floor and illuminated sprint lane" loading="lazy">
+        <div class="arena__grid" aria-hidden="true"></div>
+        <div class="arena__shutter arena__shutter--top" aria-hidden="true"></div>
+        <div class="arena__shutter arena__shutter--bottom" aria-hidden="true"></div>
+        <div class="arena__title">
+          <div class="chapter-index"><span>05</span><i></i><b>THE ARENA</b></div>
+          <h2>BUILT FOR<br>THE PERSON<br><em>YOU BECOME.</em></h2>
+        </div>
+        <div class="arena__zones">
+          <button type="button" data-zone="01" aria-pressed="false"><span>01</span> FORCE FLOOR</button>
+          <button type="button" data-zone="02" aria-pressed="false"><span>02</span> SPEED LANE</button>
+          <button type="button" data-zone="03" aria-pressed="false"><span>03</span> RECOVERY LAB</button>
+          <button type="button" data-zone="04" aria-pressed="false"><span>04</span> PRIVATE STUDIO</button>
+        </div>
+        <div class="arena__reticle" aria-hidden="true"><i></i><i></i></div>
+      </div>
+    </section>
+
+    <section class="chapter proof" id="proof" data-chapter="proof">
+      <div class="sticky-frame proof__frame">
+
+        <div class="proof__label">
+          <div class="chapter-index chapter-index--light">
+            <span>06</span><i></i><b>PROOF UNDER PRESSURE</b>
+          </div>
+        </div>
+
+        <div class="proof__track" aria-label="Performance statistics">
+
+          <article class="proof__panel proof__panel--one" aria-labelledby="proof-stat-1">
+            <div class="proof__panel-bg" aria-hidden="true"></div>
+            <div class="proof__annotation" aria-hidden="true">
+              <span>PROTOCOL</span>
+              <b>12-WEEK POWER CYCLE</b>
+            </div>
+            <div class="proof__panel-content">
+              <p class="eyebrow">LOWER-BODY PEAK POWER</p>
+              <div class="proof__number" id="proof-stat-1">
+                <b data-proof="18">0</b><small>%</small>
+              </div>
+              <div class="proof__rule" aria-hidden="true"></div>
+              <p class="proof__descriptor">Illustrative increase across the 12-week force cycle.</p>
+            </div>
+            <div class="proof__panel-index" aria-hidden="true">01 / 03</div>
+          </article>
+
+          <article class="proof__panel proof__panel--two" aria-labelledby="proof-stat-2">
+            <div class="proof__panel-bg" aria-hidden="true"></div>
+            <div class="proof__annotation" aria-hidden="true">
+              <span>PROTOCOL</span>
+              <b>RETURN-TO-PLAY</b>
+            </div>
+            <div class="proof__panel-content">
+              <p class="eyebrow">DAYS RETURNED AHEAD OF PLAN</p>
+              <div class="proof__number" id="proof-stat-2">
+                <b data-proof="21">0</b><small>D</small>
+              </div>
+              <div class="proof__rule" aria-hidden="true"></div>
+              <p class="proof__descriptor">Illustrative days returned ahead of baseline rehabilitation plan.</p>
+            </div>
+            <div class="proof__panel-index" aria-hidden="true">02 / 03</div>
+          </article>
+
+          <article class="proof__panel proof__panel--three" aria-labelledby="proof-stat-3">
+            <div class="proof__panel-bg" aria-hidden="true"></div>
+            <div class="proof__annotation" aria-hidden="true">
+              <span>PROTOCOL</span>
+              <b>SPRINT ACCELERATION</b>
+            </div>
+            <div class="proof__panel-content">
+              <p class="eyebrow">10M ACCELERATION REDUCTION</p>
+              <div class="proof__number" id="proof-stat-3">
+                <b data-proof="0.24">0.00</b><small>S</small>
+              </div>
+              <div class="proof__rule" aria-hidden="true"></div>
+              <p class="proof__descriptor">Illustrative reduction across the ten-metre acceleration split.</p>
+            </div>
+            <div class="proof__panel-index" aria-hidden="true">03 / 03</div>
+          </article>
+
+        </div>
+
+        <div class="proof__pips" aria-hidden="true">
+          <i class="proof__pip"></i>
+          <i class="proof__pip"></i>
+          <i class="proof__pip"></i>
+        </div>
+
+        <div class="proof__scroll-hint" aria-hidden="true">
+          <span>SCROLL TO ADVANCE</span><i></i>
+        </div>
+
+        <p class="proof__disclaimer">Performance metrics altered under client confidentiality.</p>
+
+      </div>
+    </section>
+
+    <section class="network" id="network" data-chapter="network">
+      <div class="network__map" aria-hidden="true">
+        <img src="assets/images/network-visual.webp" alt="" loading="lazy">
+      </div>
+      <svg class="network__arcs" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <!-- Hub: Bengaluru origin -->
+        <circle class="arc-hub" cx="220" cy="430" r="5"/>
+        <!-- Arc: Bengaluru → Mumbai -->
+        <path class="arc-line arc-line--1" d="M220 430 Q280 260 480 300"/>
+        <circle class="arc-dot arc-dot--1" cx="480" cy="300" r="4"/>
+        <!-- Arc: Bengaluru → Dubai -->
+        <path class="arc-line arc-line--2" d="M220 430 Q380 160 680 180"/>
+        <circle class="arc-dot arc-dot--2" cx="680" cy="180" r="4"/>
+        <!-- Arc: Bengaluru → Singapore -->
+        <path class="arc-line arc-line--3" d="M220 430 Q540 340 860 390"/>
+        <circle class="arc-dot arc-dot--3" cx="860" cy="390" r="4"/>
+      </svg>
+      <div class="network__copy reveal">
+        <p class="eyebrow">ONE STANDARD. EVERYWHERE.</p>
+        <h2>A SYSTEM<br>BUILT TO<br><em>SCALE.</em></h2>
+        <p>One coaching language. One member intelligence layer. Every ARC/01 club connected to the same performance standard.</p>
+      </div>
+      <div class="network__locations reveal">
+        <div><span>01</span><strong>BENGALURU</strong><b>LIVE</b></div>
+        <div><span>02</span><strong>MUMBAI</strong><b>Q4 // 2026</b></div>
+        <div><span>03</span><strong>DUBAI</strong><b>Q2 // 2027</b></div>
+        <div><span>04</span><strong>SINGAPORE</strong><b>PLANNED</b></div>
+      </div>
+    </section>
+
+    <section class="chapter membership" id="membership" data-chapter="membership">
+      <div class="sticky-frame membership__frame">
+        <div class="membership__header">
+          <div class="chapter-index chapter-index--light"><span>07</span><i></i><b>ACCESS PROTOCOLS</b></div>
+          <p class="eyebrow">CHOOSE YOUR LEVEL OF INTENT.</p>
+          <h2>ACCESS IS<br><em>EARNED.</em></h2>
+        </div>
+        <div class="membership__cards">
+          <article class="access-card access-card--one" tabindex="0">
+            <div class="access-card__inner">
+              <div class="access-card__shine"></div>
+              <span class="access-card__index">A/01</span>
+              <div>
+                <small>FOUNDATION</small>
+                <h3>ARC<br>MEMBER</h3>
+              </div>
+              <p>Club access · quarterly assessment · performance dashboard</p>
+              <button type="button" data-open-assessment>Request access — demo ↗</button>
+            </div>
+          </article>
+          <article class="access-card access-card--two" tabindex="0">
+            <div class="access-card__inner">
+              <div class="access-card__shine"></div>
+              <span class="access-card__index">A/02</span>
+              <div>
+                <small>COACHED</small>
+                <h3>ARC<br>PERFORM</h3>
+              </div>
+              <p>Private coaching · live programming · recovery protocols</p>
+              <button type="button" data-open-assessment>Request access — demo ↗</button>
+            </div>
+          </article>
+          <article class="access-card access-card--three" tabindex="0">
+            <div class="access-card__inner">
+              <div class="access-card__shine"></div>
+              <span class="access-card__index">A/03</span>
+              <div>
+                <small>INVITATION</small>
+                <h3>ARC<br>APEX</h3>
+              </div>
+              <p>Integrated performance team · priority lab · global access</p>
+              <button type="button" data-open-assessment>Request access — demo ↗</button>
+            </div>
+          </article>
+        </div>
+        <div class="membership__hint">MOVE TO INSPECT // TAP TO SELECT</div>
+      </div>
+    </section>
+
+    <section class="gate" id="gate">
+      <div class="gate__rings" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="gate__copy">
+        <p class="eyebrow reveal">YOUR NEXT LEVEL HAS AN ENTRY POINT.</p>
+        <h2 class="reveal">ARE YOU<br><em>READY?</em></h2>
+        <p class="reveal">Five questions. One performance profile. Demo interaction — no data collected.</p>
+        <button class="gate__button reveal" type="button" data-open-assessment>
+          <span>BEGIN CALIBRATION</span><i>↗</i>
+        </button>
+      </div>
+      <div class="gate__meta">
+        <span>ARC/01 PERFORMANCE CLUB</span>
+        <span>PRIVATE // PRECISE // PROGRESSIVE</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer__brand">ARC<span>/01</span></div>
+    <p>Brand identity and performance data altered under client confidentiality. All rights reserved.</p>
+    <a href="../index.html">Design &amp; development by Ashish Ram ↗</a>
+    <span>© 2026 ARC/01</span>
+  </footer>
+
+  <div class="assessment" id="assessment" role="dialog" aria-modal="true" aria-labelledby="assessment-title" aria-hidden="true">
+    <div class="assessment__backdrop" data-close-assessment></div>
+    <div class="assessment__panel">
+      <div class="assessment__top">
+        <div>
+          <span>ARC/01 // CALIBRATION</span>
+          <b><i id="assessment-progress"></i></b>
+        </div>
+        <button type="button" data-close-assessment aria-label="Close assessment">CLOSE ×</button>
+      </div>
+
+      <form id="assessment-form">
+        <section class="assessment-step is-active" data-step="1">
+          <span class="assessment-step__number">01 / 04</span>
+          <p class="eyebrow">PRIMARY OBJECTIVE</p>
+          <h2 id="assessment-title">WHAT MUST<br>YOUR BODY DO<br><em>NEXT?</em></h2>
+          <div class="assessment-options">
+            <button type="button" data-answer="goal" data-value="Build strength">Build strength <span>↗</span></button>
+            <button type="button" data-answer="goal" data-value="Move faster">Move faster <span>↗</span></button>
+            <button type="button" data-answer="goal" data-value="Return stronger">Return stronger <span>↗</span></button>
+            <button type="button" data-answer="goal" data-value="Perform at elite level">Perform at elite level <span>↗</span></button>
+          </div>
+        </section>
+
+        <section class="assessment-step" data-step="2">
+          <span class="assessment-step__number">02 / 04</span>
+          <p class="eyebrow">TRAINING FREQUENCY</p>
+          <h2>HOW OFTEN CAN<br>YOU COMMIT?</h2>
+          <div class="assessment-options">
+            <button type="button" data-answer="frequency" data-value="2 days">2 days / week <span>↗</span></button>
+            <button type="button" data-answer="frequency" data-value="3 days">3 days / week <span>↗</span></button>
+            <button type="button" data-answer="frequency" data-value="4 days">4 days / week <span>↗</span></button>
+            <button type="button" data-answer="frequency" data-value="5+ days">5+ days / week <span>↗</span></button>
+          </div>
+          <button class="assessment-back" type="button" data-assessment-back>← Back</button>
+        </section>
+
+        <section class="assessment-step" data-step="3">
+          <span class="assessment-step__number">03 / 04</span>
+          <p class="eyebrow">COACHING FORMAT</p>
+          <h2>HOW CLOSE<br>SHOULD THE<br>SYSTEM BE?</h2>
+          <div class="assessment-options">
+            <button type="button" data-answer="format" data-value="Independent">Independent + intelligence <span>↗</span></button>
+            <button type="button" data-answer="format" data-value="Coach-led">Coach-led performance <span>↗</span></button>
+            <button type="button" data-answer="format" data-value="Integrated">Integrated performance team <span>↗</span></button>
+          </div>
+          <button class="assessment-back" type="button" data-assessment-back>← Back</button>
+        </section>
+
+        <section class="assessment-step" data-step="4">
+          <span class="assessment-step__number">04 / 04</span>
+          <p class="eyebrow">IDENTIFICATION</p>
+          <h2>BUILD YOUR<br>PERFORMANCE<br><em>PROFILE.</em></h2>
+          <div class="assessment-fields">
+            <label><span>NAME</span><input name="name" autocomplete="name" required placeholder="Your name"></label>
+            <label><span>EMAIL</span><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+          </div>
+          <p class="assessment__privacy">Demo interaction — no data is collected or transmitted.</p>
+          <button class="assessment-submit" type="submit">GENERATE PROFILE <span>↗</span></button>
+          <button class="assessment-back" type="button" data-assessment-back>← Back</button>
+        </section>
+
+        <section class="assessment-result" id="assessment-result">
+          <span class="assessment-step__number">PROFILE // GENERATED</span>
+          <p class="eyebrow">CALIBRATION COMPLETE</p>
+          <h2>YOUR PROTOCOL:<br><em id="result-profile">ARC PERFORM</em></h2>
+          <div class="result-grid">
+            <div><span>PRIMARY MODE</span><strong id="result-goal">BUILD</strong></div>
+            <div><span>FREQUENCY</span><strong id="result-frequency">04 / WEEK</strong></div>
+            <div><span>COACHING</span><strong id="result-format">COACH-LED</strong></div>
+          </div>
+          <p>Simulated output — no data has left your device.</p>
+          <button type="button" data-close-assessment>RETURN TO ARC/01</button>
+        </section>
+      </form>
+    </div>
+  </div>
+
+  <div class="cursor" id="cursor" aria-hidden="true"><span></span><b>VIEW</b></div>
+  <div id="cursor-ring" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <script>document.documentElement.classList.remove('no-js');</script>
+  <script>
+    function showErr(msg) {
+      var d = document.createElement("div");
+      d.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:99999;background:red;color:#fff;font:13px monospace;padding:10px;white-space:pre-wrap;word-break:break-all;";
+      d.textContent = msg;
+      document.body.appendChild(d);
+    }
+    window.addEventListener("error", e => showErr("JS ERROR: " + e.message + "\n" + e.filename + ":" + e.lineno));
+    window.addEventListener("unhandledrejection", e => showErr("PROMISE: " + e.reason));
+  </script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
