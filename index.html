@@ -237,10 +237,10 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 #hero-section{position:relative;display:flex;flex-direction:column;overflow:hidden;
   min-height:100svh;height:100svh;max-height:100svh;--trail-color:#F9D100;}
 #hero-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.35;}
-.hero-inner{position:relative;display:flex;flex-direction:column;justify-content:flex-start;
-  min-height:100svh;height:100svh;padding:88px clamp(24px,3vw,44px) 24px;}
+.hero-inner{position:relative;display:flex;flex-direction:column;justify-content:center;gap:28px;
+  min-height:100svh;height:100svh;padding:88px clamp(24px,3vw,44px) 48px;}
 .hero-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:40px;
-  flex-wrap:wrap;margin-bottom:24px;position:relative;z-index:2;}
+  flex-wrap:wrap;margin-bottom:0;position:relative;z-index:2;}
 .hero-tag{font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;
   color:var(--muted);display:flex;align-items:center;gap:10px;}
 .hero-hl-wrap{position:relative;display:inline-block;z-index:2;
@@ -414,26 +414,26 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
    tagline + marks revealed only under a spotlight at --mx/--my. JS sets the vars;
    all motion is transform/mask (GPU). Idle when off-screen (IO-gated rAF).
    ============================================================ */
-#reveal-slab{position:relative;background:#0D0D0D;overflow:hidden;
-  border-top:2px solid var(--black);
+#reveal-slab{position:relative;background:var(--white);overflow:hidden;
+  border-top:2px solid var(--black);border-bottom:2px solid var(--black);
   --mx:50%;--my:42%;--ex:0;--ey:0;--fill:0;--trail-color:#F9D100;}
 .rs-inner{position:relative;width:100%;
   min-height:clamp(340px,52vh,520px);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:clamp(44px,6vw,80px) 24px;}
 .rs-eyebrow{position:relative;z-index:4;font-weight:800;font-size:12px;letter-spacing:.28em;
-  text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:clamp(20px,3vw,36px);}
+  text-transform:uppercase;color:rgba(0,0,0,.85);margin-bottom:clamp(20px,3vw,36px);}
 /* Soft ambient glow following the light. */
 .rs-light{position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:radial-gradient(circle at var(--mx) var(--my),rgba(249,209,0,.2),transparent 36%);
-  mix-blend-mode:screen;}
+  background:radial-gradient(circle at var(--mx) var(--my),rgba(249,209,0,.35),transparent 36%);
+  mix-blend-mode:multiply;}
 /* Full-bleed field of ghost words + brand glyphs, revealed only under the moving spotlight. */
 .rs-reveal{position:absolute;inset:0;z-index:2;pointer-events:none;
   -webkit-mask:radial-gradient(circle at var(--mx) var(--my),#000 0,#000 13%,transparent 36%);
   mask:radial-gradient(circle at var(--mx) var(--my),#000 0,#000 13%,transparent 36%);}
 .rs-rword{position:absolute;font-family:'Clash Display','Arial Black',sans-serif;font-weight:700;
   font-size:clamp(26px,5vw,64px);letter-spacing:-.02em;text-transform:uppercase;white-space:nowrap;
-  color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.6);}
+  color:transparent;-webkit-text-stroke:1.5px rgba(0,0,0,.85);}
 .rs-mark{position:absolute;font-size:clamp(20px,2.4vw,32px);line-height:1;
   animation:rsMarkPulse 3s ease-in-out infinite;}
 @keyframes rsMarkPulse{0%,100%{transform:scale(1);opacity:.82;}50%{transform:scale(1.18);opacity:1;}}
@@ -457,9 +457,9 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
   transform-style:preserve-3d;will-change:transform;
   transform:rotateY(calc(var(--ex)*16deg)) rotateX(calc(var(--ey)*-12deg));}
 .rs-word .rs-extrude,.rs-word .rs-fill{position:absolute;inset:0;}
-/* Always-visible white stroke outline = the in-flow sizer for the stack. */
+/* Always-visible outline = the in-flow sizer for the stack. */
 .rs-outline{position:relative;display:block;color:transparent;
-  -webkit-text-stroke:2px rgba(255,255,255,.92);z-index:10;}
+  -webkit-text-stroke:2px rgba(0,0,0,.85);z-index:10;}
 /* Extrusion stack — chromatic depth, baseline down-right + pointer-directed shift. */
 .rs-extrude{z-index:1;will-change:transform;
   transform:translate(calc(var(--ex)*var(--k)*4.5px + var(--k)*1.6px),
@@ -547,14 +547,90 @@ body.no-gsap .rs-fill{-webkit-clip-path:inset(15% 0 0 0);clip-path:inset(15% 0 0
 @media(max-width:900px){.sec{padding:80px 20px;}}
 
 /* WORK GRID */
-#work-section{padding-top:0;--trail-color:#EE3A5A;}
-.work-intro-copy{max-width:760px;margin:-52px 0 54px;font-size:16px;line-height:1.68;color:#555;}
+#work-section{padding-top:80px;--trail-color:#EE3A5A;}
+#work-section .sec-title{margin-bottom:0;}
+.work-sub-title .work-y{color:var(--yellow);}
+.work-intro-copy{max-width:760px;margin:0 0 40px;font-size:16px;line-height:1.68;color:#555;}
+.work-intro-copy a{color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(0,0,0,.3);transition:text-decoration-color .2s;}
+.work-intro-copy a:hover{text-decoration-color:currentColor;}
 .work-intro-copy strong{color:var(--black);font-weight:700;}
-.work-grid{display:grid;grid-template-columns:repeat(2,1fr);border:2px solid var(--black);}
+
+/* Sub-section dividers + headings */
+.work-sub{margin-top:56px;padding-top:32px;border-top:1px solid var(--line);}
+.work-sub-label{font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.15em;
+  color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.work-sub-label::before{content:'';width:7px;height:7px;background:var(--red);border-radius:50%;}
+.work-sub-title{font-family:'Clash Display','Arial Black',sans-serif;font-weight:600;
+  font-size:clamp(20px,5.6vw,76px);line-height:1.08;letter-spacing:-.03em;
+  text-transform:uppercase;margin-bottom:16px;}
+.work-sub-title em{font-family:'Cabinet Grotesk','Arial Black',sans-serif;font-weight:800;
+  font-style:italic;color:var(--red);}
+.work-sub-copy{max-width:740px;font-size:16px;line-height:1.7;color:#555;margin-bottom:36px;}
+
+/* ARC/01 compact featured card */
+.wcard-featured-wrap{padding:1%;border:2px solid var(--black);}
+.wcard-featured{display:block;position:relative;width:100%;aspect-ratio:16/4;min-height:0;
+  overflow:hidden;text-decoration:none;cursor:pointer;transition:transform .15s var(--ease-out-expo);}
+.wcard-featured:active{transform:scale(.99);}
+.wcard-featured__bg{position:absolute;inset:0;background-size:cover;background-position:center 25%;
+  transition:transform .7s var(--ease-out-expo);}
+.wcard-featured:hover .wcard-featured__bg{transform:scale(1.04);}
+.wcard-featured__overlay{position:absolute;inset:0;
+  background:linear-gradient(to right,rgba(8,8,8,.92) 0%,rgba(8,8,8,.55) 50%,rgba(8,8,8,.18) 100%);}
+.wcard-featured__body{position:absolute;inset:0;padding:clamp(16px,2.8vw,36px);
+  display:flex;flex-direction:column;justify-content:center;gap:4px;max-width:62%;}
+.wcard-featured__badge{font-size:10px;letter-spacing:.15em;color:#ff2a18;
+  font-family:'Satoshi',sans-serif;font-weight:700;margin-bottom:3px;text-transform:uppercase;}
+.wcard-featured__title{font-family:'Clash Display','Arial Black',sans-serif;font-weight:700;
+  font-size:clamp(26px,3.6vw,56px);color:#fff;line-height:1;}
+.wcard-featured__sub{font-size:clamp(11px,1vw,13px);color:rgba(255,255,255,.48);
+  font-family:'Satoshi',sans-serif;margin-top:1px;}
+.wcard-featured__cta{font-size:11px;letter-spacing:.12em;color:#ff2a18;
+  font-family:'Satoshi',sans-serif;font-weight:600;margin-top:8px;
+  display:inline-block;border-bottom:1px solid rgba(255,42,24,.35);padding-bottom:2px;
+  width:fit-content;transition:border-color .2s;}
+.wcard-featured:hover .wcard-featured__cta{border-color:#ff2a18;}
+@media(max-width:599px){
+  .wcard-featured-wrap{padding:1%;}
+  .wcard-featured{aspect-ratio:16/9;}
+  .wcard-featured__body{max-width:85%;justify-content:flex-end;}
+  .wcard-featured__overlay{
+    background:linear-gradient(to top,rgba(8,8,8,.92) 0%,rgba(8,8,8,.5) 50%,rgba(8,8,8,.15) 100%);}
+}
+
+/* Peek-scroll grid — flex at all sizes, mobile overrides width/snap below */
+.work-grid{display:flex;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  scrollbar-width:none;overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;border:2px solid var(--black);}
+.work-grid::-webkit-scrollbar{display:none;}
 .wcard{display:block;position:relative;overflow:hidden;
-  border-right:2px solid var(--black);border-bottom:2px solid var(--black);}
-.wcard:nth-child(2n){border-right:none;}
-.wcard:nth-child(7),.wcard:nth-child(8){border-bottom:none;}
+  flex:0 0 30vw;scroll-snap-align:start;
+  border-right:2px solid var(--black);border-bottom:none;}
+.wcard:last-child{border-right:none;}
+/* Slider controls — visible at all sizes */
+.work-slider-shell{position:relative;}
+.work-slider-ctrls{display:flex;flex-direction:column;align-items:stretch;gap:14px;margin-top:18px;}
+.work-slider-top{display:flex;justify-content:space-between;align-items:center;}
+.work-slider-hint{font-family:'JetBrains Mono','Courier New',monospace;
+  font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);}
+.wsh-mobile{display:none;}
+.work-slider-arrows{display:flex;gap:8px;}
+.work-slider-arrow{appearance:none;background:var(--black);color:var(--white);border:none;
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;transition:background .2s;}
+.work-slider-arrow:hover{background:var(--red);}
+.work-slider-arrow:disabled{opacity:.28;cursor:default;background:var(--black);}
+.work-slider-track{display:flex;justify-content:center;align-items:center;height:3px;}
+.work-slider-track-inner{position:relative;width:120px;height:3px;background:rgba(13,13,13,.12);border-radius:2px;overflow:hidden;}
+.work-slider-timer{position:absolute;left:0;top:0;width:100%;height:100%;background:var(--black);
+  transform-origin:left center;transform:scaleX(0);}
+.work-slider-dots{display:flex;gap:12px;}
+.work-slider-dots--mobile{display:none;}
+.work-slider-dot{width:9px;height:9px;border-radius:50%;background:rgba(13,13,13,.22);
+  border:none;padding:0;cursor:pointer;transition:background .25s,transform .25s;}
+.work-slider-dot.is-active{background:var(--black);transform:scale(1.4);}
+.work-slider-viewall{display:none;}
 .wcard-visual{position:relative;aspect-ratio:4/3;overflow:hidden;}
 .wcard-bg{position:absolute;inset:0;transition:transform .7s var(--ease-out-expo),filter .35s;}
 .wcard:hover .wcard-bg{transform:scale(1.06);filter:saturate(1.2) contrast(1.05);}
@@ -572,7 +648,7 @@ body.no-gsap .rs-fill{-webkit-clip-path:inset(15% 0 0 0);clip-path:inset(15% 0 0
 .wcard-badge{background:var(--yellow);color:var(--black);padding:3px 10px;
   border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.1em;}
 .wcard-title{font-family:'Clash Display','Arial Black',sans-serif;font-weight:600;
-  font-size:clamp(22px,3.5vw,52px);line-height:.95;letter-spacing:-.03em;text-transform:uppercase;}
+  font-size:clamp(18px,2.4vw,36px);line-height:.95;letter-spacing:-.03em;text-transform:uppercase;}
 .wcard-title em{font-family:'Cabinet Grotesk','Arial Black',sans-serif;font-weight:800;font-style:italic;}
 .wcard-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   z-index:3;transform:translateY(101%);transition:transform .5s var(--ease-out-expo);}
@@ -597,33 +673,28 @@ body.no-gsap .rs-fill{-webkit-clip-path:inset(15% 0 0 0);clip-path:inset(15% 0 0
   color:var(--white);display:flex;align-items:center;gap:12px;transition:gap .3s,color .3s;}
 .wcard-cta-link:hover{gap:24px;color:var(--yellow);}
 @media(max-width:900px){
-  .work-grid{grid-template-columns:1fr;}
-  .wcard{border-right:none;}
-  .wcard:nth-child(7),.wcard:nth-child(8){border-bottom:2px solid var(--black);}
   .wcard-cta{padding:40px 24px;}
-  .work-intro-copy{margin:-48px 0 38px;font-size:14.5px;}
+  .work-intro-copy{font-size:14.5px;}
+  .work-sub-copy{font-size:14.5px;}
 }
 /* WORK SLIDER (mobile only, default state) — 4 pages × 2 cards, scroll-snap track.
    "View all" toggles .is-expanded which reverts to the stacked 1-col layout. */
-.work-slider-shell{position:relative;}
-.work-slider-ctrls{display:none;}
 @media(max-width:599px){
-  /* Slider track: 8 cards laid out horizontally (each 50% wide), snap by pair. */
-  .work-grid{
-    display:grid;grid-template-columns:none;
-    grid-auto-flow:column;grid-auto-columns:50%;
-    overflow-x:auto;overflow-y:hidden;
-    scroll-snap-type:x mandatory;scroll-behavior:smooth;
-    scrollbar-width:none;overscroll-behavior-x:contain;
-    border:2px solid var(--black);
-  }
-  .work-grid::-webkit-scrollbar{display:none;}
-  /* Override the 900px mobile rules: each card has a right border (pair separator),
-     no bottom border (slider is horizontal). Snap to ODD cards (start of each pair). */
-  .wcard{border-right:2px solid var(--black);border-bottom:none;scroll-snap-align:none;min-width:0;}
+  /* Slider track: 9 cards laid out horizontally (each 50% wide), snap by pair. */
+  .wcard{flex:0 0 50%;scroll-snap-align:none;border-right:2px solid var(--black);}
   .wcard:nth-child(odd){scroll-snap-align:start;}
-  .wcard:nth-child(7),.wcard:nth-child(8){border-bottom:none;}
-  .wcard:nth-child(8){border-right:none;}
+  .wcard:last-child{border-right:none;}
+  /* Controls: mobile layout */
+  .wsh-mobile{display:inline;}
+  .work-slider-arrows{display:none;}
+  .work-slider-hint{text-align:center;}
+  .work-slider-dots--desktop{display:none;}
+  .work-slider-dots--mobile{display:flex;justify-content:center;}
+  .work-slider-viewall{display:flex;appearance:none;background:var(--black);color:var(--white);
+    border:none;padding:14px 18px;font-family:'Clash Display','Arial Black',sans-serif;
+    font-weight:700;font-size:13px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
+    align-self:center;min-width:200px;justify-content:center;}
+  .work-slider-viewall:active{background:var(--red);}
   /* Declutter the small 2-up slider: drop the line-art entirely, keep a soft bottom scrim
      so white titles stay readable over the solid card colour. */
   .wcard-svg{display:none;}
@@ -653,33 +724,14 @@ body.no-gsap .rs-fill{-webkit-clip-path:inset(15% 0 0 0);clip-path:inset(15% 0 0
   @keyframes workCtaGlow{0%,100%{box-shadow:0 8px 18px rgba(13,13,13,.18);}
     50%{box-shadow:0 10px 22px rgba(13,13,13,.28);}}
   @keyframes workCtaArrow{0%,100%{transform:translateX(0);}50%{transform:translateX(3px);}}
-  /* Controls below the track */
-  .work-slider-ctrls{display:flex;flex-direction:column;align-items:stretch;gap:14px;margin-top:18px;}
-  .work-slider-hint{font-family:'JetBrains Mono','Courier New',monospace;
-    font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-align:center;}
-  .work-slider-track{position:relative;height:3px;background:rgba(13,13,13,.12);border-radius:2px;overflow:hidden;}
-  .work-slider-timer{position:absolute;left:0;top:0;width:100%;height:100%;background:var(--black);
-    transform-origin:left center;transform:scaleX(0);}
-  .work-slider-dots{display:flex;justify-content:center;gap:12px;}
-  .work-slider-dot{width:9px;height:9px;border-radius:50%;background:rgba(13,13,13,.22);
-    border:none;padding:0;cursor:pointer;transition:background .25s,transform .25s;}
-  .work-slider-dot.is-active{background:var(--black);transform:scale(1.4);}
-  .work-slider-viewall{appearance:none;background:var(--black);color:var(--white);
-    border:none;padding:14px 18px;font-family:'Clash Display','Arial Black',sans-serif;
-    font-weight:700;font-size:13px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
-    align-self:center;min-width:200px;}
-  .work-slider-viewall:active{background:var(--red);}
+  /* Controls: additional mobile tap feedback */
   /* EXPANDED MODE: revert to the stacked 1-col view (existing pre-slider mobile layout). */
   .work-grid.is-expanded{
-    display:grid;grid-template-columns:1fr;grid-auto-flow:row;grid-auto-columns:auto;
-    overflow:visible;scroll-snap-type:none;
+    flex-wrap:wrap;overflow:visible;scroll-snap-type:none;
   }
-  .work-grid.is-expanded .wcard{border-right:none;border-bottom:2px solid var(--black);
+  .work-grid.is-expanded .wcard{flex:0 0 100%;border-right:none;border-bottom:2px solid var(--black);
     scroll-snap-align:unset;}
-  .work-grid.is-expanded .wcard:nth-child(8){border-bottom:none;}
-  .work-grid.is-expanded ~ .work-slider-ctrls .work-slider-track,
-  .work-grid.is-expanded ~ .work-slider-ctrls .work-slider-dots,
-  .work-grid.is-expanded ~ .work-slider-ctrls .work-slider-hint{display:none;}
+  .work-grid.is-expanded .wcard:last-child{border-bottom:none;}
 }
 @media(max-width:599px) and (prefers-reduced-motion:reduce){
   .wcard-overlay,.wcard-overlay-txt em{animation:none;}
@@ -1988,11 +2040,43 @@ body.no-gsap .testi-glow,body.no-gsap .testi-arrow,body.no-gsap #proof-connector
 </div>
 
 <section class="sec" id="work-section">
-  <div class="sec-head"><span class="sec-label">Selected Work</span></div>
-  <h2 class="sec-title" data-anim="drop">Eight works,<br>from <em>the field.</em></h2>
-  <p class="work-intro-copy">Selected works designed and developed as part of my ongoing work on the Wellcome Trust&ndash;funded project <strong><em>If Cities Could Speak</em></strong> at the <strong>Indian Institute for Human Settlements (IIHS)</strong> &mdash; in collaboration with the Sierra Leone Urban Research Centre, Kounkuey Design Initiative, African Centre for Cities, the International Institute for Environment and Development (IIED), and the Institute of Development Studies.</p>
+  <h2 class="sec-title" data-anim="drop">Selected <em>Works</em></h2>
+
+  <div class="work-sub">
+    <span class="work-sub-label">Client Build</span>
+    <h3 class="work-sub-title">Built to <em class="work-y">Perform</em></h3>
+    <p class="work-sub-copy">Built for a <strong>performance led fitness institute</strong>, this website goes beyond simply listing services. It frames coaching, progress, and transformation as a premium digital experience, using motion, structure, and storytelling to create the kind of first impression that holds attention and earns trust fast. (<em>Brand assets and identifying details have been altered at the client&rsquo;s request.</em>)</p>
+    <div class="wcard-featured-wrap">
+      <a class="wcard-featured" href="/arc01/" target="_blank" rel="noopener"
+         aria-label="ARC/01 — Human performance, engineered.">
+        <div class="wcard-featured__bg"
+             style="background-image:url('/arc01/assets/images/hero-athlete.webp');"></div>
+        <div class="wcard-featured__overlay"></div>
+        <div class="wcard-featured__body">
+          <h3 class="wcard-featured__title">ARC/01</h3>
+          <p class="wcard-featured__sub">Human performance, engineered.</p>
+          <span class="wcard-featured__cta">Visit Site &rarr;</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div class="work-sub">
+    <span class="work-sub-label">Editorial &amp; Research</span>
+    <h3 class="work-sub-title">Works, from <em class="work-y">the field.</em></h3>
+    <p class="work-intro-copy">Selected works designed and developed as part of my ongoing work on the <a href="https://wellcome.org/" target="_blank" rel="noopener">Wellcome Trust</a>&ndash;funded project <strong><em><a href="https://ifcitiescouldspeak.com/" target="_blank" rel="noopener">If Cities Could Speak</a></em></strong> at the <strong><a href="https://iihs.co.in/" target="_blank" rel="noopener">Indian Institute for Human Settlements (IIHS)</a></strong> &mdash; in collaboration with the <a href="https://www.slrc.info/" target="_blank" rel="noopener">Sierra Leone Urban Research Centre</a>, <a href="https://www.kounkuey.org/" target="_blank" rel="noopener">Kounkuey Design Initiative</a>, <a href="https://www.africancentreforcities.net/" target="_blank" rel="noopener">African Centre for Cities</a>, the <a href="https://www.iied.org/" target="_blank" rel="noopener">International Institute for Environment and Development (IIED)</a>, and the <a href="https://www.ids.ac.uk/" target="_blank" rel="noopener">Institute of Development Studies</a>.</p>
+  </div>
   <div class="work-slider-shell">
   <div class="work-grid" id="work-grid">
+    <a href="https://ifcitiescouldspeak.com/what-of-the-sour-grapes/" target="_blank" rel="noopener" class="wcard" id="wcard-9">
+      <div class="wcard-visual">
+        <div class="wcard-bg" style="background:#5C4B6E;"></div>
+        <svg class="wcard-svg" viewBox="0 0 600 450" preserveAspectRatio="none"><circle cx="210" cy="230" r="44"/><circle cx="290" cy="198" r="44"/><circle cx="370" cy="230" r="44"/><circle cx="250" cy="288" r="44"/><circle cx="330" cy="288" r="44"/><path d="M 300 148 Q 350 100 410 78" stroke-dasharray="4 6"/><line x1="300" y1="148" x2="290" y2="198"/><path d="M 60 380 Q 160 362,260 374 T 540 370" stroke-dasharray="3 7"/></svg>
+        <div class="wcard-content"><div class="wcard-meta"><span class="wcard-badge">New</span><span>&#8599;</span></div><h3 class="wcard-title">What of the<br>Sour <em>Grapes.</em></h3></div>
+        <div class="wcard-overlay" style="background:#5C4B6E;"><div class="wcard-overlay-txt">View<br><em>Live &#8594;</em></div></div>
+      </div>
+      <div class="wcard-foot"><div class="wcard-foot-tags">Climate · Urban</div></div>
+    </a>
     <a href="https://ifcitiescouldspeak.com/the-sun-shines-all-over-the-city-but-heatwaves-hit-different-in-taiwan/" target="_blank" rel="noopener" class="wcard" id="wcard-1">
       <div class="wcard-visual">
         <div class="wcard-bg" style="background:#DA6A1E;"></div>
@@ -2066,16 +2150,30 @@ body.no-gsap .testi-glow,body.no-gsap .testi-arrow,body.no-gsap #proof-connector
       <div class="wcard-foot"><div class="wcard-foot-tags">Color · Cultural</div></div>
     </a>
   </div>
-  <div class="work-slider-ctrls" id="work-slider-ctrls" aria-hidden="true">
-    <div class="work-slider-hint">Swipe or tap a dot &rarr;</div>
-    <div class="work-slider-track"><span class="work-slider-timer" id="work-slider-timer"></span></div>
-    <div class="work-slider-dots" id="work-slider-dots" role="tablist" aria-label="Work pages">
-      <button class="work-slider-dot is-active" type="button" data-page="0" aria-label="Page 1 of 4"></button>
-      <button class="work-slider-dot" type="button" data-page="1" aria-label="Page 2 of 4"></button>
-      <button class="work-slider-dot" type="button" data-page="2" aria-label="Page 3 of 4"></button>
-      <button class="work-slider-dot" type="button" data-page="3" aria-label="Page 4 of 4"></button>
+  <div class="work-slider-ctrls" id="work-slider-ctrls">
+    <div class="work-slider-top">
+      <div class="work-slider-hint">
+        <span class="wsh-mobile">Swipe or tap a dot &rarr;</span>
+      </div>
+      <div class="work-slider-arrows">
+        <button class="work-slider-arrow" id="work-slider-prev" type="button" aria-label="Previous">&larr;</button>
+        <button class="work-slider-arrow" id="work-slider-next" type="button" aria-label="Next">&rarr;</button>
+      </div>
     </div>
-    <button class="work-slider-viewall" id="work-slider-viewall" type="button">View all 8 &darr;</button>
+    <div class="work-slider-track"><div class="work-slider-track-inner"><span class="work-slider-timer" id="work-slider-timer"></span></div></div>
+    <div class="work-slider-dots work-slider-dots--desktop" id="work-slider-dots-desktop" role="tablist" aria-label="Work pages">
+      <button class="work-slider-dot is-active" type="button" data-page="0" aria-label="Page 1 of 3"></button>
+      <button class="work-slider-dot" type="button" data-page="1" aria-label="Page 2 of 3"></button>
+      <button class="work-slider-dot" type="button" data-page="2" aria-label="Page 3 of 3"></button>
+    </div>
+    <div class="work-slider-dots work-slider-dots--mobile" id="work-slider-dots-mobile" role="tablist" aria-label="Work pages">
+      <button class="work-slider-dot is-active" type="button" data-page="0" aria-label="Page 1 of 5"></button>
+      <button class="work-slider-dot" type="button" data-page="1" aria-label="Page 2 of 5"></button>
+      <button class="work-slider-dot" type="button" data-page="2" aria-label="Page 3 of 5"></button>
+      <button class="work-slider-dot" type="button" data-page="3" aria-label="Page 4 of 5"></button>
+      <button class="work-slider-dot" type="button" data-page="4" aria-label="Page 5 of 5"></button>
+    </div>
+    <button class="work-slider-viewall" id="work-slider-viewall" type="button">View all 9 &darr;</button>
   </div>
   </div>
 </section>

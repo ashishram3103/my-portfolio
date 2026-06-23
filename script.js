@@ -1807,7 +1807,9 @@ function resetPanel(){
       trigger:slab, start:'top bottom', end:'bottom top',
       onUpdate:()=>{
         const r=slab.getBoundingClientRect(), vh=window.innerHeight||1;
-        curFill=clamp((vh - r.top)/(vh*0.75), 0, 1);
+        // fill=0 when slab enters bottom of viewport; fill=1 when slab centre reaches viewport centre
+        const centreOffset=vh/2 - (r.top + r.height/2);
+        curFill=clamp((centreOffset + r.height/2) / r.height, 0, 1);
       }
     });
   }
@@ -2869,19 +2871,22 @@ function resetPanel(){
   const ctrls = document.getElementById('work-slider-ctrls');
   if(!grid || !ctrls) return;
 
-  const dots = Array.from(ctrls.querySelectorAll('.work-slider-dot'));
   const timer = ctrls.querySelector('.work-slider-timer');
   const viewAllBtn = ctrls.querySelector('#work-slider-viewall');
-  if(!dots.length || !timer || !viewAllBtn) return;
+  if(!timer || !viewAllBtn) return;
 
-  const PAGE_COUNT = 4;            // 8 cards in pairs
-  const PAGE_DURATION_MS = 4000;   // 4s per pair (user spec)
+  const PAGE_DURATION_MS = 7000;
   const RESUME_AFTER_IDLE_MS = 7000;
 
   const mqMobile = window.matchMedia('(max-width:599px)');
   const mqReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const isMobileSlider = () => mqMobile.matches && !grid.classList.contains('is-expanded');
-  const canAuto = () => isMobileSlider() && !mqReduced.matches;
+  const canAuto = () => !grid.classList.contains('is-expanded') && !mqReduced.matches;
+
+  const dotsMobile = Array.from(document.getElementById('work-slider-dots-mobile').querySelectorAll('.work-slider-dot'));
+  const dotsDesktop = Array.from(document.getElementById('work-slider-dots-desktop').querySelectorAll('.work-slider-dot'));
+  const getDots = () => mqMobile.matches ? dotsMobile : dotsDesktop;
+  const getPageCount = () => mqMobile.matches ? 5 : 3;
 
   let currentPage = 0;
   let isPaused = false;
@@ -2896,7 +2901,7 @@ function resetPanel(){
   function setActiveDot(idx){
     if(idx === currentPage) return;
     currentPage = idx;
-    dots.forEach((d,i)=>d.classList.toggle('is-active', i===idx));
+    getDots().forEach((d,i)=>d.classList.toggle('is-active', i===idx));
   }
 
   function goToPage(idx, smooth){
@@ -2915,7 +2920,7 @@ function resetPanel(){
     const progress = Math.min(elapsed / PAGE_DURATION_MS, 1);
     timer.style.transform = `scaleX(${progress.toFixed(3)})`;
     if(progress >= 1){
-      goToPage((currentPage + 1) % PAGE_COUNT, true);
+      goToPage((currentPage + 1) % getPageCount(), true);
       advanceStart = now;
     }
     advanceRaf = requestAnimationFrame(tickAuto);
@@ -2940,7 +2945,7 @@ function resetPanel(){
     scrollSyncTimer = setTimeout(()=>{
       const w = pageWidth();
       if(w > 0){
-        const idx = Math.max(0, Math.min(PAGE_COUNT - 1, Math.round(grid.scrollLeft / w)));
+        const idx = Math.max(0, Math.min(getPageCount() - 1, Math.round(grid.scrollLeft / w)));
         setActiveDot(idx);
       }
     }, 90);
@@ -2948,17 +2953,39 @@ function resetPanel(){
   grid.addEventListener('touchstart', ()=>{ if(canAuto()) pauseFor(RESUME_AFTER_IDLE_MS); }, {passive:true});
 
   // Dot taps: jump + pause.
-  dots.forEach((d,i)=>{
+  [...dotsMobile, ...dotsDesktop].forEach((d,_i)=>{
+    const i = parseInt(d.dataset.page, 10);
     d.addEventListener('click', ()=>{
       goToPage(i, true);
       if(canAuto()) pauseFor(RESUME_AFTER_IDLE_MS);
     });
   });
 
+  // Arrow buttons (desktop).
+  const prevBtn = document.getElementById('work-slider-prev');
+  const nextBtn = document.getElementById('work-slider-next');
+  function syncArrows(){
+    if(prevBtn) prevBtn.disabled = currentPage === 0;
+    if(nextBtn) nextBtn.disabled = currentPage === getPageCount() - 1;
+  }
+  if(prevBtn) prevBtn.addEventListener('click', ()=>{
+    goToPage(Math.max(0, currentPage - 1), true);
+    if(canAuto()) pauseFor(RESUME_AFTER_IDLE_MS);
+    syncArrows();
+  });
+  if(nextBtn) nextBtn.addEventListener('click', ()=>{
+    goToPage(Math.min(getPageCount() - 1, currentPage + 1), true);
+    if(canAuto()) pauseFor(RESUME_AFTER_IDLE_MS);
+    syncArrows();
+  });
+  const _origSetActiveDot = setActiveDot;
+  setActiveDot = function(idx){ _origSetActiveDot(idx); syncArrows(); };
+  syncArrows();
+
   // View all toggle: expand → stacked list, collapse → slider.
   function setExpanded(expanded){
     grid.classList.toggle('is-expanded', expanded);
-    viewAllBtn.innerHTML = expanded ? 'Show slider ↑' : 'View all 8 ↓';
+    viewAllBtn.innerHTML = expanded ? 'Show slider ↑' : 'View all 9 ↓';
     if(pauseTimer){ clearTimeout(pauseTimer); pauseTimer = null; }
     isPaused = false;
     if(expanded){
