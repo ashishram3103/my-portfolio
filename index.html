@@ -95,7 +95,7 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 .currently-dot{width:7px;height:7px;border-radius:50%;background:var(--green);
   animation:currentlyPulse 1.8s ease-in-out infinite;}
 @keyframes currentlyPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
-@media(max-width:1100px){.currently-badge{display:none;}}
+@media(max-width:1100px){.currently-badge{display:none;}.proj-panel-trigger{display:none !important;}}
 @media(max-width:900px){#main-nav{padding:14px 20px;}.nav-links{display:none;}}
 
 /* Burger menu */
@@ -122,6 +122,7 @@ body.cur-hidden #cur-ring,body.cur-hidden #cur-dot,body.cur-hidden #cur-label{op
 @media(max-width:900px){
   .burger-btn{display:flex;}
   .proj-panel-trigger{display:none !important;}
+  .nav-logo{white-space:nowrap;}
   .mobile-menu{padding:78px 24px 28px;justify-content:flex-start;overflow-y:auto;}
   .mobile-menu-close{display:flex;position:absolute;top:18px;right:20px;width:40px;height:40px;
     border:1px solid rgba(255,255,255,.22);border-radius:50%;background:transparent;color:var(--white);
