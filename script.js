@@ -1386,6 +1386,8 @@ function resetPanel(){
   const closeBtn=document.getElementById('panel-close');
   const backdrop=document.getElementById('panel-backdrop');
   if(trigger) trigger.addEventListener('click',openPanel);
+  const badge=document.getElementById('currently-badge');
+  if(badge) badge.addEventListener('click',openPanel);
   if(closeBtn) closeBtn.addEventListener('click',closePanel);
   if(backdrop) backdrop.addEventListener('click',closePanel);
 
