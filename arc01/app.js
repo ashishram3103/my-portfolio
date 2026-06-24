@@ -798,53 +798,142 @@ if (!isTouch) {
 const cardContainer = document.querySelector(".membership__cards");
 
 if (isTouch && cardContainer) {
-  const hintStacked = document.querySelector(".hint-stacked");
-  const hintSpread  = document.querySelector(".hint-spread");
+  const cards        = [...cardContainer.querySelectorAll(".access-card")];
+  const hintEl       = document.querySelector(".membership__hint");
+  const hintStacked  = document.querySelector(".hint-stacked");
+  const hintSpread   = document.querySelector(".hint-spread");
+  const N            = cards.length; // 3
 
-  function setHint(state) {
-    if (hintStacked) hintStacked.style.display = state === "stacked" ? "inline" : "none";
-    if (hintSpread)  hintSpread.style.display  = state === "fanned"  ? "inline" : "none";
+  /* Create backdrop */
+  const backdrop = document.createElement("div");
+  backdrop.className = "card-backdrop";
+  document.body.appendChild(backdrop);
+
+  let activeIdx  = 0;   // which card is centred (0-based)
+  let dragStartX = 0;
+  let dragDeltaX = 0;
+  let isDragging = false;
+  let tapStartX  = 0;
+  let tapStartT  = 0;
+  let isOpen     = false;
+
+  /* card width + side offset for coverflow */
+  const CARD_W   = () => Math.min(window.innerWidth * 0.72, 300);
+  const SIDE_X   = () => window.innerWidth * 0.52;  // how far side cards sit from centre
+  const SIDE_ROT = 38;   // rotateY degrees for side cards
+  const SIDE_SCL = 0.78; // scale of side cards
+
+  function mod(n, m) { return ((n % m) + m) % m; }
+
+  function renderCards(dragOffset = 0) {
+    cards.forEach((card, i) => {
+      /* distance from active, wrapped for infinite */
+      let d = i - activeIdx;
+      if (d >  N / 2) d -= N;
+      if (d < -N / 2) d += N;
+
+      /* apply drag offset as fractional distance */
+      const frac = d - dragOffset / window.innerWidth;
+
+      const tx     = frac * SIDE_X() * 2;
+      const ry     = Math.max(-SIDE_ROT, Math.min(SIDE_ROT, frac * SIDE_ROT));
+      const scale  = 1 - Math.min(Math.abs(frac), 1) * (1 - SIDE_SCL);
+      const op     = frac === 0 ? 1 : Math.abs(frac) >= 1 ? 0.55 : 0.55 + (1 - Math.abs(frac)) * 0.45;
+      const zi     = frac === 0 ? 3 : Math.abs(frac) === 1 ? 2 : 1;
+      /* hide cards more than 1 step away */
+      const vis    = Math.abs(frac) <= 1.4;
+
+      card.style.transform    = `translateX(calc(-50% + ${tx}px)) rotateY(${ry}deg) scale(${scale})`;
+      card.style.opacity      = vis ? op : 0;
+      card.style.zIndex       = zi;
+      card.style.pointerEvents = vis ? "" : "none";
+    });
   }
 
-  function collapse() {
-    cardContainer.classList.remove("is-fanned", "card-active-1", "card-active-2", "card-active-3");
-    setHint("stacked");
+  function openCoverflow() {
+    isOpen = true;
+    cardContainer.classList.add("is-coverflow");
+    backdrop.classList.add("is-visible");
+    if (hintEl) hintEl.classList.add("hint-fixed");
+    if (hintStacked) hintStacked.style.display = "none";
+    if (hintSpread)  hintSpread.style.display  = "inline";
+    document.body.style.overflow = "hidden";
+    renderCards();
   }
 
-  cardContainer.addEventListener("click", e => {
-    const card = e.target.closest(".access-card");
-    const isFanned = cardContainer.classList.contains("is-fanned");
+  function closeCoverflow() {
+    isOpen = false;
+    cardContainer.classList.remove("is-coverflow");
+    backdrop.classList.remove("is-visible");
+    if (hintEl) hintEl.classList.remove("hint-fixed");
+    if (hintStacked) hintStacked.style.display = "inline";
+    if (hintSpread)  hintSpread.style.display  = "none";
+    document.body.style.overflow = "";
+    /* reset inline styles so stacked CSS takes over */
+    cards.forEach(c => { c.style.transform = ""; c.style.opacity = ""; c.style.zIndex = ""; c.style.pointerEvents = ""; });
+  }
 
-    if (!isFanned) {
-      /* stacked → fan out */
-      cardContainer.classList.add("is-fanned");
-      setHint("fanned");
-      e.stopPropagation();
-      return;
-    }
+  /* ── Drag / swipe on coverflow ── */
+  cardContainer.addEventListener("touchstart", e => {
+    if (!isOpen) return;
+    isDragging = true;
+    dragStartX = e.touches[0].clientX;
+    dragDeltaX = 0;
+    tapStartX  = e.touches[0].clientX;
+    tapStartT  = Date.now();
+    /* disable transition during drag */
+    cards.forEach(c => c.style.transition = "opacity .2s, filter .2s");
+  }, { passive: true });
 
-    if (card) {
-      const idx = card.classList.contains("access-card--one") ? 1
-                : card.classList.contains("access-card--two") ? 2 : 3;
-      const activeClass = `card-active-${idx}`;
+  cardContainer.addEventListener("touchmove", e => {
+    if (!isOpen || !isDragging) return;
+    dragDeltaX = e.touches[0].clientX - dragStartX;
+    renderCards(dragDeltaX / window.innerWidth);
+  }, { passive: true });
 
-      if (cardContainer.classList.contains(activeClass)) {
-        /* already selected → open assessment */
-        document.querySelector("[data-open-assessment]")?.click();
-      } else {
-        /* first tap on this card → highlight it */
-        cardContainer.classList.remove("card-active-1", "card-active-2", "card-active-3");
-        cardContainer.classList.add(activeClass);
+  cardContainer.addEventListener("touchend", e => {
+    if (!isOpen || !isDragging) return;
+    isDragging = false;
+    const dx   = e.changedTouches[0].clientX - dragStartX;
+    const dt   = Date.now() - tapStartT;
+    const isTap = Math.abs(dx) < 10 && dt < 250;
+
+    /* restore transitions */
+    cards.forEach(c => c.style.transition = "");
+
+    if (isTap) {
+      /* tap on centre card → open assessment */
+      const tappedCard = e.target.closest(".access-card");
+      if (tappedCard) {
+        const ti = cards.indexOf(tappedCard);
+        if (ti === activeIdx) {
+          document.querySelector("[data-open-assessment]")?.click();
+        } else {
+          /* tap on a side card → bring it to centre */
+          activeIdx = ti;
+          renderCards();
+        }
       }
-      e.stopPropagation();
+    } else {
+      /* swipe — threshold: 20% of screen width or fast flick */
+      const threshold = window.innerWidth * 0.18;
+      const isFlick   = Math.abs(dx) > 40 && dt < 300;
+      if (dx < -threshold || (isFlick && dx < 0)) activeIdx = mod(activeIdx + 1, N);
+      else if (dx > threshold || (isFlick && dx > 0)) activeIdx = mod(activeIdx - 1, N);
+      renderCards();
     }
+    dragDeltaX = 0;
+  }, { passive: true });
+
+  /* ── Tap stacked deck to open ── */
+  cardContainer.addEventListener("click", e => {
+    if (isOpen) return; // touchend handles open state
+    openCoverflow();
+    e.stopPropagation();
   });
 
-  document.addEventListener("click", e => {
-    if (cardContainer.classList.contains("is-fanned") && !cardContainer.contains(e.target)) {
-      collapse();
-    }
-  });
+  /* ── Tap backdrop to close ── */
+  backdrop.addEventListener("click", closeCoverflow);
 } else {
   /* Desktop: click any card to toggle spread */
   document.querySelectorAll(".access-card").forEach(card => {
