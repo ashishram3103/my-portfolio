@@ -1010,6 +1010,7 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .proof__frame { position: relative; min-height: 100svh; overflow: hidden; }
   .proof__track {
     position: relative;
+    display: flex;
     flex-direction: row;
     width: 300vw;
     height: 100svh;
