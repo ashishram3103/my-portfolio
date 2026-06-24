@@ -821,6 +821,51 @@ document.querySelectorAll(".access-card").forEach(card => {
   });
 });
 
+/* Mobile proof carousel — counter + swipe hint */
+if (isTouch) {
+  const proofTrack = document.querySelector(".proof__track");
+  if (proofTrack) {
+    const panels = [...proofTrack.querySelectorAll(".proof__panel")];
+    const counters = [...proofTrack.querySelectorAll("[data-proof]")];
+    let counted = new Set();
+
+    function countUp(el) {
+      const target = Number(el.dataset.proof);
+      const isDecimal = target < 1;
+      const duration = 1200;
+      const start = performance.now();
+      function tick(now) {
+        const t = easeOut(Math.min((now - start) / duration, 1));
+        const val = target * t;
+        el.textContent = isDecimal ? val.toFixed(2) : String(Math.round(val));
+        if (t < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    proofTrack.addEventListener("scroll", () => {
+      const w = proofTrack.clientWidth;
+      panels.forEach((panel, i) => {
+        const panelLeft = panel.offsetLeft;
+        const scrollLeft = proofTrack.scrollLeft;
+        const visible = scrollLeft >= panelLeft - w * 0.5 && scrollLeft < panelLeft + w * 0.5;
+        if (visible && !counted.has(i) && counters[i]) {
+          counted.add(i);
+          countUp(counters[i]);
+        }
+      });
+    }, { passive: true });
+
+    // Trigger first panel immediately when section enters view
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !counted.has(0) && counters[0]) {
+        counted.add(0);
+        countUp(counters[0]);
+      }
+    }, { threshold: 0.4 }).observe(proofTrack);
+  }
+}
+
 /* Arena zones */
 const zoneButtons = [...document.querySelectorAll(".arena__zones [data-zone]")];
 zoneButtons.forEach(button => {
