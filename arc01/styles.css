@@ -1202,6 +1202,7 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .hint-mobile  { display: inline; }
   .gate__rings { width: 140vw; }
   .gate__copy h2 { font-size: 27vw; }
+  .gate__copy > p:not(.eyebrow) { padding: 0 24px; }
   footer { grid-template-columns: 1fr; padding: 7vh 20px 4vh; }
   .assessment__panel { width: 100%; padding: 20px; }
   .assessment-step, .assessment-result { padding-top: 8vh; }
