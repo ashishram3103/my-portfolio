@@ -983,7 +983,7 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .method__frame > .chapter-index { left: 20px; top: 80px; }
   .method__intro { left: 20px; top: 18%; }
   .method__intro h2 { font-size: 17vw; }
-  .method__scroll-hint { display: flex; flex-direction: column; align-items: center; gap: 10px; position: absolute; left: 50%; top: 38%; transform: translateX(-50%); font-size: 11px; font-weight: 800; letter-spacing: .18em; color: rgba(238,234,225,.75); pointer-events: none; z-index: 10; animation: swipeHintFade 2.4s ease-in-out infinite; }
+  .method__scroll-hint { display: flex; flex-direction: column; align-items: center; gap: 10px; position: absolute; left: 50%; top: 38%; transform: translateX(-50%); font-size: 11px; font-weight: 800; letter-spacing: .18em; color: #eeeae1; text-shadow: 0 0 12px rgba(0,0,0,1), 0 0 24px rgba(0,0,0,1); pointer-events: none; z-index: 10; animation: swipeHintFade 2.4s ease-in-out infinite; }
   .method__scroll-hint i { display: block; width: 1px; height: 38px; background: currentColor; position: relative; }
   .method__scroll-hint i::after { content: ""; position: absolute; bottom: 0; left: -3px; width: 8px; height: 8px; border-bottom: 1px solid currentColor; border-right: 1px solid currentColor; transform: rotate(45deg); }
   .mode { right: 20px; left: 20px; top: auto; bottom: 5%; width: auto; padding: 22px; max-height: 62vh; overflow: hidden; }
