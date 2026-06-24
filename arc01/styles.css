@@ -675,6 +675,13 @@ main, footer { position: relative; z-index: 2; }
   .network__arcs.is-revealed .arc-dot--3 { animation: dotPop 0.4s var(--ease) 1.8s forwards; }
 }
 @keyframes arcDraw { to { stroke-dashoffset: 0; } }
+@keyframes cardIdleTilt {
+  0%   { transform: translateX(-50%) translateY(0) rotate(0deg) scale(1) rotateX(0deg) rotateY(0deg); }
+  25%  { transform: translateX(-50%) translateY(-3px) rotate(0deg) scale(1) rotateX(2deg) rotateY(-3deg); }
+  50%  { transform: translateX(-50%) translateY(0) rotate(0deg) scale(1) rotateX(0deg) rotateY(0deg); }
+  75%  { transform: translateX(-50%) translateY(2px) rotate(0deg) scale(1) rotateX(-2deg) rotateY(3deg); }
+  100% { transform: translateX(-50%) translateY(0) rotate(0deg) scale(1) rotateX(0deg) rotateY(0deg); }
+}
 @keyframes dotPop { 0% { opacity: 0; transform: scale(0); } 60% { opacity: 1; transform: scale(1.5); } 100% { opacity: 1; transform: scale(1); } }
 
 .membership { height: 170vh; }
@@ -1054,48 +1061,57 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .membership__header { position: relative; left: auto; top: auto; padding: 72px 20px 0; }
   .membership__header h2 { font-size: 20vw; }
 
-  /* ── Mobile cards: stacked deck ── */
+  /* ── Mobile membership: stacked auto-cycle deck ── */
   .membership__cards {
     position: relative;
     left: auto; right: auto; top: auto;
     width: 100%;
-    height: 116vw;
+    height: 108vw;
     overflow: visible;
-    margin-top: 32px;
+    margin-top: 28px;
     padding: 0;
-    perspective: 900px;
+    perspective: 800px;
   }
+  /* All cards centred, stacked via z-index and slight offsets */
   .access-card {
     position: absolute;
     top: 0;
     left: 50%;
-    width: min(68vw, 290px);
+    width: min(70vw, 300px);
     aspect-ratio: .66;
     transform-origin: center center;
-    transition: transform .55s cubic-bezier(.16,1,.3,1), opacity .4s, filter .4s;
-    will-change: transform;
+    transition: transform .6s cubic-bezier(.16,1,.3,1), opacity .5s, box-shadow .5s;
+    cursor: default;        /* whole card NOT a CTA */
   }
-  /* Stacked offsets */
-  .access-card--one   { transform: translateX(-50%) translateY(10px) rotate(-7deg) !important; z-index: 1; }
-  .access-card--two   { transform: translateX(-50%) translateY(5px)  rotate(3deg)  !important; z-index: 2; }
-  .access-card--three { transform: translateX(-50%)                  rotate(0deg)  !important; z-index: 3; }
+  /* z=1 (back) */
+  .access-card--slot-back {
+    transform: translateX(-50%) translateY(14px) rotate(-5deg) scale(.92) !important;
+    opacity: .55;
+    z-index: 1;
+    animation: none !important;
+  }
+  /* z=2 (middle peek) */
+  .access-card--slot-mid {
+    transform: translateX(-50%) translateY(7px) rotate(3deg) scale(.96) !important;
+    opacity: .75;
+    z-index: 2;
+    animation: none !important;
+  }
+  /* z=3 (front / active) */
+  .access-card--slot-front {
+    opacity: 1;
+    z-index: 3;
+    box-shadow: 0 24px 60px rgba(0,0,0,.55);
+    animation: cardIdleTilt 5s ease-in-out infinite;
+    animation-delay: .65s; /* wait for cycle-in transition to finish */
+  }
   .access-card h3 { font-size: 14vw; }
+  /* Only the button is interactive */
+  .access-card button { cursor: pointer; }
 
-  /* Coverflow — JS sets inline transforms; just unlock the container */
-  .membership__cards.is-coverflow {
-    overflow: visible;
-    perspective: 900px;
-  }
-  /* Let JS inline style win — strip stacked rotate-!important overrides */
-  .membership__cards.is-coverflow .access-card--one,
-  .membership__cards.is-coverflow .access-card--two,
-  .membership__cards.is-coverflow .access-card--three { transform: none !important; }
-  /* But JS inline style beats stylesheet !important, so this just prevents flash */
-
-  .membership__hint { position: relative; left: auto; bottom: auto; padding: 0 20px; margin-top: 20px; }
+  .membership__hint { position: relative; left: auto; bottom: auto; padding: 0 20px; margin-top: 18px; }
   .hint-desktop { display: none; }
-  .hint-stacked { display: inline; }
-  .hint-spread  { display: none; }
+  .hint-mobile  { display: inline; }
   .gate__rings { width: 140vw; }
   .gate__copy h2 { font-size: 27vw; }
   footer { grid-template-columns: 1fr; padding: 7vh 20px 4vh; }

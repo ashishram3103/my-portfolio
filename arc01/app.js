@@ -798,110 +798,64 @@ if (!isTouch) {
 const cardContainer = document.querySelector(".membership__cards");
 
 if (isTouch && cardContainer) {
-  const cards       = [...cardContainer.querySelectorAll(".access-card")];
-  const hintStacked = document.querySelector(".hint-stacked");
-  const hintSpread  = document.querySelector(".hint-spread");
-  const N           = cards.length;
-
-  let activeIdx = 0;
-  let isOpen    = false;
-  let dragStartX = 0, dragDeltaX = 0, isDragging = false, tapStartT = 0;
-
-  /* Side card sits ~85% of card width away from centre — stays on screen */
-  const SIDE_X   = () => Math.min(window.innerWidth * 0.68, 290) * 0.85;
-  const SIDE_ROT = 36;
-  const SIDE_SCL = 0.82;
+  const cards = [...cardContainer.querySelectorAll(".access-card")];
+  const N     = cards.length; // 3
+  const SLOTS = ["slot-back", "slot-mid", "slot-front"];
+  let activeIdx  = 0;
+  let autoTimer  = null;
+  let dragStartX = 0, dragStartT = 0, isDragging = false;
 
   function mod(n, m) { return ((n % m) + m) % m; }
 
-  function renderCards(extraFrac = 0) {
+  /* Assign slot classes based on activeIdx.
+     front = activeIdx, mid = activeIdx-1, back = activeIdx-2 (all wrapped) */
+  function renderSlots() {
     cards.forEach((card, i) => {
-      let d = i - activeIdx;
-      if (d >  N / 2) d -= N;
-      if (d < -N / 2) d += N;
-      const frac = d + extraFrac;
-      const tx    = frac * SIDE_X();
-      const ry    = Math.max(-SIDE_ROT, Math.min(SIDE_ROT, frac * SIDE_ROT));
-      const sc    = 1 - Math.min(Math.abs(frac), 1) * (1 - SIDE_SCL);
-      const op    = Math.abs(frac) <= 0.01 ? 1 : Math.abs(frac) >= 1 ? 0.5 : 0.5 + (1 - Math.abs(frac)) * 0.5;
-      const vis   = Math.abs(frac) < 1.6;
-      card.style.transform     = `translateX(calc(-50% + ${tx}px)) rotateY(${ry}deg) scale(${sc})`;
-      card.style.opacity       = vis ? op : 0;
-      card.style.zIndex        = Math.round(10 - Math.abs(frac) * 3);
-      card.style.pointerEvents = vis ? "" : "none";
+      card.classList.remove("access-card--slot-front", "access-card--slot-mid", "access-card--slot-back");
+      const d = mod(i - activeIdx, N);
+      if      (d === 0) card.classList.add("access-card--slot-front");
+      else if (d === N - 1) card.classList.add("access-card--slot-mid");
+      else    card.classList.add("access-card--slot-back");
     });
   }
 
-  function openCoverflow() {
-    isOpen = true;
-    activeIdx = 0;
-    cardContainer.classList.add("is-coverflow");
-    if (hintStacked) hintStacked.style.display = "none";
-    if (hintSpread)  hintSpread.style.display  = "inline";
-    renderCards();
+  function advance(dir = 1) {
+    activeIdx = mod(activeIdx + dir, N);
+    renderSlots();
   }
 
-  function closeCoverflow() {
-    isOpen = false;
-    cardContainer.classList.remove("is-coverflow");
-    if (hintStacked) hintStacked.style.display = "inline";
-    if (hintSpread)  hintSpread.style.display  = "none";
-    cards.forEach(c => { c.style.transform = ""; c.style.opacity = ""; c.style.zIndex = ""; c.style.pointerEvents = ""; });
+  function startAuto() {
+    stopAuto();
+    autoTimer = setInterval(() => advance(1), 2500);
   }
 
-  /* touch drag */
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+  }
+
+  /* swipe detection */
   cardContainer.addEventListener("touchstart", e => {
-    if (!isOpen) return;
     isDragging = true;
     dragStartX = e.touches[0].clientX;
-    dragDeltaX = 0;
-    tapStartT  = Date.now();
-    cards.forEach(c => c.style.transition = "opacity .15s, filter .15s");
-  }, { passive: true });
-
-  cardContainer.addEventListener("touchmove", e => {
-    if (!isOpen || !isDragging) return;
-    dragDeltaX = e.touches[0].clientX - dragStartX;
-    renderCards(-dragDeltaX / (window.innerWidth * 0.55));
+    dragStartT = Date.now();
+    stopAuto();
   }, { passive: true });
 
   cardContainer.addEventListener("touchend", e => {
-    if (!isOpen || !isDragging) return;
+    if (!isDragging) return;
     isDragging = false;
-    cards.forEach(c => c.style.transition = "");
-    const dx  = e.changedTouches[0].clientX - dragStartX;
-    const dt  = Date.now() - tapStartT;
-    const tap = Math.abs(dx) < 12 && dt < 260;
-
-    if (tap) {
-      const tapped = e.target.closest(".access-card");
-      if (tapped) {
-        const ti = cards.indexOf(tapped);
-        if (ti === activeIdx) {
-          document.querySelector("[data-open-assessment]")?.click();
-        } else {
-          activeIdx = ti;
-          renderCards();
-        }
-      } else {
-        closeCoverflow();
-      }
-    } else {
-      const threshold = window.innerWidth * 0.15;
-      const flick     = Math.abs(dx) > 35 && dt < 320;
-      if      (dx < -threshold || (flick && dx < 0)) activeIdx = mod(activeIdx + 1, N);
-      else if (dx >  threshold || (flick && dx > 0)) activeIdx = mod(activeIdx - 1, N);
-      renderCards();
-    }
-    dragDeltaX = 0;
+    const dx = e.changedTouches[0].clientX - dragStartX;
+    const dt = Date.now() - dragStartT;
+    const threshold = window.innerWidth * 0.15;
+    const flick     = Math.abs(dx) > 30 && dt < 350;
+    if      (dx < -threshold || (flick && dx < 0)) advance(1);
+    else if (dx >  threshold || (flick && dx > 0)) advance(-1);
+    startAuto();
   }, { passive: true });
 
-  /* tap stacked deck → open */
-  cardContainer.addEventListener("click", e => {
-    if (isOpen) return;
-    openCoverflow();
-    e.stopPropagation();
-  });
+  /* init */
+  renderSlots();
+  startAuto();
 } else {
   /* Desktop: click any card to toggle spread */
   document.querySelectorAll(".access-card").forEach(card => {
