@@ -1049,50 +1049,73 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .network__copy, .network__locations { width: 100%; }
   .network__copy h2 { font-size: 22vw; }
   .network__copy > p:last-child { margin-left: 16vw; max-width: 75%; }
-  .membership { height: auto !important; min-height: 0; position: relative; z-index: 2; padding-bottom: 10vh; }
+  .membership { height: auto !important; min-height: 0; position: relative; z-index: 2; padding-bottom: 8vh; }
   .membership__frame { position: relative !important; height: auto !important; min-height: 0; overflow: visible; }
-  .membership__header { position: relative; left: auto; top: auto; padding: 80px 20px 0; }
+  .membership__header { position: relative; left: auto; top: auto; padding: 72px 20px 0; }
   .membership__header h2 { font-size: 20vw; }
-  /* Mobile cards: horizontal swipe carousel */
+
+  /* ── Mobile cards: stacked deck → spread on tap ── */
   .membership__cards {
     position: relative;
     left: auto; right: auto; top: auto;
     width: 100%;
+    height: 72vw;           /* tall enough for one card + offset stack */
+    perspective: 800px;
+    overflow: visible;
+    margin-top: 32px;
+    padding: 0 20px;
+    transition: height .5s cubic-bezier(.16,1,.3,1);
+  }
+  /* Stacked state — all 3 absolute, layered like a physical deck */
+  .access-card {
+    position: absolute;
+    top: 0; left: 50%;
+    width: min(72vw, 300px);
+    aspect-ratio: .66;
+    transform-origin: bottom center;
+    transition: transform .55s cubic-bezier(.16,1,.3,1), opacity .4s;
+  }
+  .access-card--one {
+    transform: translateX(calc(-50% - 14px)) translateY(8px) rotate(-6deg) !important;
+    z-index: 1;
+  }
+  .access-card--two {
+    transform: translateX(calc(-50% + 4px)) translateY(4px) rotate(2deg) !important;
+    z-index: 2;
+  }
+  .access-card--three {
+    transform: translateX(-50%) translateY(0px) rotate(0deg) !important;
+    z-index: 3;
+  }
+  .access-card h3 { font-size: 15vw; }
+
+  /* Spread state — all 3 side by side, full width, no scroll */
+  .membership__cards.is-spread {
+    left: auto; right: auto; width: 100%;
     height: auto;
-    perspective: none;
     display: flex;
     flex-direction: row;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    gap: 16px;
-    padding: 24px 20px 12px;
-    margin-top: 28px;
+    gap: 8px;
+    padding: 0 12px;
+    perspective: none;
+    overflow: hidden;
   }
-  .membership__cards::-webkit-scrollbar { display: none; }
-  /* Kill the is-spread desktop behaviour on mobile */
-  .membership__cards.is-spread { left: auto; right: auto; width: 100%; }
-  .membership__cards.is-spread .access-card { position: relative; top: auto; right: auto; float: none; }
-  .access-card {
+  .membership__cards.is-spread .access-card {
     position: relative;
-    top: auto; right: auto;
-    flex: 0 0 76vw;
-    width: 76vw;
-    max-width: 320px;
-    aspect-ratio: .66;
-    scroll-snap-align: center;
+    top: auto; left: auto;
+    flex: 1 1 0;
+    width: auto;
+    max-width: none;
     transform: none !important;
   }
-  .access-card--one { transform: none !important; }
-  .access-card--two { transform: none !important; }
-  .access-card--three { transform: none !important; }
-  .access-card h3 { font-size: 16vw; }
-  .membership__hint { position: relative; left: auto; bottom: auto; padding: 0 20px; margin-top: 8px; }
+  .membership__cards.is-spread .access-card--one { transform: none !important; }
+  .membership__cards.is-spread .access-card--two { transform: none !important; }
+  .membership__cards.is-spread .access-card--three { transform: none !important; }
+
+  .membership__hint { position: relative; left: auto; bottom: auto; padding: 0 20px; margin-top: 16px; }
   .hint-desktop { display: none; }
-  .hint-mobile { display: inline; }
+  .hint-stacked { display: inline; }
+  .hint-spread { display: none; }
   .gate__rings { width: 140vw; }
   .gate__copy h2 { font-size: 27vw; }
   footer { grid-template-columns: 1fr; padding: 7vh 20px 4vh; }

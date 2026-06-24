@@ -794,9 +794,34 @@ if (!isTouch) {
   });
 }
 
-/* Access cards — click to spread all 3 across full width (desktop only) */
+/* Access cards */
 const cardContainer = document.querySelector(".membership__cards");
-if (!isTouch) {
+
+if (isTouch) {
+  const hintStacked = document.querySelector(".hint-stacked");
+  const hintSpread  = document.querySelector(".hint-spread");
+  function setSpread(on) {
+    cardContainer.classList.toggle("is-spread", on);
+    if (hintStacked) hintStacked.style.display = on ? "none"   : "inline";
+    if (hintSpread)  hintSpread.style.display  = on ? "inline" : "none";
+  }
+  /* Mobile: tap stack → spread; tap card (spread) → assessment; tap outside → collapse */
+  cardContainer && cardContainer.addEventListener("click", e => {
+    const card = e.target.closest(".access-card");
+    if (!cardContainer.classList.contains("is-spread")) {
+      setSpread(true);
+      e.stopPropagation();
+    } else if (card) {
+      document.querySelector("[data-open-assessment]")?.click();
+    }
+  });
+  document.addEventListener("click", e => {
+    if (cardContainer && cardContainer.classList.contains("is-spread") && !cardContainer.contains(e.target)) {
+      setSpread(false);
+    }
+  });
+} else {
+  /* Desktop: click any card to toggle spread */
   document.querySelectorAll(".access-card").forEach(card => {
     card.addEventListener("click", () => {
       cardContainer && cardContainer.classList.toggle("is-spread");
