@@ -432,6 +432,7 @@ main, footer { position: relative; z-index: 2; }
 .mode p { max-width: 400px; color: rgba(255,255,255,.6); font-size: 16px; line-height: 1.7; }
 .mode > b { display: block; margin-top: 7vh; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.18); font-size: 9px; letter-spacing: .18em; }
 .method__counter { position: absolute; z-index: 3; left: 7vw; bottom: 7vh; display: flex; align-items: center; gap: 10px; font-family: "Barlow Condensed", sans-serif; font-size: 17px; }
+.method__scroll-hint { display: none; }
 .method__counter i { width: 80px; height: 1px; background: rgba(255,255,255,.3); }
 
 .coaching__frame { background: var(--bone); color: var(--black); }
@@ -982,7 +983,7 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .method__frame > .chapter-index { left: 20px; top: 80px; }
   .method__intro { left: 20px; top: 18%; }
   .method__intro h2 { font-size: 17vw; }
-  .method__frame::after { content: "SCROLL TO EXPLORE"; position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-size: 9px; font-weight: 800; letter-spacing: .18em; color: rgba(255,255,255,.4); writing-mode: vertical-rl; pointer-events: none; z-index: 10; }
+  .method__scroll-hint { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 9px; font-weight: 800; letter-spacing: .18em; color: rgba(255,255,255,.4); writing-mode: vertical-rl; pointer-events: none; z-index: 10; }
   .mode { right: 20px; left: 20px; top: auto; bottom: 5%; width: auto; padding: 22px; max-height: 62vh; overflow: hidden; }
   .mode__num { margin-bottom: 3vh; }
   .mode h3 { font-size: 14vw; }
