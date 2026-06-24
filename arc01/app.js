@@ -827,13 +827,13 @@ if (isTouch && cardContainer) {
       <p class="mc-desc"></p>
       <button class="mc-cta" type="button" data-open-assessment>Request access — demo ↗</button>
     </div>`;
-  /* Peek cards — 2 ghost cards behind the front */
-  const peekLeft  = document.createElement("div");
-  const peekRight = document.createElement("div");
-  peekLeft.className  = "mc-peek mc-peek--left";
-  peekRight.className = "mc-peek mc-peek--right";
-  cardContainer.appendChild(peekLeft);
-  cardContainer.appendChild(peekRight);
+  /* Peek cards — stacked behind the front card, never move */
+  const peekBack = document.createElement("div");
+  const peekMid  = document.createElement("div");
+  peekBack.className = "mc-peek mc-peek--back";
+  peekMid.className  = "mc-peek mc-peek--mid";
+  cardContainer.appendChild(peekBack);
+  cardContainer.appendChild(peekMid);
   cardContainer.appendChild(card); // front card on top
 
   /* Dots */
@@ -850,9 +850,9 @@ if (isTouch && cardContainer) {
   const elTitle = card.querySelector(".mc-title");
   const elDesc  = card.querySelector(".mc-desc");
 
-  /* ── Apply gyro tilt to front card only ── */
+  /* ── Apply gyro tilt to front card only — preserves translateX(-50%) ── */
   function applyTilt(rx, ry) {
-    card.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+    card.style.transform = `translateX(-50%) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
     elShine.style.transform = `translateX(${(ry * 3.5).toFixed(1)}%) translateY(${(-rx * 3.5).toFixed(1)}%)`;
   }
 
@@ -860,8 +860,8 @@ if (isTouch && cardContainer) {
   function updatePeeks() {
     const prev = TIERS[mod(activeIdx - 1, N)];
     const next = TIERS[mod(activeIdx + 1, N)];
-    peekLeft.style.background  = prev.bg;
-    peekRight.style.background = next.bg;
+    peekBack.style.background = prev.bg;
+    peekMid.style.background  = next.bg;
   }
 
   /* ── Render content for activeIdx ── */

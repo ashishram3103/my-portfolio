@@ -1061,52 +1061,47 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .membership__header { position: relative; left: auto; top: auto; padding: 72px 20px 0; }
   .membership__header h2 { font-size: 20vw; }
 
-  /* ── Mobile membership: single card + peeking stack ── */
+  /* ── Mobile membership: stacked deck, contents change ── */
   .membership__cards {
     position: relative;
     width: 100%;
-    height: 120vw;
+    height: 115vw;
     overflow: visible;
     margin-top: 32px;
     padding: 0;
     perspective: 700px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
   }
   /* Hide the raw access-card elements — JS builds virtual cards */
   .access-card { display: none !important; }
 
-  /* Ghost peek cards — sit behind the front card */
-  .mc-peek {
+  /* All three cards absolutely centred — stack via z-index + tiny offsets */
+  .mc-peek, .mc-card {
     position: absolute;
+    left: 50%;
     top: 0;
-    width: min(72vw, 310px);
+    width: min(70vw, 300px);
     aspect-ratio: .66;
     border-radius: 20px;
-    border: 1px solid rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.18);
   }
-  .mc-peek--left {
-    transform: translateX(-62%) translateY(18px) rotate(-11deg) scale(.88);
-    opacity: .55;
+  /* Back card — furthest behind, rotated left */
+  .mc-peek--back {
+    transform: translateX(calc(-50% - 18px)) translateY(14px) rotate(-7deg) scale(.91);
+    opacity: .5;
     z-index: 1;
   }
-  .mc-peek--right {
-    transform: translateX(62%) translateY(10px) rotate(8deg) scale(.92);
-    opacity: .65;
+  /* Mid card — slightly behind, slight right tilt */
+  .mc-peek--mid {
+    transform: translateX(calc(-50% + 8px)) translateY(8px) rotate(4deg) scale(.95);
+    opacity: .7;
     z-index: 2;
   }
-
-  /* The front floating card rendered by JS */
+  /* Front card — perfectly upright, gyro tilts it */
   .mc-card {
-    position: relative;
+    transform: translateX(-50%);
     z-index: 3;
-    width: min(72vw, 310px);
-    aspect-ratio: .66;
-    border-radius: 20px;
     overflow: hidden;
-    border: 1px solid rgba(255,255,255,.22);
-    box-shadow: 0 28px 70px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06);
+    box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06);
     transform-style: preserve-3d;
     will-change: transform;
     transition: transform .08s ease-out;
