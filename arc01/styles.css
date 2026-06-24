@@ -1054,65 +1054,67 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .membership__header { position: relative; left: auto; top: auto; padding: 72px 20px 0; }
   .membership__header h2 { font-size: 20vw; }
 
-  /* ── Mobile cards: stacked deck → spread on tap ── */
+  /* ── Mobile cards: stacked deck → fan on tap ── */
   .membership__cards {
     position: relative;
     left: auto; right: auto; top: auto;
     width: 100%;
-    height: 72vw;           /* tall enough for one card + offset stack */
-    perspective: 800px;
+    height: 112vw;
+    perspective: none;
     overflow: visible;
     margin-top: 32px;
-    padding: 0 20px;
-    transition: height .5s cubic-bezier(.16,1,.3,1);
+    padding: 0;
   }
-  /* Stacked state — all 3 absolute, layered like a physical deck */
+  /* All cards: absolute, stacked at center */
   .access-card {
     position: absolute;
-    top: 0; left: 50%;
-    width: min(72vw, 300px);
+    top: 0;
+    left: 50%;
+    width: min(68vw, 290px);
     aspect-ratio: .66;
-    transform-origin: bottom center;
-    transition: transform .55s cubic-bezier(.16,1,.3,1), opacity .4s;
+    transform-origin: center bottom;
+    transition: transform .6s cubic-bezier(.16,1,.3,1), opacity .45s cubic-bezier(.16,1,.3,1), filter .45s;
   }
+  /* Stacked offsets — physical deck feel */
   .access-card--one {
-    transform: translateX(calc(-50% - 14px)) translateY(8px) rotate(-6deg) !important;
+    transform: translateX(-50%) translateY(10px) rotate(-7deg) !important;
     z-index: 1;
   }
   .access-card--two {
-    transform: translateX(calc(-50% + 4px)) translateY(4px) rotate(2deg) !important;
+    transform: translateX(-50%) translateY(5px) rotate(3deg) !important;
     z-index: 2;
   }
   .access-card--three {
-    transform: translateX(-50%) translateY(0px) rotate(0deg) !important;
+    transform: translateX(-50%) rotate(0deg) !important;
     z-index: 3;
   }
-  .access-card h3 { font-size: 15vw; }
+  .access-card h3 { font-size: 14vw; }
 
-  /* Spread state — all 3 side by side, full width, no scroll */
-  .membership__cards.is-spread {
-    left: auto; right: auto; width: 100%;
-    height: auto;
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    padding: 0 12px;
-    perspective: none;
-    overflow: hidden;
+  /* Fanned state — cards slide apart like holding a hand */
+  .membership__cards.is-fanned .access-card--one {
+    transform: translateX(calc(-50% - 52vw)) rotate(-14deg) !important;
+    z-index: 1;
   }
-  .membership__cards.is-spread .access-card {
-    position: relative;
-    top: auto; left: auto;
-    flex: 1 1 0;
-    width: auto;
-    max-width: none;
-    transform: none !important;
+  .membership__cards.is-fanned .access-card--two {
+    transform: translateX(-50%) translateY(-8px) rotate(0deg) !important;
+    z-index: 2;
   }
-  .membership__cards.is-spread .access-card--one { transform: none !important; }
-  .membership__cards.is-spread .access-card--two { transform: none !important; }
-  .membership__cards.is-spread .access-card--three { transform: none !important; }
+  .membership__cards.is-fanned .access-card--three {
+    transform: translateX(calc(-50% + 52vw)) rotate(14deg) !important;
+    z-index: 1;
+  }
+  /* Selected card lifts, others dim */
+  .membership__cards.is-fanned.card-active-1 .access-card--one { transform: translateX(calc(-50% - 52vw)) rotate(-14deg) scale(1.06) !important; z-index: 4; }
+  .membership__cards.is-fanned.card-active-1 .access-card--two  { opacity: .35; filter: brightness(.6); }
+  .membership__cards.is-fanned.card-active-1 .access-card--three { opacity: .35; filter: brightness(.6); }
+  .membership__cards.is-fanned.card-active-2 .access-card--two { transform: translateX(-50%) translateY(-16px) rotate(0deg) scale(1.06) !important; z-index: 4; }
+  .membership__cards.is-fanned.card-active-2 .access-card--one  { opacity: .35; filter: brightness(.6); }
+  .membership__cards.is-fanned.card-active-2 .access-card--three { opacity: .35; filter: brightness(.6); }
+  .membership__cards.is-fanned.card-active-3 .access-card--three { transform: translateX(calc(-50% + 52vw)) rotate(14deg) scale(1.06) !important; z-index: 4; }
+  .membership__cards.is-fanned.card-active-3 .access-card--one  { opacity: .35; filter: brightness(.6); }
+  .membership__cards.is-fanned.card-active-3 .access-card--two  { opacity: .35; filter: brightness(.6); }
 
-  .membership__hint { position: relative; left: auto; bottom: auto; padding: 0 20px; margin-top: 16px; }
+  .membership__hint { position: relative; left: auto; bottom: auto; padding: 0 20px; margin-top: 20px; }
   .hint-desktop { display: none; }
   .hint-stacked { display: inline; }
   .hint-spread { display: none; }

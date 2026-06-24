@@ -797,27 +797,52 @@ if (!isTouch) {
 /* Access cards */
 const cardContainer = document.querySelector(".membership__cards");
 
-if (isTouch) {
+if (isTouch && cardContainer) {
   const hintStacked = document.querySelector(".hint-stacked");
   const hintSpread  = document.querySelector(".hint-spread");
-  function setSpread(on) {
-    cardContainer.classList.toggle("is-spread", on);
-    if (hintStacked) hintStacked.style.display = on ? "none"   : "inline";
-    if (hintSpread)  hintSpread.style.display  = on ? "inline" : "none";
+
+  function setHint(state) {
+    if (hintStacked) hintStacked.style.display = state === "stacked" ? "inline" : "none";
+    if (hintSpread)  hintSpread.style.display  = state === "fanned"  ? "inline" : "none";
   }
-  /* Mobile: tap stack → spread; tap card (spread) → assessment; tap outside → collapse */
-  cardContainer && cardContainer.addEventListener("click", e => {
+
+  function collapse() {
+    cardContainer.classList.remove("is-fanned", "card-active-1", "card-active-2", "card-active-3");
+    setHint("stacked");
+  }
+
+  cardContainer.addEventListener("click", e => {
     const card = e.target.closest(".access-card");
-    if (!cardContainer.classList.contains("is-spread")) {
-      setSpread(true);
+    const isFanned = cardContainer.classList.contains("is-fanned");
+
+    if (!isFanned) {
+      /* stacked → fan out */
+      cardContainer.classList.add("is-fanned");
+      setHint("fanned");
       e.stopPropagation();
-    } else if (card) {
-      document.querySelector("[data-open-assessment]")?.click();
+      return;
+    }
+
+    if (card) {
+      const idx = card.classList.contains("access-card--one") ? 1
+                : card.classList.contains("access-card--two") ? 2 : 3;
+      const activeClass = `card-active-${idx}`;
+
+      if (cardContainer.classList.contains(activeClass)) {
+        /* already selected → open assessment */
+        document.querySelector("[data-open-assessment]")?.click();
+      } else {
+        /* first tap on this card → highlight it */
+        cardContainer.classList.remove("card-active-1", "card-active-2", "card-active-3");
+        cardContainer.classList.add(activeClass);
+      }
+      e.stopPropagation();
     }
   });
+
   document.addEventListener("click", e => {
-    if (cardContainer && cardContainer.classList.contains("is-spread") && !cardContainer.contains(e.target)) {
-      setSpread(false);
+    if (cardContainer.classList.contains("is-fanned") && !cardContainer.contains(e.target)) {
+      collapse();
     }
   });
 } else {
