@@ -1013,7 +1013,7 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
     display: flex;
     flex-direction: row;
     width: 300vw;
-    height: 100svh;
+    height: 92svh;
     transform: none !important;
     overflow-x: scroll;
     overflow-y: hidden;
@@ -1022,7 +1022,8 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
     scrollbar-width: none;
   }
   .proof__track::-webkit-scrollbar { display: none; }
-  .proof__panel { flex: 0 0 100vw; width: 100vw; height: 100svh; scroll-snap-align: start; }
+  .proof__panel { flex: 0 0 100vw; width: 100vw; height: 92svh; scroll-snap-align: start; }
+  .proof__frame { min-height: 92svh; }
   .proof__panel::before { font-size: 42vw; right: -4vw; top: 10vh; opacity: .04; }
   .proof__number b { font-size: clamp(90px, 28vw, 160px); }
   .proof__number small { font-size: clamp(28px, 9vw, 52px); }
@@ -1085,7 +1086,7 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .sticky-frame { position: relative; min-height: 100vh; min-height: 100svh; }
   .hero__image, .scan__visual img, .coaching__image, .recovery__frame > img, .arena__frame > img { transform: none; }
   .hero-line, .access-card { transform: none !important; }
-  .proof__track { transform: none !important; flex-direction: column; width: 100%; }
+  .proof__track { transform: none !important; }
   .proof__panel::before { display: none; }
   .annotation { opacity: 1; transform: none; }
   .scan__crosshair { opacity: 1; }
