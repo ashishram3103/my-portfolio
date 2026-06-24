@@ -1140,14 +1140,14 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
     font-family: "Barlow Condensed", sans-serif;
     font-size: 17px;
     font-weight: 700;
-    transition: opacity .4s, transform .4s;
+    transition: opacity .45s ease;
   }
   .mc-tier {
     font-size: 9px;
     font-weight: 800;
     letter-spacing: .18em;
     text-transform: uppercase;
-    transition: opacity .4s, transform .4s;
+    transition: opacity .45s ease;
   }
   .mc-title {
     margin: 8px 0 0;
@@ -1155,14 +1155,17 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
     font-size: clamp(52px, 16vw, 80px);
     line-height: .78;
     letter-spacing: -.04em;
-    transition: opacity .4s, transform .4s;
+    /* fixed height = 2 lines — prevents reflow between short/long titles */
+    min-height: calc(clamp(52px, 16vw, 80px) * .78 * 2);
+    transition: opacity .45s ease;
   }
   .mc-desc {
     font-size: 11px;
     line-height: 1.55;
     text-transform: uppercase;
-    opacity: .8;
-    transition: opacity .4s, transform .4s;
+    /* fixed height = 3 lines — prevents reflow between long/short desc */
+    min-height: calc(11px * 1.55 * 3);
+    transition: opacity .45s ease;
   }
   .mc-cta {
     position: relative;
@@ -1179,15 +1182,12 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
     font-family: inherit;
     transition: opacity .4s;
   }
-  /* Content fade-out during cycle */
+  /* Content fade-out during cycle — pure opacity, no position shift */
   .mc-card.is-transitioning .mc-index,
   .mc-card.is-transitioning .mc-tier,
   .mc-card.is-transitioning .mc-title,
   .mc-card.is-transitioning .mc-desc,
-  .mc-card.is-transitioning .mc-cta {
-    opacity: 0;
-    transform: translateY(6px);
-  }
+  .mc-card.is-transitioning .mc-cta { opacity: 0; }
   /* Dots indicator */
   .mc-dots {
     display: flex;

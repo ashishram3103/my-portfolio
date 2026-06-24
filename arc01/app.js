@@ -876,17 +876,23 @@ if (isTouch && cardContainer) {
     updatePeeks();
   }
 
-  /* ── Cycle with crossfade ── */
+  /* ── Cycle with clean crossfade — fade out → swap → fade in ── */
+  let transitioning = false;
   function goTo(idx) {
+    if (transitioning) return;
+    transitioning = true;
     activeIdx = mod(idx, N);
+    /* fade out content + bg */
     card.classList.add("is-transitioning");
-    /* swap bg immediately (it has its own fade) */
     elBg.classList.add("is-leaving");
     setTimeout(() => {
+      /* swap content while invisible */
       setContent(TIERS[activeIdx]);
-      elBg.classList.remove("is-leaving");
+      /* fade back in */
       card.classList.remove("is-transitioning");
-    }, 400);
+      elBg.classList.remove("is-leaving");
+      setTimeout(() => { transitioning = false; }, 460);
+    }, 460);
   }
 
   function advance(dir = 1) { goTo(activeIdx + dir); }
