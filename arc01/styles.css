@@ -959,14 +959,15 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .manifesto__statement { font-size: clamp(55px, 17vw, 90px); }
   .manifesto__proof { grid-template-columns: 1fr; }
   .manifesto__proof div { border-right: 0; border-bottom: 1px solid rgba(0,0,0,.18); }
-  .scan__visual { width: 100%; height: 57%; top: 68px; }
+  .scan__frame { display: flex; flex-direction: column; height: auto; min-height: 100svh; padding-bottom: 40px; }
+  .scan__visual { position: relative; top: auto; left: auto; width: 100%; height: 56vw; min-height: 260px; flex-shrink: 0; margin-top: 68px; clip-path: none; }
+  .scan__visual img { object-position: center 20%; transform: none; }
   .scan__frame > .chapter-index { left: 20px; top: 75px; }
-  .scan__headline { top: auto; right: 20px; left: 20px; bottom: 4%; width: auto; z-index: 5; background: rgba(0,0,0,.45); backdrop-filter: blur(6px); padding: 16px 16px 10px; border-top: 1px solid rgba(255,255,255,.12); }
-  .scan__headline h2 { font-size: 24vw; }
-  .scan__headline > p:last-child { margin-left: 20vw; }
-  .scan__visual img { object-position: 35% top; }
-  .metrics-panel { left: 20px; right: 20px; bottom: 42%; width: auto; color: var(--white); background: rgba(0,0,0,.6); backdrop-filter: blur(4px); padding: 10px 12px 12px; border-radius: 3px; }
-  .metric i { background: rgba(255,255,255,.25); }
+  .scan__headline { position: relative; top: auto; left: auto; right: auto; bottom: auto; width: auto; z-index: 2; padding: 24px 20px 0; }
+  .scan__headline h2 { font-size: 22vw; margin: 10px 0 14px; }
+  .scan__headline > p:last-child { margin-left: 0; font-size: 15px; }
+  .metrics-panel { position: relative; left: auto; right: auto; bottom: auto; width: auto; display: grid; grid-template-columns: repeat(3, 1fr); margin: 20px 20px 0; border-top: 1px solid rgba(0,0,0,.25); color: var(--black); }
+  .metric i { background: rgba(0,0,0,.12); }
   .method { height: 300vh; }
   .method__frame > .chapter-index { left: 20px; top: 80px; }
   .method__intro { left: 20px; top: 18%; }
@@ -1057,10 +1058,8 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .loader__mark { font-size: 25vw; }
   .loader__mark i { width: 17vw; }
   .hero__bottom p { font-size: 13.5px; }
-  .metrics-panel { grid-template-columns: repeat(3, 1fr); }
-  .metric { padding-right: 6px; }
   .metric > span { font-size: 8px; }
-  .metric strong { font-size: 7vw; }
+  .metric strong { font-size: 8vw; }
   .metric small { font-size: 9px; }
   .arena__zones { grid-template-columns: 1fr; }
   .proof__number b { font-size: 22vw; }
