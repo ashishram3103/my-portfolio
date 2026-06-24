@@ -798,42 +798,102 @@ if (!isTouch) {
 const cardContainer = document.querySelector(".membership__cards");
 
 if (isTouch && cardContainer) {
-  const cards = [...cardContainer.querySelectorAll(".access-card")];
-  const N     = cards.length; // 3
-  const SLOTS = ["slot-back", "slot-mid", "slot-front"];
-  let activeIdx  = 0;
-  let autoTimer  = null;
+  /* ── Card data ── */
+  const TIERS = [
+    { idx: "A/01", tier: "FOUNDATION", title: "ARC<br>MEMBER",  desc: "Club access · quarterly assessment · performance dashboard", bg: "linear-gradient(145deg,#222,#080808 55%,#191919)", color: "#eeeae1" },
+    { idx: "A/02", tier: "COACHED",    title: "ARC<br>PERFORM", desc: "Private coaching · live programming · recovery protocols",    bg: "linear-gradient(145deg,#302825,#130c0a 55%,#2a1510)",  color: "#eeeae1" },
+    { idx: "A/03", tier: "INVITATION", title: "ARC<br>APEX",    desc: "Integrated performance team · priority lab · global access",  bg: "linear-gradient(145deg,#b7b3ab,#5e5e5a 55%,#d5d0c7)", color: "#080808" },
+  ];
+  const N = TIERS.length;
+  let activeIdx = 0;
+  let autoTimer = null;
   let dragStartX = 0, dragStartT = 0, isDragging = false;
+  let gyroRX = 0, gyroRY = 0;
 
   function mod(n, m) { return ((n % m) + m) % m; }
 
-  /* Assign slot classes based on activeIdx.
-     front = activeIdx, mid = activeIdx-1, back = activeIdx-2 (all wrapped) */
-  function renderSlots() {
-    cards.forEach((card, i) => {
-      card.classList.remove("access-card--slot-front", "access-card--slot-mid", "access-card--slot-back");
-      const d = mod(i - activeIdx, N);
-      if      (d === 0) card.classList.add("access-card--slot-front");
-      else if (d === N - 1) card.classList.add("access-card--slot-mid");
-      else    card.classList.add("access-card--slot-back");
-    });
+  /* ── Build single virtual card ── */
+  const card = document.createElement("div");
+  card.className = "mc-card";
+  card.innerHTML = `
+    <div class="mc-bg"></div>
+    <div class="mc-shine"></div>
+    <div class="mc-inner">
+      <span class="mc-index"></span>
+      <div>
+        <small class="mc-tier"></small>
+        <h3 class="mc-title"></h3>
+      </div>
+      <p class="mc-desc"></p>
+      <button class="mc-cta" type="button" data-open-assessment>Request access — demo ↗</button>
+    </div>`;
+  cardContainer.appendChild(card);
+
+  /* Dots */
+  const dotsWrap = document.createElement("div");
+  dotsWrap.className = "mc-dots";
+  TIERS.forEach(() => { const d = document.createElement("div"); d.className = "mc-dot"; dotsWrap.appendChild(d); });
+  cardContainer.after(dotsWrap);
+  const dots = [...dotsWrap.querySelectorAll(".mc-dot")];
+
+  const elBg    = card.querySelector(".mc-bg");
+  const elShine = card.querySelector(".mc-shine");
+  const elIdx   = card.querySelector(".mc-index");
+  const elTier  = card.querySelector(".mc-tier");
+  const elTitle = card.querySelector(".mc-title");
+  const elDesc  = card.querySelector(".mc-desc");
+
+  /* ── Apply gyro tilt to card ── */
+  function applyTilt(rx, ry) {
+    card.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+    elShine.style.transform = `translateX(${(ry * 2).toFixed(1)}%) translateY(${(-rx * 2).toFixed(1)}%)`;
   }
 
-  function advance(dir = 1) {
-    activeIdx = mod(activeIdx + dir, N);
-    renderSlots();
+  /* ── Render content for activeIdx ── */
+  function setContent(t) {
+    elBg.style.background   = t.bg;
+    card.style.color         = t.color;
+    elIdx.textContent        = t.idx;
+    elTier.textContent       = t.tier;
+    elTitle.innerHTML        = t.title;
+    elDesc.textContent       = t.desc;
+    dots.forEach((d, i) => d.classList.toggle("is-active", i === activeIdx));
   }
+
+  /* ── Cycle with crossfade ── */
+  function goTo(idx) {
+    activeIdx = mod(idx, N);
+    card.classList.add("is-transitioning");
+    /* swap bg immediately (it has its own fade) */
+    elBg.classList.add("is-leaving");
+    setTimeout(() => {
+      setContent(TIERS[activeIdx]);
+      elBg.classList.remove("is-leaving");
+      card.classList.remove("is-transitioning");
+    }, 400);
+  }
+
+  function advance(dir = 1) { goTo(activeIdx + dir); }
 
   function startAuto() {
     stopAuto();
-    autoTimer = setInterval(() => advance(1), 2500);
+    autoTimer = setInterval(() => advance(1), 3500);
+  }
+  function stopAuto() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; } }
+
+  /* ── Gyroscope ── */
+  if (window.DeviceOrientationEvent) {
+    window.addEventListener("deviceorientation", e => {
+      /* beta = front-back tilt (−90→90), gamma = left-right tilt (−90→90) */
+      const targetRX = Math.max(-12, Math.min(12, (e.beta  - 45) * 0.22));
+      const targetRY = Math.max(-12, Math.min(12,  e.gamma        * 0.22));
+      gyroRX += (targetRX - gyroRX) * 0.08;
+      gyroRY += (targetRY - gyroRY) * 0.08;
+      applyTilt(gyroRX, gyroRY);
+    }, { passive: true });
   }
 
-  function stopAuto() {
-    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
-  }
-
-  /* swipe detection */
+  /* ── Swipe ── */
   cardContainer.addEventListener("touchstart", e => {
     isDragging = true;
     dragStartX = e.touches[0].clientX;
@@ -844,17 +904,17 @@ if (isTouch && cardContainer) {
   cardContainer.addEventListener("touchend", e => {
     if (!isDragging) return;
     isDragging = false;
-    const dx = e.changedTouches[0].clientX - dragStartX;
-    const dt = Date.now() - dragStartT;
-    const threshold = window.innerWidth * 0.15;
-    const flick     = Math.abs(dx) > 30 && dt < 350;
-    if      (dx < -threshold || (flick && dx < 0)) advance(1);
-    else if (dx >  threshold || (flick && dx > 0)) advance(-1);
+    const dx  = e.changedTouches[0].clientX - dragStartX;
+    const dt  = Date.now() - dragStartT;
+    const thr = window.innerWidth * 0.14;
+    const flick = Math.abs(dx) > 28 && dt < 360;
+    if      (dx < -thr || (flick && dx < 0)) advance(1);
+    else if (dx >  thr || (flick && dx > 0)) advance(-1);
     startAuto();
   }, { passive: true });
 
-  /* init */
-  renderSlots();
+  /* ── Init ── */
+  setContent(TIERS[0]);
   startAuto();
 } else {
   /* Desktop: click any card to toggle spread */
