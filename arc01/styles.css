@@ -980,9 +980,9 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .metric i { background: rgba(0,0,0,.12); }
   .method { height: 300vh; }
   .method__frame > .chapter-index { left: 20px; top: 80px; }
-  .method__intro { left: 20px; right: 0; top: 18%; }
+  .method__intro { left: 20px; top: 18%; }
   .method__intro h2 { font-size: 17vw; }
-  .method__intro::after { content: "SCROLL TO EXPLORE"; position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 9px; font-weight: 800; letter-spacing: .18em; color: rgba(255,255,255,.4); writing-mode: vertical-rl; pointer-events: none; }
+  .method__frame::after { content: "SCROLL TO EXPLORE"; position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-size: 9px; font-weight: 800; letter-spacing: .18em; color: rgba(255,255,255,.4); writing-mode: vertical-rl; pointer-events: none; z-index: 10; }
   .mode { right: 20px; left: 20px; top: auto; bottom: 5%; width: auto; padding: 22px; max-height: 62vh; overflow: hidden; }
   .mode__num { margin-bottom: 3vh; }
   .mode h3 { font-size: 14vw; }
