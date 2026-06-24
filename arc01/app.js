@@ -948,7 +948,11 @@ if (isTouch && cardContainer) {
   }, { passive: true });
 
   /* ── Init ── */
-  setContent(TIERS[0]);
+  const t0 = TIERS[0];
+  elBg.style.background = t0.bg;
+  card.style.color = t0.color;
+  dots.forEach((d, i) => d.classList.toggle("is-active", i === 0));
+  updatePeeks();
   startAuto();
 } else {
   /* Desktop: click any card to toggle spread */
