@@ -916,7 +916,7 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
 
 @media (max-width: 900px) {
   .site-header { grid-template-columns: auto 1fr auto; padding: 15px 16px; }
-  .sticky-frame { top: 60px; height: calc(100svh - 60px); }
+  .scan__frame, .coaching__frame, .recovery__frame, .arena__frame { top: 60px; height: calc(100svh - 60px); }
   .header__status, .desktop-nav, .header__cta { display: none; }
   .menu-toggle { display: block; justify-self: end; }
   .menu-toggle.is-open span:first-child { transform: translateY(3px) rotate(45deg); }
