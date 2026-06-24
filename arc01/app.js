@@ -1008,8 +1008,14 @@ if (isTouch) {
       requestAnimationFrame(tick);
     }
 
+    const swipeHint = proofTrack.querySelector(".proof__swipe-hint");
     proofTrack.addEventListener("scroll", () => {
       const w = proofTrack.clientWidth;
+      /* hide swipe hint once user scrolls off first panel */
+      if (swipeHint && proofTrack.scrollLeft > w * 0.3) {
+        swipeHint.style.opacity = "0";
+        swipeHint.style.pointerEvents = "none";
+      }
       panels.forEach((panel, i) => {
         const panelLeft = panel.offsetLeft;
         const scrollLeft = proofTrack.scrollLeft;
