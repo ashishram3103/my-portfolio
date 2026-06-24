@@ -861,7 +861,7 @@ if (isTouch && cardContainer) {
     peekMid.style.background  = TIERS[mod(activeIdx + 1, N)].bg;
   }
 
-  /* ── True crossfade: inject new inner at opacity 0, fade old out + new in simultaneously ── */
+  /* ── True crossfade: two layers fade simultaneously ── */
   let transitioning = false;
   function goTo(idx) {
     if (transitioning) return;
@@ -870,35 +870,40 @@ if (isTouch && cardContainer) {
     const t = TIERS[activeIdx];
 
     const oldInner = card.querySelector(".mc-inner");
-    const newInner = document.createElement("div");
-    newInner.innerHTML = makeInner(t).trim();
-    const newEl = newInner.firstElementChild;
-    newEl.style.opacity = "0";
-    newEl.style.transition = "opacity .5s ease";
-    /* position new layer on top of old */
-    newEl.style.position = "absolute";
-    newEl.style.inset = "0";
+    if (!oldInner) { transitioning = false; return; }
+
+    /* Build new layer */
+    const newEl = document.createElement("div");
+    newEl.className = "mc-inner";
+    newEl.style.cssText = "position:absolute;inset:0;opacity:0;";
+    newEl.innerHTML = `
+      <span class="mc-index">${t.idx}</span>
+      <div>
+        <small class="mc-tier">${t.tier}</small>
+        <h3 class="mc-title">${t.title}</h3>
+      </div>
+      <p class="mc-desc">${t.desc}</p>
+      <button class="mc-cta" type="button" data-open-assessment>Request access — demo ↗</button>`;
     card.appendChild(newEl);
 
-    /* also crossfade background */
-    elBg.style.transition = "background .5s ease";
+
+    /* swap bg */
     elBg.style.background = t.bg;
     card.style.color = t.color;
+    dots.forEach((d, i) => d.classList.toggle("is-active", i === activeIdx));
+    updatePeeks();
 
-    /* trigger fade — rAF ensures browser has painted newEl at opacity 0 first */
+    /* double rAF so browser paints newEl at opacity:0 before transitioning */
     requestAnimationFrame(() => requestAnimationFrame(() => {
+      newEl.style.transition = "opacity .55s ease";
       newEl.style.opacity = "1";
-      oldInner.style.transition = "opacity .5s ease";
+      oldInner.style.transition = "opacity .55s ease";
       oldInner.style.opacity = "0";
-      dots.forEach((d, i) => d.classList.toggle("is-active", i === activeIdx));
-      updatePeeks();
       setTimeout(() => {
         oldInner.remove();
-        newEl.style.position = "";
-        newEl.style.inset = "";
-        newEl.style.transition = "";
+        newEl.style.cssText = "";
         transitioning = false;
-      }, 520);
+      }, 580);
     }));
   }
 
@@ -1077,6 +1082,8 @@ if (assessment && assessmentForm && assessmentProgress && result && steps.length
   };
 
   document.querySelectorAll("[data-open-assessment]").forEach(button => button.addEventListener("click", openAssessment));
+  /* delegation for dynamically injected [data-open-assessment] buttons (mc-card CTA) */
+  document.addEventListener("click", e => { if (e.target.closest("[data-open-assessment]")) openAssessment(); });
   document.querySelectorAll("[data-close-assessment]").forEach(button => button.addEventListener("click", closeAssessment));
   document.querySelectorAll("[data-assessment-back]").forEach(button => button.addEventListener("click", () => showStep(currentStep - 1)));
   document.querySelectorAll("[data-answer]").forEach(button => {
