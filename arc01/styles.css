@@ -916,6 +916,7 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
 
 @media (max-width: 900px) {
   .site-header { grid-template-columns: auto 1fr auto; padding: 15px 16px; }
+  .sticky-frame { top: 60px; height: calc(100svh - 60px); }
   .header__status, .desktop-nav, .header__cta { display: none; }
   .menu-toggle { display: block; justify-self: end; }
   .menu-toggle.is-open span:first-child { transform: translateY(3px) rotate(45deg); }
@@ -978,18 +979,18 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .mode h3 { font-size: 14vw; }
   .mode > b { margin-top: 3vh; }
   .method__counter { left: 20px; bottom: 3vh; }
-  .coaching__frame::after { content: ""; position: absolute; inset: 42% 0 0 0; background: linear-gradient(0deg, rgba(238,234,225,1) 55%, rgba(238,234,225,0) 100%); z-index: 2; pointer-events: none; }
-  .coaching__image { width: 100%; height: 54%; object-position: center 15%; }
-  .coaching__wipe { inset: 0 0 46% 0; }
-  .coaching__path { width: 100%; height: 54%; bottom: auto; top: 0; }
-  .coaching__copy { top: auto; left: 20px; right: 20px; bottom: 4%; width: auto; z-index: 3; }
-  .coaching__copy > .eyebrow { margin-top: 2vh; }
+  .coaching__frame { display: flex; flex-direction: column; height: auto; min-height: 100svh; padding-bottom: 40px; }
+  .coaching__frame::after { display: none; }
+  .coaching__image { position: relative; top: auto; left: auto; width: 100%; height: 56vw; min-height: 260px; flex-shrink: 0; object-position: center 15%; transform: none; }
+  .coaching__wipe { display: none; }
+  .coaching__path { display: none; }
+  .coaching__copy { position: relative; top: auto; left: auto; right: auto; bottom: auto; width: auto; z-index: 3; padding: 24px 20px 0; }
+  .coaching__copy > .eyebrow { margin-top: 0; }
   .coaching__copy h2 { font-size: 16vw; margin: 10px 0 14px; }
   .coaching__copy > p:not(.eyebrow) { margin-left: 10vw; font-size: 13.5px; }
   .coach-signature { margin: 3vh 0 0 10vw; }
-  .annotation--one { left: 8%; top: 18%; z-index: 3; }
-  .annotation--two { left: 50%; top: 32%; z-index: 3; }
-  .recovery__frame > img { object-position: center 20%; }
+  .annotation--one, .annotation--two { display: none; }
+  .recovery__frame > img { object-position: 40% 25%; }
   .recovery__glass { background: linear-gradient(0deg, rgba(0,0,0,.9), transparent 75%); }
   .recovery__copy { left: 20px; top: auto; bottom: 9%; width: auto; }
   .recovery__copy h2 { font-size: 19vw; }
