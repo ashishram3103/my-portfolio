@@ -990,8 +990,8 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .coaching__copy h2 { font-size: 16vw; margin: 10px 0 14px; }
   .coaching__copy > p:not(.eyebrow) { margin-left: 0; font-size: 15px; }
   .coach-signature { margin: 3vh 0 0 0; }
-  .annotation--one { left: 8%; top: 25%; z-index: 3; }
-  .annotation--two { left: 50%; top: 42%; z-index: 3; }
+  .annotation--one { left: 8%; top: calc(56vw * 0.3); z-index: 3; }
+  .annotation--two { left: 50%; top: calc(56vw * 0.55); z-index: 3; }
   .recovery__frame > img { object-position: 40% 25%; }
   .recovery__glass { background: linear-gradient(0deg, rgba(0,0,0,.9), transparent 75%); }
   .recovery__copy { left: 20px; top: auto; bottom: 9%; width: auto; }
