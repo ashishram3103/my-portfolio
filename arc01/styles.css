@@ -1182,12 +1182,6 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
     font-family: inherit;
     transition: opacity .4s;
   }
-  /* Content fade-out during cycle — pure opacity, no position shift */
-  .mc-card.is-transitioning .mc-index,
-  .mc-card.is-transitioning .mc-tier,
-  .mc-card.is-transitioning .mc-title,
-  .mc-card.is-transitioning .mc-desc,
-  .mc-card.is-transitioning .mc-cta { opacity: 0; }
   /* Dots indicator */
   .mc-dots {
     display: flex;

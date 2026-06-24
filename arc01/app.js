@@ -812,21 +812,24 @@ if (isTouch && cardContainer) {
 
   function mod(n, m) { return ((n % m) + m) % m; }
 
-  /* ── Build single virtual card ── */
+  /* ── Build card with two inner layers for true crossfade ── */
+  function makeInner(t) {
+    return `
+      <div class="mc-inner">
+        <span class="mc-index">${t.idx}</span>
+        <div>
+          <small class="mc-tier">${t.tier}</small>
+          <h3 class="mc-title">${t.title}</h3>
+        </div>
+        <p class="mc-desc">${t.desc}</p>
+        <button class="mc-cta" type="button" data-open-assessment>Request access — demo ↗</button>
+      </div>`;
+  }
+
   const card = document.createElement("div");
   card.className = "mc-card";
-  card.innerHTML = `
-    <div class="mc-bg"></div>
-    <div class="mc-shine"></div>
-    <div class="mc-inner">
-      <span class="mc-index"></span>
-      <div>
-        <small class="mc-tier"></small>
-        <h3 class="mc-title"></h3>
-      </div>
-      <p class="mc-desc"></p>
-      <button class="mc-cta" type="button" data-open-assessment>Request access — demo ↗</button>
-    </div>`;
+  card.innerHTML = `<div class="mc-bg"></div><div class="mc-shine"></div>` + makeInner(TIERS[0]);
+
   /* Peek cards — stacked behind the front card, never move */
   const peekBack = document.createElement("div");
   const peekMid  = document.createElement("div");
@@ -834,7 +837,7 @@ if (isTouch && cardContainer) {
   peekMid.className  = "mc-peek mc-peek--mid";
   cardContainer.appendChild(peekBack);
   cardContainer.appendChild(peekMid);
-  cardContainer.appendChild(card); // front card on top
+  cardContainer.appendChild(card);
 
   /* Dots */
   const dotsWrap = document.createElement("div");
@@ -845,54 +848,58 @@ if (isTouch && cardContainer) {
 
   const elBg    = card.querySelector(".mc-bg");
   const elShine = card.querySelector(".mc-shine");
-  const elIdx   = card.querySelector(".mc-index");
-  const elTier  = card.querySelector(".mc-tier");
-  const elTitle = card.querySelector(".mc-title");
-  const elDesc  = card.querySelector(".mc-desc");
 
-  /* ── Apply gyro tilt to front card only — preserves translateX(-50%) ── */
+  /* ── Apply gyro tilt ── */
   function applyTilt(rx, ry) {
     card.style.transform = `translateX(-50%) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
     elShine.style.transform = `translateX(${(ry * 3.5).toFixed(1)}%) translateY(${(-rx * 3.5).toFixed(1)}%)`;
   }
 
-  /* ── Update peek card backgrounds to adjacent tiers ── */
+  /* ── Update peek backgrounds ── */
   function updatePeeks() {
-    const prev = TIERS[mod(activeIdx - 1, N)];
-    const next = TIERS[mod(activeIdx + 1, N)];
-    peekBack.style.background = prev.bg;
-    peekMid.style.background  = next.bg;
+    peekBack.style.background = TIERS[mod(activeIdx - 1, N)].bg;
+    peekMid.style.background  = TIERS[mod(activeIdx + 1, N)].bg;
   }
 
-  /* ── Render content for activeIdx ── */
-  function setContent(t) {
-    elBg.style.background = t.bg;
-    card.style.color       = t.color;
-    elIdx.textContent      = t.idx;
-    elTier.textContent     = t.tier;
-    elTitle.innerHTML      = t.title;
-    elDesc.textContent     = t.desc;
-    dots.forEach((d, i) => d.classList.toggle("is-active", i === activeIdx));
-    updatePeeks();
-  }
-
-  /* ── Cycle with clean crossfade — fade out → swap → fade in ── */
+  /* ── True crossfade: inject new inner at opacity 0, fade old out + new in simultaneously ── */
   let transitioning = false;
   function goTo(idx) {
     if (transitioning) return;
     transitioning = true;
     activeIdx = mod(idx, N);
-    /* fade out content + bg */
-    card.classList.add("is-transitioning");
-    elBg.classList.add("is-leaving");
-    setTimeout(() => {
-      /* swap content while invisible */
-      setContent(TIERS[activeIdx]);
-      /* fade back in */
-      card.classList.remove("is-transitioning");
-      elBg.classList.remove("is-leaving");
-      setTimeout(() => { transitioning = false; }, 460);
-    }, 460);
+    const t = TIERS[activeIdx];
+
+    const oldInner = card.querySelector(".mc-inner");
+    const newInner = document.createElement("div");
+    newInner.innerHTML = makeInner(t).trim();
+    const newEl = newInner.firstElementChild;
+    newEl.style.opacity = "0";
+    newEl.style.transition = "opacity .5s ease";
+    /* position new layer on top of old */
+    newEl.style.position = "absolute";
+    newEl.style.inset = "0";
+    card.appendChild(newEl);
+
+    /* also crossfade background */
+    elBg.style.transition = "background .5s ease";
+    elBg.style.background = t.bg;
+    card.style.color = t.color;
+
+    /* trigger fade — rAF ensures browser has painted newEl at opacity 0 first */
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      newEl.style.opacity = "1";
+      oldInner.style.transition = "opacity .5s ease";
+      oldInner.style.opacity = "0";
+      dots.forEach((d, i) => d.classList.toggle("is-active", i === activeIdx));
+      updatePeeks();
+      setTimeout(() => {
+        oldInner.remove();
+        newEl.style.position = "";
+        newEl.style.inset = "";
+        newEl.style.transition = "";
+        transitioning = false;
+      }, 520);
+    }));
   }
 
   function advance(dir = 1) { goTo(activeIdx + dir); }
