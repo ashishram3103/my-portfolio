@@ -807,9 +807,10 @@ if (isTouch && cardContainer) {
   let isOpen    = false;
   let dragStartX = 0, dragDeltaX = 0, isDragging = false, tapStartT = 0;
 
-  const SIDE_X   = () => window.innerWidth * 0.38;
-  const SIDE_ROT = 42;
-  const SIDE_SCL = 0.80;
+  /* Side card sits ~85% of card width away from centre — stays on screen */
+  const SIDE_X   = () => Math.min(window.innerWidth * 0.68, 290) * 0.85;
+  const SIDE_ROT = 36;
+  const SIDE_SCL = 0.82;
 
   function mod(n, m) { return ((n % m) + m) % m; }
 
@@ -819,7 +820,7 @@ if (isTouch && cardContainer) {
       if (d >  N / 2) d -= N;
       if (d < -N / 2) d += N;
       const frac = d + extraFrac;
-      const tx    = frac * SIDE_X() * 2;
+      const tx    = frac * SIDE_X();
       const ry    = Math.max(-SIDE_ROT, Math.min(SIDE_ROT, frac * SIDE_ROT));
       const sc    = 1 - Math.min(Math.abs(frac), 1) * (1 - SIDE_SCL);
       const op    = Math.abs(frac) <= 0.01 ? 1 : Math.abs(frac) >= 1 ? 0.5 : 0.5 + (1 - Math.abs(frac)) * 0.5;
