@@ -615,6 +615,10 @@ function updateMetrics(active) {
   } else if (active.element.id === "recovery") {
     if (recoveryValue) recoveryValue.textContent = `+${(active.progress * 18.7).toFixed(1)}`;
   } else if (active.element.id === "proof") {
+    // On touch, the proof section is a horizontal scroll-snap carousel whose
+    // counters are driven by the track-scroll handler below — skip the
+    // vertical-scroll driver so the two don't fight (it would reset to 0).
+    if (isTouch) return;
     // Each panel owns a slice of --p. Counter only runs within that panel's window.
     // Panel 0: 0.00→0.38, Panel 1: 0.38→0.68, Panel 2: 0.68→1.00
     const panelWindows = [[0.00, 0.30], [0.30, 0.65], [0.65, 1.00]];
