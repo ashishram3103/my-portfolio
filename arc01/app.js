@@ -827,7 +827,14 @@ if (isTouch && cardContainer) {
       <p class="mc-desc"></p>
       <button class="mc-cta" type="button" data-open-assessment>Request access — demo ↗</button>
     </div>`;
-  cardContainer.appendChild(card);
+  /* Peek cards — 2 ghost cards behind the front */
+  const peekLeft  = document.createElement("div");
+  const peekRight = document.createElement("div");
+  peekLeft.className  = "mc-peek mc-peek--left";
+  peekRight.className = "mc-peek mc-peek--right";
+  cardContainer.appendChild(peekLeft);
+  cardContainer.appendChild(peekRight);
+  cardContainer.appendChild(card); // front card on top
 
   /* Dots */
   const dotsWrap = document.createElement("div");
@@ -843,21 +850,30 @@ if (isTouch && cardContainer) {
   const elTitle = card.querySelector(".mc-title");
   const elDesc  = card.querySelector(".mc-desc");
 
-  /* ── Apply gyro tilt to card ── */
+  /* ── Apply gyro tilt to front card only ── */
   function applyTilt(rx, ry) {
     card.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
-    elShine.style.transform = `translateX(${(ry * 2).toFixed(1)}%) translateY(${(-rx * 2).toFixed(1)}%)`;
+    elShine.style.transform = `translateX(${(ry * 3.5).toFixed(1)}%) translateY(${(-rx * 3.5).toFixed(1)}%)`;
+  }
+
+  /* ── Update peek card backgrounds to adjacent tiers ── */
+  function updatePeeks() {
+    const prev = TIERS[mod(activeIdx - 1, N)];
+    const next = TIERS[mod(activeIdx + 1, N)];
+    peekLeft.style.background  = prev.bg;
+    peekRight.style.background = next.bg;
   }
 
   /* ── Render content for activeIdx ── */
   function setContent(t) {
-    elBg.style.background   = t.bg;
-    card.style.color         = t.color;
-    elIdx.textContent        = t.idx;
-    elTier.textContent       = t.tier;
-    elTitle.innerHTML        = t.title;
-    elDesc.textContent       = t.desc;
+    elBg.style.background = t.bg;
+    card.style.color       = t.color;
+    elIdx.textContent      = t.idx;
+    elTier.textContent     = t.tier;
+    elTitle.innerHTML      = t.title;
+    elDesc.textContent     = t.desc;
     dots.forEach((d, i) => d.classList.toggle("is-active", i === activeIdx));
+    updatePeeks();
   }
 
   /* ── Cycle with crossfade ── */
@@ -884,11 +900,11 @@ if (isTouch && cardContainer) {
   /* ── Gyroscope ── */
   if (window.DeviceOrientationEvent) {
     window.addEventListener("deviceorientation", e => {
-      /* beta = front-back tilt (−90→90), gamma = left-right tilt (−90→90) */
-      const targetRX = Math.max(-12, Math.min(12, (e.beta  - 45) * 0.22));
-      const targetRY = Math.max(-12, Math.min(12,  e.gamma        * 0.22));
-      gyroRX += (targetRX - gyroRX) * 0.08;
-      gyroRY += (targetRY - gyroRY) * 0.08;
+      /* beta = front-back tilt, gamma = left-right tilt */
+      const targetRX = Math.max(-18, Math.min(18, (e.beta  - 45) * 0.45));
+      const targetRY = Math.max(-18, Math.min(18,  e.gamma        * 0.45));
+      gyroRX += (targetRX - gyroRX) * 0.12;
+      gyroRY += (targetRY - gyroRY) * 0.12;
       applyTilt(gyroRX, gyroRY);
     }, { passive: true });
   }

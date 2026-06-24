@@ -1061,25 +1061,46 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .membership__header { position: relative; left: auto; top: auto; padding: 72px 20px 0; }
   .membership__header h2 { font-size: 20vw; }
 
-  /* ── Mobile membership: single card, content cycles ── */
+  /* ── Mobile membership: single card + peeking stack ── */
   .membership__cards {
     position: relative;
     width: 100%;
-    height: auto;
+    height: 120vw;
     overflow: visible;
     margin-top: 32px;
-    padding: 0 20px;
+    padding: 0;
     perspective: 700px;
-    /* hide all but the single card wrapper */
     display: flex;
     justify-content: center;
+    align-items: flex-start;
   }
-  /* Hide the raw access-card elements — we render one virtual card */
+  /* Hide the raw access-card elements — JS builds virtual cards */
   .access-card { display: none !important; }
 
-  /* The single floating card rendered by JS */
+  /* Ghost peek cards — sit behind the front card */
+  .mc-peek {
+    position: absolute;
+    top: 0;
+    width: min(72vw, 310px);
+    aspect-ratio: .66;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.15);
+  }
+  .mc-peek--left {
+    transform: translateX(-62%) translateY(18px) rotate(-11deg) scale(.88);
+    opacity: .55;
+    z-index: 1;
+  }
+  .mc-peek--right {
+    transform: translateX(62%) translateY(10px) rotate(8deg) scale(.92);
+    opacity: .65;
+    z-index: 2;
+  }
+
+  /* The front floating card rendered by JS */
   .mc-card {
     position: relative;
+    z-index: 3;
     width: min(72vw, 310px);
     aspect-ratio: .66;
     border-radius: 20px;
@@ -1088,7 +1109,7 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
     box-shadow: 0 28px 70px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06);
     transform-style: preserve-3d;
     will-change: transform;
-    transition: transform .12s ease-out;
+    transition: transform .08s ease-out;
     cursor: default;
   }
   /* Background layer — crossfades on cycle */
