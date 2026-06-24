@@ -801,8 +801,8 @@ if (isTouch && cardContainer) {
   /* ── Card data ── */
   const TIERS = [
     { idx: "A/01", tier: "FOUNDATION", title: "ARC<br>MEMBER",  desc: "Club access · quarterly assessment · performance dashboard", bg: "linear-gradient(145deg,#222,#080808 55%,#191919)", color: "#eeeae1" },
-    { idx: "A/02", tier: "COACHED",    title: "ARC<br>PERFORM", desc: "Private coaching · live programming · recovery protocols",    bg: "linear-gradient(145deg,#302825,#130c0a 55%,#2a1510)",  color: "#eeeae1" },
-    { idx: "A/03", tier: "INVITATION", title: "ARC<br>APEX",    desc: "Integrated performance team · priority lab · global access",  bg: "linear-gradient(145deg,#b7b3ab,#5e5e5a 55%,#d5d0c7)", color: "#080808" },
+    { idx: "A/02", tier: "COACHED",    title: "ARC<br>PERFORM", desc: "Private coaching · live programming · recovery protocol",    bg: "linear-gradient(145deg,#302825,#130c0a 55%,#2a1510)",  color: "#eeeae1" },
+    { idx: "A/03", tier: "INVITATION", title: "ARC<br>APEX",    desc: "Priority lab access · global network · elite performance",  bg: "linear-gradient(145deg,#b7b3ab,#5e5e5a 55%,#d5d0c7)", color: "#080808" },
   ];
   const N = TIERS.length;
   let activeIdx = 0;

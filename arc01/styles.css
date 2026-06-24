@@ -1163,8 +1163,8 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
     font-size: 11px;
     line-height: 1.55;
     text-transform: uppercase;
-    /* fixed height = 3 lines — prevents reflow between long/short desc */
-    min-height: calc(11px * 1.55 * 3);
+    height: calc(11px * 1.55 * 3);
+    overflow: hidden;
     transition: opacity .45s ease;
   }
   .mc-cta {
