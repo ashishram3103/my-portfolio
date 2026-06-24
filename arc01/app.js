@@ -794,13 +794,15 @@ if (!isTouch) {
   });
 }
 
-/* Access cards — click to spread all 3 across full width */
+/* Access cards — click to spread all 3 across full width (desktop only) */
 const cardContainer = document.querySelector(".membership__cards");
-document.querySelectorAll(".access-card").forEach(card => {
-  card.addEventListener("click", () => {
-    cardContainer && cardContainer.classList.toggle("is-spread");
+if (!isTouch) {
+  document.querySelectorAll(".access-card").forEach(card => {
+    card.addEventListener("click", () => {
+      cardContainer && cardContainer.classList.toggle("is-spread");
+    });
   });
-});
+}
 
 /* Access card shine + 3D tilt */
 document.querySelectorAll(".access-card").forEach(card => {

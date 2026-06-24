@@ -725,6 +725,8 @@ main, footer { position: relative; z-index: 2; }
 .access-card p { margin: 0; font-size: 12px; line-height: 1.6; text-transform: uppercase; }
 .access-card button { position: relative; z-index: 2; padding: 13px; border: 1px solid currentColor; background: transparent; color: inherit; font-size: 11px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
 .membership__hint { position: absolute; left: 6vw; bottom: 6vh; font-size: 9px; font-weight: 800; letter-spacing: .16em; color: rgba(255,255,255,.45); }
+.hint-desktop { display: inline; }
+.hint-mobile { display: none; }
 
 .gate {
   position: relative;
@@ -1047,15 +1049,50 @@ footer a { text-decoration: underline; text-underline-offset: 4px; }
   .network__copy, .network__locations { width: 100%; }
   .network__copy h2 { font-size: 22vw; }
   .network__copy > p:last-child { margin-left: 16vw; max-width: 75%; }
-  .membership { height: 150vh; position: relative; z-index: 2; }
-  .membership__header { left: 20px; top: 8%; }
+  .membership { height: auto !important; min-height: 0; position: relative; z-index: 2; padding-bottom: 10vh; }
+  .membership__frame { position: relative !important; height: auto !important; min-height: 0; overflow: visible; }
+  .membership__header { position: relative; left: auto; top: auto; padding: 80px 20px 0; }
   .membership__header h2 { font-size: 20vw; }
-  .membership__cards { left: 20px; right: 20px; top: 38%; width: auto; height: 55%; }
-  .access-card { top: 5%; right: 4%; width: min(70vw, 340px); }
-  .access-card--one { transform: translate3d(calc(-20vw * var(--p)), calc(9vh * var(--p)), 0) rotateY(calc(-8deg + var(--p) * -8deg)) rotateZ(calc(var(--p) * -4deg)); }
-  .access-card--two { transform: translate3d(calc(-8vw * var(--p)), calc(3vh * var(--p)), 50px) rotateY(calc(-5deg + var(--p) * 2deg)); }
-  .access-card--three { transform: translate3d(calc(7vw * var(--p)), calc(-3vh * var(--p)), 80px) rotateY(calc(-3deg + var(--p) * 8deg)) rotateZ(calc(var(--p) * 4deg)); }
+  /* Mobile cards: horizontal swipe carousel */
+  .membership__cards {
+    position: relative;
+    left: auto; right: auto; top: auto;
+    width: 100%;
+    height: auto;
+    perspective: none;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 16px;
+    padding: 24px 20px 12px;
+    margin-top: 28px;
+  }
+  .membership__cards::-webkit-scrollbar { display: none; }
+  /* Kill the is-spread desktop behaviour on mobile */
+  .membership__cards.is-spread { left: auto; right: auto; width: 100%; }
+  .membership__cards.is-spread .access-card { position: relative; top: auto; right: auto; float: none; }
+  .access-card {
+    position: relative;
+    top: auto; right: auto;
+    flex: 0 0 76vw;
+    width: 76vw;
+    max-width: 320px;
+    aspect-ratio: .66;
+    scroll-snap-align: center;
+    transform: none !important;
+  }
+  .access-card--one { transform: none !important; }
+  .access-card--two { transform: none !important; }
+  .access-card--three { transform: none !important; }
   .access-card h3 { font-size: 16vw; }
+  .membership__hint { position: relative; left: auto; bottom: auto; padding: 0 20px; margin-top: 8px; }
+  .hint-desktop { display: none; }
+  .hint-mobile { display: inline; }
   .gate__rings { width: 140vw; }
   .gate__copy h2 { font-size: 27vw; }
   footer { grid-template-columns: 1fr; padding: 7vh 20px 4vh; }
